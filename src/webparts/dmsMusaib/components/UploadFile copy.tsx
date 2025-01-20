@@ -236,7 +236,147 @@ console.log("documentLibraryName" , documentLibraryName)
   };
 
 
-const previewFile = async (previewUrl: string) => {
+// const previewFile = async (previewUrl: string) => {
+//     try {
+//       console.log("Previewing file at URL:", previewUrl);
+//       const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
+//       const spinner = document.getElementById("spinner") as HTMLElement;
+  
+//       // Show the spinner and hide the iframe initially
+//       spinner.style.display = "block";
+//       iframe.style.display = "none";
+//       iframe.src = previewUrl;
+  
+//       // Add an onload event listener to the iframe
+//       iframe.onload = () => {
+//         console.log("Iframe has loaded");
+  
+//         const checkAndHideButton = () => {
+//           try {
+//             const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+//             if (iframeDocument) {
+//               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+//               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+//               if(excelToolbar){
+//                 excelToolbar.style.display= "none"
+//               }
+//               if (button) {
+//                 console.log("Hiding the OneUpCommandBar element");
+//                 button.style.display = "none";
+  
+
+//                 spinner.style.display = "none";
+//                 iframe.style.display = "block"; 
+
+
+//               } else {
+//                 console.log("OneUpCommandBar not found, rechecking...");
+//               }
+              
+//               const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement; 
+//               if(helpbutton){
+//                 helpbutton.style.display = "none"
+//               }
+//             }
+//           } catch (error) {
+//             console.error("Error accessing iframe content:", error);
+//           }
+  
+
+//           setTimeout(checkAndHideButton, 100);
+//         };
+  
+
+//         checkAndHideButton();
+//       };
+//     } catch (error) {
+//       console.error("Error previewing file:", error);
+//     }
+
+//   };
+
+  // const entity=data.Entity;
+
+  // const previewFile = async (previewUrl: string) => {
+  //   try {
+  //     console.log("Previewing file at URL:", previewUrl);
+  //     const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
+  //     const spinner = document.getElementById("spinner") as HTMLElement;
+      
+  //     // Show the spinner and hide the iframe initially
+  //     spinner.style.display = "block";
+  //     iframe.style.display = "none";
+  //     iframe.src = previewUrl;
+      
+  //     // Add an onload event listener to the iframe
+  //     iframe.onload = () => {
+  //       console.log("Iframe has loaded");
+  
+  //       const checkAndHideButton = () => {
+  //         try {
+  //           const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+  //           if (iframeDocument) {
+  //             const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+  //             const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+  //             if (excelToolbar) {
+  //               excelToolbar.style.display = "none";
+  //             }
+  
+  //             // Hide OneUpCommandBar
+  //             if (button) {
+  //               console.log("Hiding the OneUpCommandBar element");
+  //               button.style.display = "none";
+  //               spinner.style.display = "none";
+  //               iframe.style.display = "block";
+  //             } else {
+  //               console.log("OneUpCommandBar not found, rechecking...");
+  //             }
+  //           }
+  //         } catch (error) {
+  //           console.error("Error accessing iframe content:", error);
+  //         }
+  
+  //         setTimeout(checkAndHideButton, 100);
+  //       };
+  
+  //       checkAndHideButton();
+  //     };
+  //   } catch (error) {
+  //     console.error("Error previewing file:", error);
+  //   }
+  
+  //   // Add fullscreen button overlay
+  //   const iframeContainer = document.getElementById("iframeContainer");
+  //   const fullscreenButton = document.createElement("button");
+  //   fullscreenButton.textContent = "Go Fullscreen";
+  //   fullscreenButton.style.position = "absolute";
+  //   fullscreenButton.style.top = "20px";
+  //   fullscreenButton.style.right = "20px";
+  //   fullscreenButton.style.padding = "10px";
+  //   fullscreenButton.style.fontSize = "16px";
+  //   fullscreenButton.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+  //   fullscreenButton.style.color = "white";
+  //   fullscreenButton.style.border = "none";
+  //   fullscreenButton.style.cursor = "pointer";
+    
+  //   // Append the button to iframe container
+  //   iframeContainer?.appendChild(fullscreenButton);
+  
+  //   fullscreenButton.addEventListener("click", () => {
+  //     // Fullscreen logic
+  //     iframeContainer!.style.position = "fixed";
+  //     iframeContainer!.style.top = "0";
+  //     iframeContainer!.style.left = "0";
+  //     iframeContainer!.style.width = "100%";
+  //     iframeContainer!.style.height = "100%";
+  //     iframeContainer!.style.zIndex = "9999"; // Ensuring it stays on top
+  //     iframeContainer!.style.backgroundColor = "rgba(0, 0, 0, 0.8)"; // Optional dark background
+  
+  //     // Hide fullscreen button after fullscreen is activated
+  //     fullscreenButton.style.display = "none";
+  //   });
+  // };
+  const previewFile = async (previewUrl: string) => {
     try {
       console.log("Previewing file at URL:", previewUrl);
       const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
@@ -245,7 +385,11 @@ const previewFile = async (previewUrl: string) => {
       // Show the spinner and hide the iframe initially
       spinner.style.display = "block";
       iframe.style.display = "none";
-      iframe.src = previewUrl;
+      
+      // Set iframe src only once to prevent reloading
+      if (!iframe.src || iframe.src !== previewUrl) {
+        iframe.src = previewUrl;
+      }
   
       // Add an onload event listener to the iframe
       iframe.onload = () => {
@@ -257,47 +401,100 @@ const previewFile = async (previewUrl: string) => {
             if (iframeDocument) {
               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
-              if(excelToolbar){
-                excelToolbar.style.display= "none"
+              if (excelToolbar) {
+                excelToolbar.style.display = "none";
               }
+  
+              // Hide OneUpCommandBar
               if (button) {
                 console.log("Hiding the OneUpCommandBar element");
                 button.style.display = "none";
-  
-
                 spinner.style.display = "none";
-                iframe.style.display = "block"; 
-
-
+                iframe.style.display = "block";
               } else {
                 console.log("OneUpCommandBar not found, rechecking...");
-              }
-              
-              const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement; 
-              if(helpbutton){
-                helpbutton.style.display = "none"
               }
             }
           } catch (error) {
             console.error("Error accessing iframe content:", error);
           }
   
-
           setTimeout(checkAndHideButton, 100);
         };
   
-
         checkAndHideButton();
       };
     } catch (error) {
       console.error("Error previewing file:", error);
     }
-
+  
+    // Add fullscreen and minimize button overlay
+    const iframeContainer = document.getElementById("iframeContainer");
+    const fullscreenButton = document.createElement("button");
+    fullscreenButton.textContent = "Go Fullscreen";
+    fullscreenButton.style.position = "absolute";
+    fullscreenButton.style.top = "20px";
+    fullscreenButton.style.right = "20px";
+    fullscreenButton.style.padding = "10px";
+    fullscreenButton.style.fontSize = "16px";
+    fullscreenButton.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    fullscreenButton.style.color = "white";
+    fullscreenButton.style.border = "none";
+    fullscreenButton.style.cursor = "pointer";
+    
+    // Minimize button
+    const minimizeButton = document.createElement("button");
+    minimizeButton.textContent = "Minimize";
+    minimizeButton.style.position = "absolute";
+    minimizeButton.style.top = "20px";
+    minimizeButton.style.left = "20px";
+    minimizeButton.style.padding = "10px";
+    minimizeButton.style.fontSize = "16px";
+    minimizeButton.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    minimizeButton.style.color = "white";
+    minimizeButton.style.border = "none";
+    minimizeButton.style.cursor = "pointer";
+    minimizeButton.style.display = "none";  // Initially hidden
+  
+    // Append both buttons to iframe container
+    iframeContainer?.appendChild(fullscreenButton);
+    iframeContainer?.appendChild(minimizeButton);
+  
+    fullscreenButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      // Fullscreen logic - modify only the iframe container's style
+      iframeContainer!.style.position = "fixed";
+      iframeContainer!.style.top = "0";
+      iframeContainer!.style.left = "0";
+      iframeContainer!.style.width = "100%";
+      iframeContainer!.style.height = "100%";
+      iframeContainer!.style.zIndex = "9999";  // Ensuring it stays on top
+      iframeContainer!.style.backgroundColor = "rgba(0, 0, 0, 0.8)";  // Optional dark background
+  
+      // Hide fullscreen button and show minimize button after fullscreen is activated
+      fullscreenButton.style.display = "none";
+      minimizeButton.style.display = "block";
+    });
+  
+    minimizeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      
+      // Minimize logic - revert iframe container to its original size
+      iframeContainer!.style.position = "relative";
+      iframeContainer!.style.width = "80%"; // Or whatever size you want
+      iframeContainer!.style.height = "80%"; // Or whatever size you want
+      iframeContainer!.style.top = "50%";
+      iframeContainer!.style.left = "50%";
+      iframeContainer!.style.transform = "translate(-50%, -50%)";  // Center it on the page
+      iframeContainer!.style.backgroundColor = "transparent";  // Remove the overlay
+      
+      // Hide minimize button and show fullscreen button again
+      minimizeButton.style.display = "none";
+      fullscreenButton.style.display = "block";
+    });
   };
-
-  // const entity=data.Entity;
-
-
+  
+  
   
 React.useEffect(()=>{
   const  loadFormOptions = async ()=> {
@@ -905,8 +1102,17 @@ const Deletemedia = () => {
                       </div>
                       <div className='column column2 p-3'>
                           <h1>File Preview</h1>
-                          <div id="spinner" style={{display: "none"}}>Loading...</div>
-                          <iframe id="filePreview" width="100%" height="400"></iframe>
+                          {/* <div id="iframeContainer" style={{ position: 'relative' }}>
+    <iframe id="filePreview" style={{ display: 'none' }} width="100%" height="100%"></iframe>
+    <div id="spinner">Loading...</div>
+</div> */}
+<div id="iframeContainer" style={{ position: 'relative' }}>
+    <iframe id="filePreview" style={{ display: 'none' }} width="100%" height="100%"></iframe>
+    <div id="spinner">Loading...</div>
+</div>
+
+                          {/* <div id="spinner" style={{display: "none"}}>Loading...</div>
+                          <iframe id="filePreview" width="100%" height="400"></iframe> */}
                       </div>
               </div>
           </div>

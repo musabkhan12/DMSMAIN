@@ -40,6 +40,9 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 }) => {
   console.log(OthProps, "oth props");
   const sp: SPFI = getSP();
+
+  const siteUrl = window.location.origin;
+  // alert(`siteUrl : ${siteUrl}${locationPath}/SitePages/DMSAdmin.aspx`)
   const [toggleApproval, setToggleApproval] = React.useState(false);
   const [approvalOption, setApprovalOption]=useState("");
   console.log("Approval option",approvalOption);
@@ -992,8 +995,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
       }
       // Clear form on successful submission
       Swal.fire({
-        title: "Folder Created Successfully",
-        text: "Folder Created Successfully. It will reflect after a few seconds as we set up everything for the folder.",
+        title: "Success",
+        text: "Your request to create a folder has been submitted successfully. The folder will appear shortly as we complete the setup process.",
         icon: "success",
         // showCancelButton: true,
         confirmButtonText: 'OK',
@@ -1207,8 +1210,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         {toggleaddFieldsButton && ( 
               <div className="row mt-0" id="addFieldsButton">
                 <div className="col-md-10">
-                <h3 className="header-title text-dark font-16 mb-1">List of Document</h3>
-                <p className="subheader font-14 mb-3">Specify sub folder and create list of documents to be prepared and submitted bt team members.  </p>
+                <h3 className="header-title text-dark font-16 mb-1">List of metadata</h3>
+                <p className="subheader font-14 mb-3">Specify sub folder and create list of metadata to be prepared and submitted by team members.</p>
                 </div>
                
                 <div style={{position:'relative'}} className="col-md-2">
@@ -1375,7 +1378,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       handleUserSelect(selected, row.id)
                     }
                     placeholder="Enter names or email addresses..."
-                    noOptionsMessage={() => "No User Found..."}
+                    // noOptionsMessage={() => "No User Found..."}
+                    noOptionsMessage={() => (
+                      <div>
+                        <p>No users found. Please <a href={`${siteUrl}${locationPath}/SitePages/DMSAdmin.aspx`} target="_blank" rel="noopener noreferrer"> <br />
+                         add users in the Approval Group for this Entity</a>.</p>
+                      </div>
+                    )}
                   />
                   {/* {errors.selectedUsers && (
                     <span className="text-danger">{errors.selectedUsers}</span>
@@ -1500,6 +1509,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                       }
                                       placeholder="Enter names or email addresses..."
                                       noOptionsMessage={() => "No User Found..."}
+                                     
                                   />
                               </div>
                               <div className="col-12 col-md-5" 

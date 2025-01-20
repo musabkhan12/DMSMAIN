@@ -5,17 +5,12 @@ import { ISearchHitResource, ISearchQuery } from './SearchHelperInterfaces';
 //import * as msgraphtypes from '@microsoft/microsoft-graph-types';
 //import { version } from 'os';
 
-function getUniqueItems<T>(array: T[]): T[] {
-  return Array.from(new Set(array));
-}
-
 export interface ISearchResult {
   name: string;
   webUrl: string;
   lastModifiedDateTime: string;
   createdBy: string;
 }
-
 
 export class GraphSearchHelper {
   private graphClient: MSGraphClientV3;
@@ -155,7 +150,7 @@ export class GraphSearchHelper {
 
   public async searchAll(query: string, size: number = 100,refiners:string[]=[],refinerfilters:string[]=[]): Promise<SearchHitsContainer> {
     try {
-      const searchaggegators:AggregationOption[]=getUniqueItems<string>(['lastModifiedDateTime','FileType','createdBy'].concat(refiners)).map(ref=>{return  ({
+      const searchaggegators:AggregationOption[]=[].concat(refiners).map(ref=>{return  ({
         "field": ref,
         "size": 100,
         "bucketDefinition": {
@@ -170,17 +165,39 @@ export class GraphSearchHelper {
       query: {
         queryString: query
       },
-      
       from: 0,
       size: size,            
-      fields:getUniqueItems<string>(['name','lastModifiedDateTime','webUrl','createdBy','FileType','FileExtension'].concat(refiners))
-      
+      fields:['name','size','lastModifiedDateTime','webUrl','createdBy','FileType','FileExtension'].concat(refiners),
+      aggregations:searchaggegators,
+      // [
+      //   {
+      //     "field": "RefinableString00",
+      //     "size": 100,
+      //     "bucketDefinition": {
+      //         "sortBy": "count",                  
+      //         "minimumCount": 1,
+      //         "isDescending":true                    
+      //     }          
+      //   },
+      //   {
+      //     "field": "lastModifiedDateTime",
+      //     "size": 100,
+      //     "bucketDefinition": {
+      //         "sortBy": "count",                  
+      //         "minimumCount": 1,
+      //         "isDescending":true                    
+      //     }          
+      //   }  
+
+      // ],
+      //aggregationFilters:refinerfilters
+
+      //fields: ['title', "path","url"],
+      // sortProperties: [{ name: 'lastModifiedDateTime', isDescending: true }]
     };
 
-    if(searchaggegators && searchaggegators.length>0) searchrequestparam['aggregations']=searchaggegators;
     if(refinerfilters && refinerfilters.length>0) searchrequestparam['aggregationFilters']=refinerfilters;
 
-    (searchrequestparam as any)['trimDuplicates']=true;
      const requestBody:ISearchQuery = {
         requests: [searchrequestparam]
       };
@@ -210,29 +227,6 @@ export class GraphSearchHelper {
       throw error;
     }
   }
-
-  // exceuteasyncsearch=async (searchrequestparam:SearchRequest,start=0,pagesize=500, results:any[] = []):Promise<any>=>{
-
-  //   searchrequestparam.from=start;
-  //   searchrequestparam.size=pagesize;  
-  // const requestBody:ISearchQuery = {
-  //   requests: [searchrequestparam]
-  // };
-
-  // const result = await this.graphClient.api('/search/query').post(requestBody);
-  // let hitcont=(result.value[0] as SearchResponse).hitsContainers[0];
-
-  // results=results.concat(hitcont.hits);
-
-  // // Base condition
-  // if (!hitcont.moreResultsAvailable) {
-  //   return results;
-  // }
-
-  // // Recursive call
-  // return await this.exceuteasyncsearch(searchrequestparam,resul);
-
-  // }
 
   /**
    * Helper function to format results for display

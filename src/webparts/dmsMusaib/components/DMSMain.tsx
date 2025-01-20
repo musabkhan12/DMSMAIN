@@ -476,7 +476,7 @@ const myrequestbuttonclick =()=>{
 
       // Fetch data from DMSFolderMaster
       const folderItems = await sp.web.lists
-        .getByTitle("DMSFolderMaster").items.getAll();
+        .getByTitle("DMSFolderMaster").items.filter("IsActive eq 'Yes'").select("*").getAll();
        console.log("folderItems", folderItems);
 
       // const myButton = document.getElementById("mybutton");
@@ -2794,24 +2794,24 @@ const myrequestbuttonclick =()=>{
       // console.log("FavouriteMap",favouriteMap)
       console.log("Files", filesData);
       // Add breadCrumb start
-      handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+      // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
       // End
-      const container = document.getElementById("files-container");
-      container.innerHTML = "";
+      // const container = document.getElementById("files-container");
+      // container.innerHTML = "";
       setdisplayuploadfileandcreatefolder(true)
       // Hide the list and grid view start
-    const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-    if (hidegidvewlistviewbutton2) {
-      console.log("enter here .....................")
-      hidegidvewlistviewbutton2.style.display = 'none'
+    // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+    // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+    // if (hidegidvewlistviewbutton2) {
+    //   console.log("enter here .....................")
+    //   hidegidvewlistviewbutton2.style.display = 'none'
     
-    }
-    if (hidegidvewlistviewbutton) {
-    console.log("enter here .....................")
-    hidegidvewlistviewbutton.style.display = 'none'
+    // }
+    // if (hidegidvewlistviewbutton) {
+    // console.log("enter here .....................")
+    // hidegidvewlistviewbutton.style.display = 'none'
 
-    }
+    // }
     // End
     const currentUser = await sp.web.currentUser();
     const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
@@ -2884,8 +2884,21 @@ const myrequestbuttonclick =()=>{
       }
     }
     ismyrequordoclibforfilepreview = "getdoclibdata"
-      // const container = document.getElementById("files-container");
-      // container.innerHTML = "";
+    handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+      const container = document.getElementById("files-container");
+      container.innerHTML = "";
+      const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+      const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+      if (hidegidvewlistviewbutton2) {
+        console.log("enter here .....................")
+        hidegidvewlistviewbutton2.style.display = 'none'
+      
+      }
+      if (hidegidvewlistviewbutton) {
+      console.log("enter here .....................")
+      hidegidvewlistviewbutton.style.display = 'none'
+  
+      }
       if(files.length === 0){
         // console.log("no file found");
         const container = document.getElementById("files-container");
@@ -3967,7 +3980,7 @@ const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHa
         <img class="filextension" src=${fileIcon} alt="File icon"/>
         </div>
          <div class="col-md-10 pe-0">
-        <p class="p1st">${file.Name}</p>
+        <p style="cursor: pointer;" class="p1st"  onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">${file.Name}</p>
           <p class="p3rd">${((file.Length as unknown as number) / (1024 * 1024)).toFixed(2)} MB</p>
          </div>
          </div>
@@ -4112,6 +4125,7 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
     border-radius: 8px;
     padding: 20px;
     overflow-y: auto;
+    z-index: 9999;
   `;
 
   const popupHeader = document.createElement("div");
@@ -10532,7 +10546,7 @@ FilesItems.forEach(async (fileItem, index) => {
     </div>
         <div class="col-md-10"> 
          <div class="CardTextContainer">
-      <p class="p1st">${file.FileName}</p>
+      <p class="p1st" style="cursor: pointer;" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
       <p class="p2nd">${file.DocumentLibraryName}</p>
       <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
       <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
@@ -11026,7 +11040,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
   // Add event listener for "+" button to add new editable fields
   addFieldButton.addEventListener('click', () => {
     const newFieldHTML = `
-      <div class="form-group">
+      <div class="form-group row">
         <div class="col-md-5">
           <label>Field Name</label>
           <input type="text" class="form-control" placeholder="Enter new field name" />
@@ -12311,7 +12325,9 @@ if (resultArrayThatContainstheColumnDetails.length % 3 !== 0) {
     <div class="popup-details">
       ${detailRowsHTML}
       <table class="mtbalenew">
-      <thead>
+      ${ fileItem.ListItemAllFields.Status !== "Auto Approved" ?
+       `
+        <thead>
         <th class="">Approval Level</th>
         <th class="">Approver</th>
         <th class="">Action DateTime</th>
@@ -12320,12 +12336,20 @@ if (resultArrayThatContainstheColumnDetails.length % 3 !== 0) {
       </thead>
       ${approverRowsHTML}
     </table>
+       `
+        :
+        `Audit History is not available as the file does not have approval`
+      }
+     
   </div>
   `;
 
 
 // Append to body
-document.body.appendChild(popup);
+  
+    document.body.appendChild(popup);
+   
+ 
 }
 
 // function to hide audit history pop

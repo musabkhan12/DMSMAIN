@@ -24,8 +24,7 @@ export interface IDMSEntity
     SiteID?:string;
     Active?:string;
     ID?:number;  
-    FileMasterList?:string;     
-    SiteURL?:string;
+    FileMasterList?:string; 
 }
 
 export interface IDMSEntityDocLib
@@ -35,7 +34,6 @@ export interface IDMSEntityDocLib
     ID?:number;  
     SiteTitle?:string;
     DocumentLibraryName?:string;
-    FolderPath?:string;
 
 }
 
@@ -46,8 +44,7 @@ export interface IDMSEntityList
     SiteName?:string;
     DocumentLibraryName?:string;
     SearchMappedManagedProperty?:string;
-    ID?:number;
-     
+    ID?:number;  
 }
 
 export class DMSEntityConfigurationHelper
@@ -61,7 +58,7 @@ export class DMSEntityConfigurationHelper
     GetActivEnitities=async():Promise<IDMSEntity[]>=>
     {
         const FilesItems:IDMSEntity[] = await this.sp.web.lists.getByTitle(LIST_TITLE_DMSEntitySitesMaster)
-         .items//.select("Title", "SiteID", "FileMasterList", "Active")
+         .items.select("Title", "SiteID", "FileMasterList", "Active")
          .filter(`Active eq 'Yes'`)();
 
          return FilesItems;
@@ -128,7 +125,7 @@ export class DMSEntityConfigurationHelper
             
             let doclibs= await this.sp.web.lists
                 .getByTitle(LIST_TITLE_DMSFolderMaster)
-                .items//.select("SiteTitle", "ID", "DocumentLibraryName")
+                .items.select("SiteTitle", "ID", "DocumentLibraryName")
                 .filter(`IsLibrary eq 1 and SiteTitle eq '${sitetitle}'`)();
                
             return doclibs
