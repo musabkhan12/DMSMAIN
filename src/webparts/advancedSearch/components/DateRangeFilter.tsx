@@ -78,7 +78,7 @@ export const DateRangeFilter: React.FC<IDateRangeFilterProps> = ({ onFilterChang
                     />
                 </div>
                 <div className="col-md-2 mt-3 mb-3">
-                    <button style={{marginTop:'0rem',fontSize:'1rem',padding:'6px 20px', minWidth:'auto'}} className="btn btn-primary" onClick={handleApply}>
+                    <button type='button' style={{marginTop:'0rem',fontSize:'1rem',padding:'6px 20px', minWidth:'auto'}} className="btn btn-primary" onClick={handleApply}>
                         Apply
                     </button>
                 </div>

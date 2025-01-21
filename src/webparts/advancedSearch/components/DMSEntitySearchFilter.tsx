@@ -15,19 +15,29 @@ export interface TreeNode {
   text: string;
   children?: TreeNode[];
   checked?: boolean;
+  data?:any
+}
+
+export enum enumfieldtype
+{
+  SingleLineofText='Single Line of Text',
+  MultipleLineofText='Multiple Line of Text',
+  YesNo='Yes or No',
+  DateTime='Date & Time',
+  Number='Number'
 }
 
 export interface ITreeViewProps
 {
   context:BaseWebPartContext
-  onFieldSelect?: (field: string) => void;
+  onFieldSelect?: (field: string,fieldtype?:enumfieldtype) => void;
 
 }
 
 export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeViewProps) => {
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [selectedLibrary, setSelectedLibrary] = useState<string | null>(null);
-  const [fields, setFields] = useState<{ key: string; text: string }[]>([]);
+  const [fields, setFields] = useState<{ key: string; text: string, type?:string }[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
 
 
@@ -55,8 +65,10 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
   // };
   const fetchFields = async (siteid:string,libraryId: string) => {
    
-    const fields = await confighelper.GetActiveEntityDocLibsSearchFields(siteid,libraryId);
-    setFields(fields.map(field => ({ key: field.SearchMappedManagedProperty, text: field.ColumnName })));
+    const _fields = await confighelper.GetActiveEntityDocLibsSearchFields(siteid,libraryId);
+    let fldnodes=_fields.map(field => ({ key: field.SearchMappedManagedProperty, text: field.ColumnName,type:field.ColumnType }))
+    //fldnodes.push({key: 'lastModifiedDateTime', text: 'Published Date',type:enumfieldtype.DateTime});
+    setFields(fields.concat(fldnodes));
   };
 
   const handleFieldSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -66,7 +78,8 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
   const handleButtonClick = () => {
     let fielddrpdonw=document.getElementById('FieldSelectDropdown') as HTMLSelectElement;
     if (fielddrpdonw.value) {
-      if(props.onFieldSelect) props.onFieldSelect(fielddrpdonw.value);
+      let t=fielddrpdonw.value.split('|')
+      if(props.onFieldSelect) props.onFieldSelect(t[0],t[1] as enumfieldtype);
     }
   };
 
@@ -121,6 +134,9 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
 
   return (
     <div className="container p-3">
+      
+      
+
       {treeData.map((site, siteIndex) => (
         // <div key={site.key} className="form-check">
         <div key={site.text} className="form-check">
@@ -157,12 +173,12 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
         <label className="form-label">Fields</label>
         <select id='FieldSelectDropdown' className="form-select" onChange={handleFieldSelect} value={selectedField || ''}>
           {fields.map(field => (
-            <option key={field.key} value={field.key}>{field.text}</option>
+            <option key={field.key} value={field.key+'|'+field.type} data-type={field.type} >{field.text}</option>
           ))}
         </select>
       </div>
       <div className="mt-3 mb-3 col-sm-4">
-      <button style={{marginTop:'27px',padding:'8px 12px'}} className="btn btn-primary mb-0" onClick={handleButtonClick}>Submit Field</button></div>
+      <button type='button' style={{marginTop:'27px',padding:'8px 12px'}} className="btn btn-primary mb-0" onClick={handleButtonClick}>Submit Field</button></div>
     </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { Fields } from "../../../../Shared/SearchHelperInterfaces";
+
 export enum ResultsViewMode
 {
    Grid,Table
@@ -16,6 +18,7 @@ export interface IDocumentDisplayFields
    Path?:string;
    Summary?:string;
    UniqueId?:string;
+   Properties?:Fields
 
 }
 export interface IDMSResultsGridProps
