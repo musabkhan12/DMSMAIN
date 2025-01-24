@@ -327,7 +327,7 @@ const handleCreate = async(e: any) => {
   
   return (
 
-    <div className="container mt-4 second">
+    <div className="container mt-0 second">
         <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content" style={{
@@ -338,17 +338,19 @@ const handleCreate = async(e: any) => {
                   {toggleApprover === "Yes"  ?
                   (<div>
                       <div className="" style={{ height: "auto", width: "100%" }}>
+                      <div  className='row'>
+                      <div className='col-sm-8 w90'>
                                         <h5 className="mb-1 Permissionsectionstyle">
-                                          <strong>Approval Hierarchy</strong>
+                                          Approval Hierarchy
                                         </h5>
                                         <p className="subheadernew font-14">
                                           Define approval hierarchy for the documents submitted by Team
                                           members in this folder.
                                         </p>
-                                        <div style={{position:'relative',top:'-51px'}} className='row'>
-                                          <div className='col-sm-6'>
-                                            </div>
-                                            <div className='col-sm-6'>
+
+                                        </div>
+                                        <div className='col-sm-4 w20'>
+                                      
                                             <div className="mb-0">
                                           <div style={{height:'20px'}} className="col-12 d-flex justify-content-end">
                                             <a onClick={handleAddRow}>
@@ -357,26 +359,38 @@ const handleCreate = async(e: any) => {
                                           </div>
                                         </div>
                                             </div>
+
+                                            <div style={{borderBottom:'1px solid #ccc', marginBottom:'15px', height:'15px', float:'left', width:'100%',  paddingBottom:'10px'}}></div>
                                           </div>
                                        
                                         <div className="row mb-1 approvalheirarcystyle">
-                                          <div className="col-12 col-md-4">
+                                        <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th  style={{minWidth:'60px',maxWidth:'60px'}}> Level</th>
+        <th> Approver</th>
+        <th style={{minWidth:'80px',maxWidth:'80px'}}> &nbsp;</th>
+        <th style={{minWidth:'40px',maxWidth:'40px'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+                                          {/* <div className="col-12 col-md-4">
                                             <label htmlFor="level" className="form-label approvalhierarcyfont">
                                               Level
                                             </label>
-                                          </div>
-                                          <div className="col-12 col-md-6">
+                                          </div> */}
+                                          {/* <div className="col-12 col-md-6">
                                             <label htmlFor="approver" className="form-label approvalhierarcyfont">
                                               Approver
                                             </label>
-                                          </div>
-                                        </div>
+                                          </div> */}
+                                       
                                         {rows.map((row) => (
-                                          <div className="row mb-3 approvalheirarchyfield" key={row.id}>
-                                            <div className="col-12 col-md-4">
+                                          <tr className="approvalheirarchyfield" key={row.id}>
+                                            <td  style={{minWidth:'60px',maxWidth:'60px'}}>
                                               <input type="text" style={{height:'36px'}} className="form-control" id={`level-${row.id}`} value={`Level ${row.id + 1}`} disabled />
-                                            </div>
-                                            <div className="col-12 col-md-6">
+                                            </td>
+                                            <td>
                                               <Select
                                                 value={row.approvedUserList}
                                                 isMulti
@@ -388,8 +402,9 @@ const handleCreate = async(e: any) => {
                                               {errorsForUserSelection[row.id]?.userSelect && (
                                                 <span className="text-danger">{errorsForUserSelection[row.id].userSelect}</span>
                                               )}
-                                            </div>
-                                            <div style={{gap:'10px'}} className="col-12 col-md-2 d-flex">
+                                            </td>
+                                            <td style={{minWidth:'80px',maxWidth:'80px', textAlign:'center'}}>
+                                            <div style={{gap:'10px', justifyContent:'center'}} className="d-flex">
                                               <div className="form-check">
                                                 <input
                                                   className="form-check-input"
@@ -419,16 +434,23 @@ const handleCreate = async(e: any) => {
                                                 </label>
                                               </div>
                                             </div>
+                                            </td>
+                                            <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
                                             {row.id === 0 ? null : (
-                                              <div className="col-12 col-md-2 d-flex align-items-end">
+                                              <div style={{textAlign:'center', justifyContent:'center'}} className="d-flex align-items-end">
                                                 <a onClick={(e) => handleRemoveRow(row.id, e)} style={{ width: "50px", height: "50px", cursor: "pointer" }}>
-                                                  <img className="fas fa-trash" src={require("../assets/delete.png")} alt="delete" />
+                                                  <img className="fas fa-trash" src={require("../assets/del.png")} alt="delete" />
                                                 </a>
                                               </div>
                                             )}
-                                          </div>
+
+                                            </td>
+                                           
+                                          </tr>
                                         ))}
-                                      </div> 
+                                        </tbody>
+                                        </table>
+                                      </div>  </div>
                                       <div className="modal-footer">
                                       <button type="button" className="btn btn-primary" 
                                       onClick={handleCreate}

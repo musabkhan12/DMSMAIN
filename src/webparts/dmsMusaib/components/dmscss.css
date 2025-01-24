@@ -935,6 +935,9 @@ text-align: center;
   max-height: 30007px !important;
   overflow-y: hidden !important;
 }
+.mtbalenewn tbody{
+  overflow-y: inherit !important;
+}
 .mtbalenew td {
   min-width: 130px;
   max-width: 130px;

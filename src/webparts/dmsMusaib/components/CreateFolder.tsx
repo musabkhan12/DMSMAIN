@@ -1060,7 +1060,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
             <div className="row mt-0">
               <h3 className="header-title text-dark font-16 mb-1">Basic Information</h3>
               <p className="subheader font-14 mb-3">Specify Basic Information and create folder  </p>
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-6 mb-3">
                 <div className="form-group">
                   <label htmlFor="folderName" className="headerfont">
                     Folder Name
@@ -1079,8 +1079,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                 </div>
               </div>
               {/* {togglefolderPrivacy &&  ( */}
-                  <div className="col-12 col-md-6" id="folderPrivacy" style={{
-                      width:"25%"
+                  <div className="col-12 col-md-3 mb-3" id="folderPrivacy" style={{
+                     
                   }}>
                         <div className="form-group">
                           <label htmlFor="folderPrivacy" className="headerfont">
@@ -1132,8 +1132,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               {/* )} */}
 
               {togglefolderPrivacy &&  (
-              <div className="col-12 col-md-6" id="approvalOption" style={{
-                   width:"25%"
+              <div className="col-12 col-md-3 mb-3" id="approvalOption" style={{
+                  
               }}>
                 <div className="form-group">
                           <label htmlFor="approvalOption" className="headerfont">
@@ -1213,7 +1213,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         <div className="">
         {toggleaddFieldsButton && ( 
               <div className="row mt-0" id="addFieldsButton">
-                <div className="col-md-10">
+                <div className="col-md-10  w90">
                 <h3 className="header-title text-dark font-16 mb-1">List of metadata</h3>
                 <p className="subheader font-14 mb-3">Specify sub folder and create list of metadata to be prepared and submitted by team members.</p>
                 </div>
@@ -1236,14 +1236,24 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                   
               </div>
           )}
-  
+  <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th>  Field Name</th>
+        <th>    Select Field Type</th>
+        <th style={{minWidth:'40px',maxWidth:'40px'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+
           {togglecolumneDetails && formFields.map((formField) => (
-      <div className="row mt-3" key={formField.id} id="columnDetail">
-        <div className="col-12 col-md-6">
+            
+      <tr  key={formField.id} id="columnDetail">
+        <td>
           <div className="form-group">
-            <label htmlFor={`fieldName-${formField.id}`} className="headerfont">
+            {/* <label htmlFor={`fieldName-${formField.id}`} className="headerfont">
               Field Name
-            </label>
+            </label> */}
             <input
               type="text"
               className="form-control fieldmargin"
@@ -1258,13 +1268,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               <span className="text-danger">{errors1[formField.id].fieldName}</span>
             )}
           </div>
-        </div>
+        </td>
 
-        <div className="col-12 col-md-5">
+        <td>
           <div className="form-group">
-            <label htmlFor={`selectField-${formField.id}`} className="headerfont">
+            {/* <label htmlFor={`selectField-${formField.id}`} className="headerfont">
               Select Field Type
-            </label>
+            </label> */}
             <select
               className="form-control"
               id={`selectField-${formField.id}`}
@@ -1285,21 +1295,22 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               <span className="text-danger">{errors1[formField.id].selectField}</span>
             )}
           </div>
-        </div>
-
+        </td>
+        <td style={{minWidth:'40px',maxWidth:'40px',textAlign:'center'}}>
+        <div >
         {formField.id === 0 ? (
                 null
               ) : (
-                <div className="col-12 col-md-1 d-flex align-items-end">
+                <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                   <a
                     onClick={(e) => handleRemoveField(formField.id, e)}
                     style={{
                       width: "50px",
-                      height: "50px",
+                   
                       cursor: "pointer",
                     }}
                   >
-                    <img style={{marginTop:'14px'}}
+                    <img style={{marginTop:'0px'}}
                       className="fas fa-trash"
                       src={require("../assets/del.png")}
                       alt="delete"
@@ -1307,9 +1318,14 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                   </a>
                 </div>
               )}
-      </div>
+
+          </div>
+          </td>
+      </tr>
       
             ))}
+            </tbody>
+              </table>
 
         </div>
       </div>
@@ -1324,46 +1340,68 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
             {/* <h5 className="mb-1 Permissionsectionstyle">
               <strong>Approval Hierarchy</strong>
             </h5> */}
-            <h3 className="header-title text-dark font-16 mb-1">Approval Hierarchy</h3>
+            <div className="row">
+              <div className="col-sm-10 w90">
+              <h3 className="header-title text-dark font-16 mb-1">Approval Hierarchy</h3>
      
-            <p className="subheader font-14 mb-3">
-              Define approval hierarchy for the documents submitted by Team
-              members in this folder.
-            </p>
+     <p className="subheader font-14 mb-3">
+       Define approval hierarchy for the documents submitted by Team
+       members in this folder.
+     </p>
 
-            <div style={{height:'0px', position:'relative'}} className="mb-0">
+              </div>
+
+              <div className="col-sm-2">
+              <div style={{height:'0px', position:'relative'}} className="mb-0">
               <div className="col-12 d-flex justify-content-end">
                 <a onClick={handleAddRow}>
                   <img
                     className="bi bi-plus"
                     src={require("../assets/plus.png")}
                     alt="add"
-                    style={{ width: "50px", top:'-60px', position:'absolute', right:'0px', left:'auto', height: "50px" }}
+                    style={{ width: "50px", top:'0px', position:'absolute', right:'0px', left:'auto', height: "50px" }}
                   />
                 </a>
               </div>
             </div>
-            <div className="row mb-1 approvalheirarcystyle">
-              <div className="col-12 col-md-4">
+
+              </div>
+            </div>
+            
+
+           
+            <div style={{clear:'both'}} className="row mb-2 approvalheirarcystyle">
+            <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th> Level</th>
+        <th> Approver</th>
+        <th style={{textAlign:'center', minWidth:'70px', maxWidth:'70px'}}> Select</th>
+        <th style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+
+
+              {/* <div className="col-12 col-md-4">
                 <label
                   htmlFor="level"
                   className="form-label approvalhierarcyfont"
                 >
                   Level
                 </label>
-              </div>
-              <div className="col-12 col-md-5">
+              </div> */}
+              {/* <div className="col-12 col-md-5">
                 <label
                   htmlFor="approver"
                   className="form-label approvalhierarcyfont"
                 >
                   Approver
                 </label>
-              </div>
-            </div>
-            {rows.map((row) => (
-              <div className="row mb-3 approvalheirarchyfield" key={row.id}>
-                <div className="col-12 col-md-4">
+              </div> */}
+               {rows.map((row) => (
+              <tr className="approvalheirarchyfield" key={row.id}>
+                <td>
                   <input style={{height:'36px'}}
                     type="text"
                     className="form-control"
@@ -1371,8 +1409,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     value={`Level ${row.id + 1}`}
                     disabled
                   />
-                </div>
-                <div className="col-12 col-md-5">
+                </td>
+                <td>
                   {/* start */}
                   <Select
                     isMulti
@@ -1382,13 +1420,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       handleUserSelect(selected, row.id)
                     }
                     placeholder="Enter names or email addresses..."
-                    // noOptionsMessage={() => "No User Found..."}
-                    noOptionsMessage={() => (
-                      <div>
-                        <p>No users found. Please <a href={`${siteUrl}${locationPath}/SitePages/DMSAdmin.aspx`} target="_blank" rel="noopener noreferrer"> <br />
-                         add users in the Approval Group for this Entity</a>.</p>
-                      </div>
-                    )}
+                    noOptionsMessage={() => "No User Found..."}
                   />
                   {/* {errors.selectedUsers && (
                     <span className="text-danger">{errors.selectedUsers}</span>
@@ -1397,9 +1429,10 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       <span className="text-danger">{errorsForUserSelection[row.id].userSelect}</span>
                   )}
                   {/* end */}
-                </div>
+                </td>
                 {/* start */}
-                <div style={{gap:'10px'}} className="col-12 col-md-2 d-flex">
+                <td style={{textAlign:'center', minWidth:'70px', maxWidth:'70px'}}>
+                <div style={{gap:'10px', justifyContent:'center'}} className="d-flex">
                   <div className="form-check">
                     <input
                       className="form-check-input"
@@ -1435,17 +1468,18 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     </label>
                   </div>
                 </div>
+                </td>
                 {/* end */}
-
+                <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
                 {row.id === 0 ? (
                  null
                 ) : (
-                  <div className="col-12 col-md-1 d-flex align-items-end">
+                  <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                     <a
                       onClick={(e) => handleRemoveRow(row.id, e)}
                       style={{
                         width: "50px",
-                        height: "50px",
+                       
                         cursor: "pointer",
                       }}
                     >
@@ -1457,8 +1491,16 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     </a>
                   </div>
                 )}
-              </div>
+                </td>
+
+               
+              </tr>
             ))}
+            </tbody>
+            </table>
+            </div>
+           
+
           </div>
         </div>
       ) : null
@@ -1474,7 +1516,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       </h5> */}
                                   
                       <div className="row">
-                        <div className="col-md-10">
+                        <div className="col-md-10 w90">
 
                         <h3 className="header-title text-dark font-16 mb-1">Permission</h3>
      
@@ -1501,10 +1543,19 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                         </div>
 
                       </div>
-                      
+                      <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th> Name</th>
+        <th> Permission</th>
+      
+        <th style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
                       {rowsForPermission.map((rowForPermission)=>(
-                          <div className="row mb1 approvalheirarcystyle" key={rowForPermission.id}>
-                              <div className="col-12 col-md-6">
+                          <tr className="approvalheirarcystyle" key={rowForPermission.id}>
+                              <td className="">
                                   <Select
                                       isMulti
                                       options={siteUsers}
@@ -1515,8 +1566,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                       noOptionsMessage={() => "No User Found..."}
                                      
                                   />
-                              </div>
-                              <div className="col-12 col-md-5" 
+                              </td>
+                              <td className="" 
                               
                               >
                                   <Select
@@ -1527,16 +1578,17 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                       placeholder="Select Permission"
                                       noOptionsMessage={() => "No Such Permission Find"}
                                   />
-                              </div>
-                              {rowForPermission.id === 0 ? (
+                              </td>
+                            <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
+                            {rowForPermission.id === 0 ? (
                                 null
                                 ) : (
-                                  <div className="col-12 col-md-1 d-flex align-items-end">
+                                  <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                                     <a
                                       onClick={(e) => handleRemoveRowForPermission(rowForPermission.id, e)}
                                       style={{
                                         width: "50px",
-                                        height: "50px",
+                                       
                                         cursor: "pointer",
                                       }}
                                     >
@@ -1548,8 +1600,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                     </a>
                                   </div>
                                 )}
-                          </div>
+
+                            </td>
+                             
+                          </tr>
                       ))}
+                      </tbody>
+                      </table>
 
                 </div>
 

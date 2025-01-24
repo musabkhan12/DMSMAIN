@@ -945,7 +945,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
 
   return (
-    <div className="container mt-4 second">
+    <div className="container mt-0 second">
             <div className="modal show d-block" tabIndex={-1}>
                     <div className="modal-dialog">
                         <div className="modal-content" style={{
@@ -964,33 +964,37 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                               width:"auto",
                           }}
                           >
-                          <h5 className="mb-3 " style={{
+                          
+                         
+                          <div  className='row'>
+                            <div className='col-sm-8 w90'>
+                            <h5 className="mb-3 " style={{
                               display:"block", margin:'inherit'
                              
                           }}>
-                              <strong>Manage Permission</strong>
+                              Manage Permission
+                              
                           </h5>
-                          <div>
+                          <div  className='font-12 text-muted'>
                             {path}
                           </div>
-                          <div style={{top:'-51px', position:'relative'}} className='row'>
-                            <div className='col-sm-6'>
 
                             </div>
-                            <div className='col-sm-6'>
+                            <div className='col-sm-4'>
                             <div  className="mb-0">
                             <div style={{height:'20px'}} className="col-12 d-flex justify-content-end">
                               <a onClick={handleAddRow}>
-                                <img className="bi bi-plus" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
+                                <img className="bi bi-plus newl" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
                               </a>
                             </div>
                           </div>
                             </div>
+                            <div style={{borderBottom:'1px solid #ccc', marginBottom:'15px', height:'15px', float:'left', width:'100%',  paddingBottom:'10px'}}></div>
                           </div>
                         
                           {rowsForPermission.map((row)=>(
-                          <div className="row mb-2 approvalheirarcystyle" key={row.id}>
-                                  <div className="col-12 col-md-6">
+                          <div style={{clear:'both'}} className="row  approvalheirarcystyle" key={row.id}>
+                                  <div className="col-12 col-md-6 mb-2">
                                       <Select
                                           value={row.selectedUserForPermission}
                                           isMulti
@@ -1002,7 +1006,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           noOptionsMessage={() => "No User Found..."}
                                       />
                                   </div>
-                                  <div className="col-12 col-md-4" style={{
+                                  <div className="col-12 col-md-4 mb-2" style={{
                                
                                   }}>
                                       <Select
@@ -1016,7 +1020,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                       />
                                   </div>
                                   {/* {row.id === 0 ? null : ( */}
-                                    <div className="col-12 col-md-2 d-flex align-items-end">
+                                    <div className="col-12 mb-2 col-md-2 d-flex align-items-end">
                                       <a onClick={(e) => handleRemoveRow(row.id, e)} style={{ width: "50px",    height: "50px", cursor: "pointer" }}>
                                         <img className="fas fa-trash" src={require("../assets/del.png")} alt="delete" />
                                       </a>
@@ -1046,8 +1050,8 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             {currentData.map((item:any, index:any) => (
                                 <React.Fragment key={item.Id}>
                                 <tr >
-                                    <td >
-                                  <span className='indexdesign'>{index + 1}</span>   
+                                    <td style={{minWidth:'55px', maxWidth:'55px'}} >
+                                  <span style={{marginLeft:'20px'}}  className='indexdesign'>{index + 1}</span>   
                                     </td>
                                     <td >
                                     {item.value || ''}
@@ -1076,12 +1080,36 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             ))}
                         </tbody>
                         </table>
-                        <Pagination
+                        <div className='row'>
+                          <div className='col-md-8 newpag'>
+                          <Pagination
                           currentPage={currentPage}
                           totalPages={totalPages}
                           handlePageChange={handlePageChange}
   
                         />
+
+                            </div>
+                            <div className='col-md-4'>
+                            <div style={{textAlign:'right'}} className="text-right pb-0">
+                                    <button type="button" className="btn btn-primary me-2" 
+                                    onClick={handleCreate}
+                                    >
+                                    Create
+                                    </button>
+                                    <button type="button" className="btn btn-secondary" 
+                                    //   onClick={toggleModal}
+                                    onClick={onReturnToMain}
+                                    >
+                                        Cancel{" "}
+                                    </button>
+                            </div>
+
+                              </div>
+
+                          </div>
+                        
+                       
                         </div>
                       </div>
                           </div>   
@@ -1124,19 +1152,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
                             </div>
                             </div> */}
-                            <div className="modal-footer pb-0">
-                                    <button type="button" className="btn btn-primary" 
-                                    onClick={handleCreate}
-                                    >
-                                    Create
-                                    </button>
-                                    <button type="button" className="btn btn-secondary" 
-                                    //   onClick={toggleModal}
-                                    onClick={onReturnToMain}
-                                    >
-                                        Cancel{" "}
-                                    </button>
-                            </div>
+                           
                       </div>
                     )
                     :null

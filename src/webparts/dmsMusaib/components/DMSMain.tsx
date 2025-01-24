@@ -1,3 +1,4 @@
+// Abdullah
 declare global {
   interface Window {
     managePermission:(DocumentLibraryName:string,SiteTilte:string , SiteID:string, folderName:any ,folderPath:any,externalFolder:any) => void;
@@ -4129,7 +4130,6 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
     border-radius: 8px;
     padding: 20px;
     overflow-y: auto;
-    z-index: 9999;
   `;
 
   const popupHeader = document.createElement("div");
@@ -5543,7 +5543,7 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
   content.style.padding = "20px";
   content.style.borderRadius = "8px";
   content.style.boxShadow = "0px 4px 6px rgba(0, 0, 0, 0.1)";
-  content.style.width = "400px";
+  content.style.width = "600px";
   content.style.textAlign = "center";
  
    // Create the heading
@@ -5553,13 +5553,15 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
    heading.style.color = "#333";
    heading.style.textAlign = "left";
    heading.style.fontSize = "18px";
+   heading.style.borderBottom = "1px solid #ccc";
+   heading.style.paddingBottom = "10px";
  
   // Create the close button
   const closeButton = document.createElement("button");
   closeButton.innerText = "X";
   closeButton.style.position = "absolute";
-  closeButton.style.top = "0px";
-  closeButton.style.right = "10px";
+  closeButton.style.top = "-6px";
+  closeButton.style.right = "18px";
   closeButton.style.backgroundColor = "white";
   closeButton.style.color = "#333";
   closeButton.style.border = "1px solid #ccc";
