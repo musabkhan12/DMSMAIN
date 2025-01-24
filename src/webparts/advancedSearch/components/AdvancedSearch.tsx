@@ -54,7 +54,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
     // const [searchFilter, setSearchFilter] = useState<string>('');
     const [searchFilter, setSearchFilter] = useState<Map<string,string>>(new Map<string,string>());
     // const [searchPath, setSearchPath] = useState<string>(props.context.pageContext.site.absoluteUrl);
-    const [searchPath, setSearchPath] = useState<string>("Path:"+props.context.pageContext.site.absoluteUrl);
+    const [searchPath, setSearchPath] = useState<string>("site:"+props.context.pageContext.site.absoluteUrl);
     const [tsearchpaths, settSearchPath] = useState<Map<string,string[]>>();
     const [searchResult, setSearchResult] = useState<IDocumentDisplayFields[]>([]);
     const [searchQueryRefiners, setSearchQueryRefiners] = useState<string[]>([]);
@@ -80,7 +80,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
         const _searchQuery = searchQueryFromUrl ? decodeURIComponent(searchQueryFromUrl) : getSearchFilter();
         const _searchPath = searchPathFromUrl ? decodeURIComponent(searchPathFromUrl) : searchPath;
         settSearchPath(new Map<string,string[]>()); 
-        // runSearch("permission",_searchQuery, _searchPath, searchQueryRefiners, getSearchRefineFiltersArray());
+        runSearch(_searchQuery,_searchQuery, _searchPath, searchQueryRefiners, getSearchRefineFiltersArray());
     }, []);
 
     const runSearch = async (searchText: string, searchFilters: string, searchPath: string, refiners: string[] = [], refinerfilters: string[] = []) => {
@@ -280,17 +280,28 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
         else _searchpaths=new Map([...tsearchpaths]);
        
         Array.from(_searchpaths.keys()).forEach(s=>{
-            if(_searchpaths.get(s).length==0)
-            {
-                allpaths.push(s);
-            }
-            else
-            {
-                allpaths=allpaths.concat(_searchpaths.get(s));
-            }
+            // if(_searchpaths.get(s).length==0)
+            // {
+            //     // allpaths.push(s);
+            //     allpaths.push("site:"+s);
+            // }
+            // else
+            // {
+            //     // allpaths=allpaths.concat(_searchpaths.get(s));
+            //     allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
+            // }
+
+            allpaths.push("site:"+s);
+            allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
+
+            // if(_searchpaths.get(s).length!=0)
+            // {
+            //    allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
+            // }
         })
 
-        let updatedpath=(allpaths.length>0)?allpaths.map(d=>"path:"+d).join(' '):("path:"+props.context.pageContext.site.absoluteUrl);
+        // let updatedpath=(allpaths.length>0)?allpaths.map(d=>"path:"+d).join(' '):("path:"+props.context.pageContext.site.absoluteUrl);
+        let updatedpath= (allpaths.length>0)?allpaths.join(" "):("site:"+props.context.pageContext.site.absoluteUrl);
         setSearchPath(updatedpath);
         return updatedpath;
 
@@ -344,7 +355,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
             </div>
 
             <div className="content-page">
-                <HorizontalNavbar _context={sp} siteUrl={props.siteUrl} />
+                <HorizontalNavbar _context={sp} siteUrl={props.siteUrl} context={props.context}  />
                 <div className="content" style={{ marginLeft: `${!useHide ? '80px' : '230px'}`, marginTop: '1.5rem' }}>
                     <section className='container-fluid'>
                         <div className='row'>
@@ -431,16 +442,19 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                             
                                             libs.forEach(l=>{
                                                 let liburl=rootpath+l.FolderPath;
+                                                //let liburl=l.ListID;
                                                 let libsite= allkeys.find(a=>liburl.toLowerCase().startsWith(a.toLowerCase()))
                                                 if(libsite)
                                                     {
                                                         let oldlibs= _searchpaths.get(libsite);
-                                                        if(!oldlibs.some(s=>s==liburl)) oldlibs.push(liburl);
+                                                        // if(!oldlibs.some(s=>s==liburl)) oldlibs.push(liburl);
+                                                        if(!oldlibs.some(s=>s==l.ListID)) oldlibs.push(l.ListID);
                                                         _searchpaths.set(libsite,oldlibs);
                                                     }
                                             })
 
-                                           let alllibpaths= libs.map(l=>rootpath+l.FolderPath);
+                                        //    let alllibpaths= libs.map(l=>rootpath+l.FolderPath);
+                                          let alllibpaths= libs.map(l=>l.ListID);
                                             allkeys.forEach(k=>{
                                                let tlibs= _searchpaths.get(k);   
                                                let newtlib=tlibs;                                         
@@ -534,7 +548,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                                         </div>
                                                     </div>
                                                 ))}
-                                                {(searchRefiners.length>0)?<div className="col">
+                                                {(searchRefiners && searchRefiners.length>0)?<div className="col">
                                                     <button type='button' className="btn btn-primary" onClick={() => handleApplyFilters()}>
                                                         Apply Filters
                                                     </button>

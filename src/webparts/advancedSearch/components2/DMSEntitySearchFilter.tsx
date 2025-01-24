@@ -42,9 +42,9 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
     });
   }, []);
 
-  const fetchDocumentLibraries = async (siteId: string):Promise<any[]> => {
+  const fetchDocumentLibraries = async (sitetitle:string,siteId: string):Promise<any[]> => {
     console.log("siteId",siteId);   
-    let  libs=await confighelper.GetActiveEntityDocLibsBySiteId(siteId);
+    let  libs=await confighelper.GetActiveEntityDocLibsBySiteId(sitetitle,siteId);
     return libs.map(lib => ({ key: lib.ID, text: lib.DocumentLibraryName, children: [], checked: false }));
   };
 
@@ -93,7 +93,7 @@ export const DMSEntitySearchTreeView: React.FC<ITreeViewProps> = (props:ITreeVie
     site.checked = !site.checked;
 
     if (site.checked && site.children && site.children.length === 0) {
-      site.children = await fetchDocumentLibraries(site.text);
+      site.children = await fetchDocumentLibraries(site.text,site.key);
     }
 
     setTreeData(updatedTree);

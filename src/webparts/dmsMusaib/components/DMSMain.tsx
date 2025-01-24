@@ -13916,7 +13916,7 @@ librarydiv.appendChild(mainContainer)
       <VerticalSideBar _context={sp} />
     </div>
     <div className="content-page">
-      <HorizontalNavbar _context={sp}  siteUrl={props.siteUrl}/>
+      <HorizontalNavbar _context={sp}  siteUrl={props.siteUrl} context={props.context} />
       <div className="content" style={{marginLeft: `${!useHide ? '240px' : '80px'}`,marginTop:'0.8rem'}}>
        
       <div className="container-fluid  paddb">

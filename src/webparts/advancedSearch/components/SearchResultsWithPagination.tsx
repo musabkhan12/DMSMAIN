@@ -116,7 +116,8 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                         <div className="card h-100">
                             <div className="card-body">
                                 <h5 className="card-title">{res.Title}</h5>
-                                <p className="card-text">{res.Summary}</p>
+                                {/* <p className="card-text">{res.Summary}</p> */}
+                                <p className="card-text"><span dangerouslySetInnerHTML={{ __html:`${res.Summary.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
                             </div>
                             <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${fieldnamesmapping[key] ? fieldnamesmapping[key] : key}: ${value}`)} />
                         </div>

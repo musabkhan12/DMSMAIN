@@ -168,7 +168,8 @@ export class GraphSearchHelper {
      let searchrequestparam:SearchRequest= {
       entityTypes: ['driveItem'],
       query: {
-        queryString: query
+        queryString: query,
+        //queryTemplate: "({searchTerms}) IsDocument:True site:https://officeindia.sharepoint.com/sites/AlRostmani/testhub",
       },
       
       from: 0,

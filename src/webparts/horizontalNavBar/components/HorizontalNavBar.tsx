@@ -16,6 +16,12 @@ import moment from 'moment';
 import NotificationList from './NotificationList';
 import { result } from 'lodash';
 import { ListTitleTiSearchCategoryMapping } from './IHorizontalNavBarProps';
+import { BaseWebPartContext } from '@microsoft/sp-webpart-base';
+import { GraphSearchHelper } from '../../../Shared/SearchHelper1';
+import { ISearchHitResource } from '../../../Shared/SearchHelperInterfaces';
+import { IDocumentDisplayFields } from '../../dmsMusaib/components/DMSSearch/Interfaces';
+import { removeDuplicates } from '../../advancedSearch/components/Common';
+import { divProperties } from '@fluentui/react';
 
 
 interface ListFieldsMapping {
@@ -32,10 +38,11 @@ interface ListFieldsMapping {
 type ListTitle = keyof ListFieldsMapping;
 
 interface SearchResult {
-  ListTitle: ListTitle;
+  ListTitle: string;//ListTitle;
   [key: string]: any;
 }
-const HorizontalNavbar = ({ _context, siteUrl }: any) => {
+const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
+  console.log("horizontal nav bar context",context);
   const listFieldsMapping: { [key: string]: { fields: string[], pageName: string } } = {
     ARGAnnouncementAndNews: { fields: ["Title", "Overview", "Description", "Id", "AnnouncementandNewsTypeMaster/Id", "AnnouncementandNewsTypeMaster/TypeMaster"], pageName: "AnnouncementDetails" },
     ARGBlogs: { fields: ["Title", "Overview", "Description", "Id"], pageName: "BlogDetails" },
@@ -257,6 +264,27 @@ const HorizontalNavbar = ({ _context, siteUrl }: any) => {
     }
   };
 
+  const runSearch = async (searchText: string, searchFilters: string, searchPath: string, refiners: string[] = [], refinerfilters: string[] = []) => {
+    // let qyerytext = `${searchText} IsDocument:True ${searchFilters} ${searchPath}`;
+    let qyerytext = `${searchText} IsDocument:True ${searchFilters} ${searchPath}`;
+    let graphcl = await (context as BaseWebPartContext).msGraphClientFactory.getClient("3");
+    let mssearch = new GraphSearchHelper(graphcl);
+    let hitcont = await mssearch.searchAll(qyerytext, 10, refiners, refinerfilters);
+    const searchres = (hitcont.hits) ? hitcont.hits : []
+    const results: Partial<ISearchHitResource>[] = (hitcont.hits) ? hitcont.hits.map((hit) => {
+        const resource: Partial<ISearchHitResource> = hit.resource as ISearchHitResource;
+        return resource;
+    }) : [];
+    let resultsdoc: IDocumentDisplayFields[] = searchres.map(filehit => {
+        let file: Partial<ISearchHitResource> = filehit.resource;
+        let tRes: IDocumentDisplayFields = { Title: file.name, Size: file.size, Extension: file.name.split('.').pop(), Path: file.webUrl, Summary: filehit.summary,Properties:file.listItem.fields }
+        return tRes;
+    });
+    //setSearchResult(removeDuplicates(resultsdoc,'Path'));
+    //setSearchRefiners(hitcont.aggregations);
+    return removeDuplicates(resultsdoc,'Path')
+}
+
   const searchKeyPress = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
    let arr:any[] =[];
@@ -268,7 +296,11 @@ const HorizontalNavbar = ({ _context, siteUrl }: any) => {
     if (queryText && queryText.length > 2) {
       showdropdown = true;
       setLoading(true);
-      const searchResults = await searchAllLists(queryText);
+      //const searchResults = await searchAllLists(queryText);
+      const searchResultstemp = await runSearch(queryText, "IsDocument:True", "site:"+(context as BaseWebPartContext).pageContext.site.absoluteUrl, [], []);
+      console.log("searchResultstemp 34456", searchResultstemp);
+      const searchResults=searchResultstemp.map((res)=>({ListTitle:"ARGMediaGallery", Title:res.Title,Overview:res.Summary,Id:"22",pageName:"Mediadetails"}));
+      console.log("searchResults 34456", searchResults);
       let grped = groupByFn(searchResults, (res: any) => res.ListTitle)
       console.log("grped results", grped);
       setSearchResults(searchResults);
@@ -440,31 +472,63 @@ const HorizontalNavbar = ({ _context, siteUrl }: any) => {
                     {searchResults.length > 0 ? (
 
 
-                      Object.keys(groupedSearchResults).map((grpreskey: any, grpind: number) => (
+                      // Object.keys(groupedSearchResults).map((grpreskey: any, grpind: number) => (
 
-                        <div>
-                          <div className='alifnsearch1' key={grpind}>{ListTitleTiSearchCategoryMapping[grpreskey]}({groupedSearchResults[grpreskey].length})</div>
-                          {
-                            groupedSearchResults[grpreskey].map((result: any, index: any) => (
-                              <div key={index} className="search-result-item">
-                                <a onClick={() => handleSearchClick(result)} style={{ padding: '0.85rem' }}>
-                                  <h4 className='eclipcsss text-dark' style={{ fontSize: '16px' }}>{result.Title || result.ProjectName || result.EventName || result.Contentpost}</h4>
-                                  {/* {result.Description && <p dangerouslySetInnerHTML={{ __html: result.Description }}></p>} */}
-                                  {result.Overview && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}>{result.Overview}</p>}
-                                  {result.EventAgenda && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}>{result.EventAgenda}</p>}
-                                </a>
-                              </div>
+                      //   <div>
+                      //     <div className='alifnsearch1' key={grpind}>{ListTitleTiSearchCategoryMapping[grpreskey]}({groupedSearchResults[grpreskey].length})</div>
+                      //     {
+                      //       groupedSearchResults[grpreskey].map((result: any, index: any) => (
+                      //         <div key={index} className="search-result-item">
+                      //           <a onClick={() => handleSearchClick(result)} style={{ padding: '0.85rem' }}>
+                      //             <h4 className='eclipcsss text-dark' style={{ fontSize: '16px' }}>{result.Title || result.ProjectName || result.EventName || result.Contentpost}</h4>
+                      //             {/* {result.Description && <p dangerouslySetInnerHTML={{ __html: result.Description }}></p>} */}
+                      //             {
+                                     
+                      //              result.Overview && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}><span dangerouslySetInnerHTML={{ __html:`${result.Overview.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
+                      //             }
+                      //             {result.EventAgenda && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}>{result.EventAgenda}</p>}
+                      //           </a>
+                      //         </div>
 
-                            ))
-                          }
+                      //       ))
+                      //     }
+                      //   </div>
+
+
+                      // ))
+
+                      searchResults.map((result: any, index: any) => (
+                        <div key={index} className="search-result-item">
+                          <a style={{ padding: '0.85rem' }}>
+                            <h4 className='eclipcsss text-dark' style={{ fontSize: '16px' }}>{result.Title}</h4>
+                            {
+                              result.Overview && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}><span dangerouslySetInnerHTML={{ __html:`${result.Overview.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
+                            }                            
+                          </a>
                         </div>
-
-
                       ))
+                      
+                      
+                       
+                      
 
                     ) : (
                       "No records found"
                     )}
+                    {
+                      (searchResults.length > 0) ? (
+                         <div className="view-more-results">
+                          <a
+                            href={`${dmssiteUrl}${locationPath}/SitePages/DMSAdvanceSearch.aspx?searchquery=${query}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ padding: '0.85rem', display: 'block', textAlign: 'center' }}
+                          >
+                            View more results
+                          </a>
+                        </div>
+                      ):(<div></div>)
+                    }
                     <div className="force-overflow"></div>
                   </div>
                 )}

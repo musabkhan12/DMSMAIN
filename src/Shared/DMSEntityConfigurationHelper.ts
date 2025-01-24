@@ -5,6 +5,7 @@ import { SPFI } from "@pnp/sp";
 import { getSP } from "../webparts/dmsMusaib/loc/pnpjsConfig";
 import { IListInfo } from "@pnp/sp/lists";
 import "@pnp/sp/sites";
+import "@pnp/sp/sites";
 
 
 
@@ -36,6 +37,7 @@ export interface IDMSEntityDocLib
     SiteTitle?:string;
     DocumentLibraryName?:string;
     FolderPath?:string;
+    ListID?:string;
 
 }
 
@@ -123,14 +125,24 @@ export class DMSEntityConfigurationHelper
             return results;
         }
 
-        GetActiveEntityDocLibsBySiteId=async(sitetitle:string):Promise<IDMSEntityDocLib[]>=>
+        GetActiveEntityDocLibsBySiteId=async(sitetitle:string,siteId?:string):Promise<IDMSEntityDocLib[]>=>
         {
             
-            let doclibs= await this.sp.web.lists
+            let doclibs:IDMSEntityDocLib[]= await this.sp.web.lists
                 .getByTitle(LIST_TITLE_DMSFolderMaster)
                 .items//.select("SiteTitle", "ID", "DocumentLibraryName")
                 .filter(`IsLibrary eq 1 and SiteTitle eq '${sitetitle}'`)();
-               
+            
+            let alldoclibsofsite:IListInfo[]=[];
+            if(siteId) 
+             {
+                alldoclibsofsite=await this.GetDocLibs(siteId);
+                doclibs=doclibs.map(d=>{
+                    let ad=alldoclibsofsite.find(a=>a.Title==d.DocumentLibraryName);
+                    if(ad) d.ListID=ad.Id;
+                    return d;
+                });
+             }
             return doclibs
         }
 

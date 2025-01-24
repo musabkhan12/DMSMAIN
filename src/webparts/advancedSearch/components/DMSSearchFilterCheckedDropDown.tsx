@@ -77,10 +77,10 @@ export const DMSSearchFilterCheckedDropDown: React.FC<IDMSEntitySearchDropDownsP
   //   return [`${value} - Option 1`, `${value} - Option 2`, `${value} - Option 3`];
   // };
 
-  const fetchDocumentLibraries = async (siteId: string):Promise<any[]> => {
+  const fetchDocumentLibraries = async (sitetitle:string,siteId: string):Promise<any[]> => {
     console.log("siteId",siteId);   
-    let  libs=await confighelper.GetActiveEntityDocLibsBySiteId(siteId);
-    return libs.map(lib => ({ key: siteId+"|"+lib.DocumentLibraryName, text: lib.DocumentLibraryName, children: [], checked: false, data:lib }));
+    let  libs=await confighelper.GetActiveEntityDocLibsBySiteId(sitetitle,siteId);
+    return libs.map(lib => ({ key: sitetitle+"|"+lib.DocumentLibraryName, text: lib.DocumentLibraryName, children: [], checked: false, data:lib }));
   };
 
   // Handle selection and adding to the next dropdown
@@ -92,14 +92,15 @@ export const DMSSearchFilterCheckedDropDown: React.FC<IDMSEntitySearchDropDownsP
     //   dropdown2t=dropdown2t.concat(doclibs.filter(d=>dropdown2.filter(drp=>drp.data==d.data && drp.text==d.text).length==0 ));
     //   setDropdown2(dropdown2t);
     // });
-    const doclibs = await Promise.all(selectedent.map(element => fetchDocumentLibraries(element.value)));
+    const doclibs = await Promise.all(selectedent.map(element => fetchDocumentLibraries(element.label, element.value)));
     let c=doclibs.flat();
     //let drpdwn=[...dropdown2];
     // dropdown2t = dropdown2t.concat(doclibs.flat().filter(d => dropdown2.filter(drp => drp.data == d.data && drp.text == d.text).length == 0));
     //dropdown2t = c.filter(d => drpdwn.filter(drp => drp.key == d.key && drp.text == d.text).length == 0)
     setDropdown2(c);
     let allsites= [...dropdown1];
-    let sleectedistes= allsites.filter((a)=>selectedent.some(s=>s.value==a.text));
+    // let sleectedistes= allsites.filter((a)=>selectedent.some(s=>s.value==a.text));
+    let sleectedistes= allsites.filter((a)=>selectedent.some(s=>s.label==a.text));
     if(props.onSiteSelect) props.onSiteSelect(sleectedistes.map(a=>a.data));
   };
 
@@ -170,7 +171,8 @@ export const DMSSearchFilterCheckedDropDown: React.FC<IDMSEntitySearchDropDownsP
        <div className="mb-3">
         <label className="form-label">Select Entities</label>
         <div className="d-flex">
-           <CheckedFilterDropDown options={dropdown1.map(d=>({label:d.text,value:d.text }))} onChange={handleAddDropdown2} ></CheckedFilterDropDown> 
+           {/* <CheckedFilterDropDown options={dropdown1.map(d=>({label:d.text,value:d.text }))} onChange={handleAddDropdown2} ></CheckedFilterDropDown>  */}
+           <CheckedFilterDropDown options={dropdown1.map(d=>({label:d.text,value:d.key }))} onChange={handleAddDropdown2} ></CheckedFilterDropDown> 
         </div>
       </div>
 
