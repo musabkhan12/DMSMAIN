@@ -9048,8 +9048,8 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
           console.log("Library deleted succesfully",data);
           // console.log("Library deleted succesfully");
         }else{
-          // const data=await web.getFolderByServerRelativePath(`${folderpath}`).delete();
-          // console.log("Folder deleted succesfully",data);
+          const data=await web.getFolderByServerRelativePath(`${folderpath}`).delete();
+          console.log("Folder deleted succesfully",data);
           // console.log("Folder deleted succesfully");
         }
         
@@ -9144,108 +9144,39 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
              
              flatFolderArray.push(folderMasterData);
              console.log("All Nested Folders (Flat Array):", flatFolderArray);
-            // let result:any[]=[];
-          //   const getFolderHierarchy=async(folderName:any, parentFolderName:any, result:any)=> {
-          //     try {
-          //         // Get data first filter folder name and parentfolder
-          //         // let parentN;
-          //         // if(parentFolderName=== null){
-          //         //   parentN=null;
-          //         // }else{
-          //         //   parentN=`${parentFolderName}`
-          //         // }
-          //         const items = await sp.web.lists
-          //             .getByTitle("DMSFolderMaster") // Replace with your list name
-          //             .items.filter(
-          //                 `FolderName eq '${folderName}' and ParentFolderId eq '${parentFolderName}'`
-          //             ).select("*")();
-          
-          //         // data in array
-          //         result.push(...items);
-          //             console.log("result inside for loop",result);
-          //         // Yaha loop chalega
-          //         for (const item of items) {
-          //             await getFolderHierarchy(item.FolderName, item.ParentFolderId, result);
-          //         }
-          //         return result;
-          //     } catch (error) {
-          //         console.error("Error fetching folder hierarchy:", error);
-          //         // return [];
-          //     }
-          // }
-          // const result:any[]=[];
-          // // result.push(folderMasterData);
-          // const data=await getFolderHierarchy(folderMasterData.FolderName,folderMasterData.ParentFolderId,result)
-          // console.log("Data of nested folder",data);
-          // console.log("Data of nested folder",result);
+            if(flatFolderArray.length > 0){
+              for(let item of flatFolderArray){
+                try {
+                  await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+                  console.log("Delete foldermasterdata",item.FolderPath);
+                } catch (error) {
+                  console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+                }
 
-            //     const getFolderHierarchy = async (folderName:string, parentFolderName:string, result:any) => {
-            //       try {
-              
-            //           // Fetch folders matching the criteria
-            //           const items = await sp.web.lists
-            //               .getByTitle("DMSFolderMaster") // Replace with your list name
-            //               .items.filter(
-            //                   `FolderName eq '${folderName}' and ParentFolderId eq '${parentFolderName}'`
-            //               )
-            //               .select("*")();
-              
-            //           // Append fetched items to the result array
-            //           result.push(...items);
-            //           console.log("Result inside for loop:", result);
-              
-            //           // Recursively process each child folder
-            //           for (const item of items) {
-            //               await getFolderHierarchy(item.FolderName, item.ParentFolderId, result);
-            //           }
-              
-            //           return result;
-            //       } catch (error) {
-            //           console.error("Error fetching folder hierarchy:", error);
-            //           return [];
-
-            //       }
-            //   };
-              
-            //   const result:any[] = [];
-            //   (async () => {
-            //     const folderData = await getFolderHierarchy(folderMasterData.FolderName,folderMasterData.ParentFolderId,result,);
-            //     console.log("Folder Hierarchy Data:", folderData);
-            // })();
-              // const data = await getFolderHierarchy(
-              //     folderMasterData.FolderName,
-              //     folderMasterData.ParentFolderId,
-              //     result,
-              // );
-              // console.log("Data of nested folder:", data);
-              // console.log("Data of nested folder (result):", result);
-              
+                const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+                  .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+                  .select("Id")();
+                  console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+                  console.log("itemsFileMaster",itemsFileMaster);
+                  if(itemsFileMaster.length >0){
+                      // Delete all matching items
+                      for (const item of itemsFileMaster) {   
+                        try {
+                          await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+                          console.log(`Deleted item with ID: ${item.Id}`);
+                        } catch (error) {
+                          console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+                        }
+                      }
+                  }
+              }
+            } 
 
           }
           console.log(`Item with ID ${itemId} deleted successfully from list DMSFolderMaster.`);
         } catch (error) {
           console.error(`Error deleting item: ${error.message}`);
         }
-
-        // try {
-        //    // Query the list for items where the 'FolderPath' column matches the given value
-        //   const items = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
-        //   .items.filter(`CurrentFolderPath eq '${folderpath}'`)
-        //   .select("Id")();
-
-        //   // Check if any items match the query
-        //   if (items.length > 0) {
-        //     // Delete all matching items
-        //     // for (const item of items) {
-        //     //   await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
-        //     //   console.log(`Deleted item with ID: ${item.Id}`);
-        //     // }
-
-        //     console.log("All matching items deleted successfully.");
-        //   }
-        // } catch (error) {
-        //   console.error(`Error deleting items in DMS${siteName}FileMaster: ${error.message}`);
-        // }
       } catch (error) {
         console.log("Error in deleteing Folder ",error);
       }
