@@ -681,7 +681,11 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         (payloadForFolderMaster as any).DocumentLibraryName=OthProps.DocumentLibrary;
         (payloadForFolderMaster as any).FolderPath=`${OthProps.folderpath}/${folderName.trim()}`;
         (payloadForFolderMaster as any).IsFolder=true;
-        (payloadForFolderMaster as any).IsActive=true;
+        if(OthProps.IsFolderDeligationUser === "true"){
+          (payloadForFolderMaster as any).IsActive=false;
+        }else if(OthProps.IsFolderDeligationUser === "false"){
+          (payloadForFolderMaster as any).IsActive=true;
+        }
 
         if(OthProps.Folder ===  ""){
             (payloadForFolderMaster as any).FolderName=folderName.trim();

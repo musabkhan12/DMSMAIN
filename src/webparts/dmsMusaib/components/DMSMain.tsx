@@ -476,7 +476,7 @@ const myrequestbuttonclick =()=>{
 
       // Fetch data from DMSFolderMaster
       const folderItems = await sp.web.lists
-        .getByTitle("DMSFolderMaster").items.filter("IsActive eq 'Yes'").select("*").getAll();
+        .getByTitle("DMSFolderMaster").items.filter("IsActive eq 1").select("*").getAll();
        console.log("folderItems", folderItems);
 
       // const myButton = document.getElementById("mybutton");
@@ -731,9 +731,13 @@ const myrequestbuttonclick =()=>{
             );
             console.log("checkIsRename",checkIsRename);
             let renameText=docLibName;
-            if(checkIsRename[0].IsRename !== null){
-              renameText=checkIsRename[0].IsRename;
+            if(checkIsRename.length >0){
+
+            
+            if(checkIsRename[0]?.IsRename !== null){
+              renameText=checkIsRename[0]?.IsRename;
             }
+          }
             // End
             docLibElement.textContent = renameText;
             // docLibElement.textContent = docLibName;
@@ -7729,6 +7733,10 @@ function closePopup() {
                     const yesButton =document.getElementById('confirm-yes');
                     yesButton.addEventListener('click', async () => {
                     const confirmationText = document.getElementById('confirmation-text');
+                    const confirmationYes = document.getElementById('confirm-yes');
+                    const confirmationNo = document.getElementById('confirm-no');
+                    confirmationNo.style.display="none";
+                    confirmationYes.textContent="Ok";
                     confirmationText.innerHTML = 'Loading...';
                     
                     try {
@@ -8772,14 +8780,14 @@ let folderItems:any[]=[]
     superAdmin=true;
     folderItems = await sp.web.lists
     .getByTitle("DMSFolderMaster")
-    .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External")
+    .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External").filter(`IsActive eq 1`)
     .orderBy("Created", false).getAll();
   }else{
 
     folderItems = await sp.web.lists
     .getByTitle("DMSFolderMaster")
     .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External")
-    .filter(`CurrentUser eq '${currentUserEmailRef.current}'`).orderBy("Created", false).getAll();
+    .filter(`CurrentUser eq '${currentUserEmailRef.current}' and IsActive eq 1`).orderBy("Created", false).getAll();
   }
 // end
 
@@ -9036,38 +9044,206 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
         if(IsLibrary === 'true'){
           const data=await web.lists.getByTitle(folderName).delete();
           console.log("Library deleted succesfully",data);
+          // console.log("Library deleted succesfully");
         }else{
-          const data=await web.getFolderByServerRelativePath(`${folderpath}`).delete();
-          console.log("Folder deleted succesfully",data);
+          // const data=await web.getFolderByServerRelativePath(`${folderpath}`).delete();
+          // console.log("Folder deleted succesfully",data);
+          // console.log("Folder deleted succesfully");
         }
         
         // Delete the data related to the folder/library inside the DMSFolderMster
         try {
-          await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(itemId).delete();
+          // await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(itemId).delete();
+          if(IsLibrary === 'true'){
+            const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+            console.log("folderMasterData",folderMasterData);
+            if(folderMasterData){
+              const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}'`)();
+              console.log("documentNestedData",libraryNestedData);
+              if(libraryNestedData.length > 0){
+                for(let item of libraryNestedData){
+                  try {
+                    await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+                    console.log("Delete foldermasterdata",item.FolderPath);
+                  } catch (error) {
+                    console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+                  }
+                  
+                  const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+                  .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+                  .select("Id")();
+                  console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+                  console.log("itemsFileMaster",itemsFileMaster);
+                  if(itemsFileMaster.length >0){
+                      // Delete all matching items
+                      for (const item of itemsFileMaster) {   
+                        try {
+                          await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+                          console.log(`Deleted item with ID: ${item.Id}`);
+                        } catch (error) {
+                          console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+                        }
+                      }
+                  }
+                }
+              
+              }
+             
+            }
+          }else{
+            const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+            console.log("folderMasterData for folder",folderMasterData);
+             const fetchNestedFolders=async(parentFolderName: string): Promise<any[]> =>{
+              // Fetch direct subfolders for the given folder
+              const subFolderData = await sp.web.lists.getByTitle("DMSFolderMaster").items
+                  .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentFolderId eq '${parentFolderName}'`)
+                  .select("*")();
+              
+              console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
+              // If no subfolders are found, return an empty array
+              if (!subFolderData.length) {
+                  return [];
+              }
+          
+              // For each subfolder, recursively fetch its nested subfolders
+              const nestedFolders = await Promise.all(
+                  subFolderData.map(async (subFolder) => {
+                      const nestedData = await fetchNestedFolders(subFolder.FolderName);
+                      // Include the subfolder's details along with its children
+                      return { ...subFolder, subFolders: nestedData }; 
+                  })
+              );
+          
+              return nestedFolders;
+          }
+           
+            // Helper function to flatten the nested folder structure
+            const flattenNestedFolders = (nestedFolders: any[]): any[] => {
+              const flatFolders: any[] = [];
+              const stack = [...nestedFolders]; // Use a stack to handle nested folders
+
+              while (stack.length) {
+                const folder = stack.pop();
+                flatFolders.push(folder);
+                if (folder.subFolders && folder.subFolders.length) {
+                  stack.push(...folder.subFolders);
+                }
+              }
+
+              return flatFolders;
+            };
+
+             // Start fetching nested folders recursively
+             const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
+             console.log("All Nested Folders:", allNestedFolders);
+ 
+             // Flatten the nested folder structure
+             const flatFolderArray = flattenNestedFolders(allNestedFolders);
+             
+             flatFolderArray.push(folderMasterData);
+             console.log("All Nested Folders (Flat Array):", flatFolderArray);
+            // let result:any[]=[];
+          //   const getFolderHierarchy=async(folderName:any, parentFolderName:any, result:any)=> {
+          //     try {
+          //         // Get data first filter folder name and parentfolder
+          //         // let parentN;
+          //         // if(parentFolderName=== null){
+          //         //   parentN=null;
+          //         // }else{
+          //         //   parentN=`${parentFolderName}`
+          //         // }
+          //         const items = await sp.web.lists
+          //             .getByTitle("DMSFolderMaster") // Replace with your list name
+          //             .items.filter(
+          //                 `FolderName eq '${folderName}' and ParentFolderId eq '${parentFolderName}'`
+          //             ).select("*")();
+          
+          //         // data in array
+          //         result.push(...items);
+          //             console.log("result inside for loop",result);
+          //         // Yaha loop chalega
+          //         for (const item of items) {
+          //             await getFolderHierarchy(item.FolderName, item.ParentFolderId, result);
+          //         }
+          //         return result;
+          //     } catch (error) {
+          //         console.error("Error fetching folder hierarchy:", error);
+          //         // return [];
+          //     }
+          // }
+          // const result:any[]=[];
+          // // result.push(folderMasterData);
+          // const data=await getFolderHierarchy(folderMasterData.FolderName,folderMasterData.ParentFolderId,result)
+          // console.log("Data of nested folder",data);
+          // console.log("Data of nested folder",result);
+
+            //     const getFolderHierarchy = async (folderName:string, parentFolderName:string, result:any) => {
+            //       try {
+              
+            //           // Fetch folders matching the criteria
+            //           const items = await sp.web.lists
+            //               .getByTitle("DMSFolderMaster") // Replace with your list name
+            //               .items.filter(
+            //                   `FolderName eq '${folderName}' and ParentFolderId eq '${parentFolderName}'`
+            //               )
+            //               .select("*")();
+              
+            //           // Append fetched items to the result array
+            //           result.push(...items);
+            //           console.log("Result inside for loop:", result);
+              
+            //           // Recursively process each child folder
+            //           for (const item of items) {
+            //               await getFolderHierarchy(item.FolderName, item.ParentFolderId, result);
+            //           }
+              
+            //           return result;
+            //       } catch (error) {
+            //           console.error("Error fetching folder hierarchy:", error);
+            //           return [];
+
+            //       }
+            //   };
+              
+            //   const result:any[] = [];
+            //   (async () => {
+            //     const folderData = await getFolderHierarchy(folderMasterData.FolderName,folderMasterData.ParentFolderId,result,);
+            //     console.log("Folder Hierarchy Data:", folderData);
+            // })();
+              // const data = await getFolderHierarchy(
+              //     folderMasterData.FolderName,
+              //     folderMasterData.ParentFolderId,
+              //     result,
+              // );
+              // console.log("Data of nested folder:", data);
+              // console.log("Data of nested folder (result):", result);
+              
+
+          }
           console.log(`Item with ID ${itemId} deleted successfully from list DMSFolderMaster.`);
         } catch (error) {
           console.error(`Error deleting item: ${error.message}`);
         }
 
-        try {
-           // Query the list for items where the 'FolderPath' column matches the given value
-          const items = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
-          .items.filter(`CurrentFolderPath eq '${folderpath}'`)
-          .select("Id")();
+        // try {
+        //    // Query the list for items where the 'FolderPath' column matches the given value
+        //   const items = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+        //   .items.filter(`CurrentFolderPath eq '${folderpath}'`)
+        //   .select("Id")();
 
-          // Check if any items match the query
-          if (items.length > 0) {
-            // Delete all matching items
-            for (const item of items) {
-              await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
-              console.log(`Deleted item with ID: ${item.Id}`);
-            }
+        //   // Check if any items match the query
+        //   if (items.length > 0) {
+        //     // Delete all matching items
+        //     // for (const item of items) {
+        //     //   await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+        //     //   console.log(`Deleted item with ID: ${item.Id}`);
+        //     // }
 
-            console.log("All matching items deleted successfully.");
-          }
-        } catch (error) {
-          console.error(`Error deleting items in DMS${siteName}FileMaster: ${error.message}`);
-        }
+        //     console.log("All matching items deleted successfully.");
+        //   }
+        // } catch (error) {
+        //   console.error(`Error deleting items in DMS${siteName}FileMaster: ${error.message}`);
+        // }
       } catch (error) {
         console.log("Error in deleteing Folder ",error);
       }
