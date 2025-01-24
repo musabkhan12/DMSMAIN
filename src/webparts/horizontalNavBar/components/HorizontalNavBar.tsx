@@ -299,7 +299,8 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
       //const searchResults = await searchAllLists(queryText);
       const searchResultstemp = await runSearch(queryText, "IsDocument:True", "site:"+(context as BaseWebPartContext).pageContext.site.absoluteUrl, [], []);
       console.log("searchResultstemp 34456", searchResultstemp);
-      const searchResults=searchResultstemp.map((res)=>({ListTitle:"ARGMediaGallery", Title:res.Title,Overview:res.Summary,Id:"22",pageName:"Mediadetails"}));
+      // const searchResults=searchResultstemp.map((res)=>({ListTitle:"ARGMediaGallery", Title:res.Title,Overview:res.Summary,Id:"22",pageName:"Mediadetails"}));
+      const searchResults=searchResultstemp.map((res)=>({ListTitle:"ARGMediaGallery", Title:res.Title,Overview:res.Summary,Id:"22",pageName:"Mediadetails",Path:res.Path}));
       console.log("searchResults 34456", searchResults);
       let grped = groupByFn(searchResults, (res: any) => res.ListTitle)
       console.log("grped results", grped);
@@ -499,7 +500,7 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
 
                       searchResults.map((result: any, index: any) => (
                         <div key={index} className="search-result-item">
-                          <a style={{ padding: '0.85rem' }}>
+                          <a style={{ padding: '0.85rem' }} href={result.Path} target='_blank' >
                             <h4 className='eclipcsss text-dark' style={{ fontSize: '16px' }}>{result.Title}</h4>
                             {
                               result.Overview && <p className='eclipcsss text-muted' style={{ fontSize: '14px' }}><span dangerouslySetInnerHTML={{ __html:`${result.Overview.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
