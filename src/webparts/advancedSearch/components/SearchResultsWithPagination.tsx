@@ -7,6 +7,7 @@ export interface SearchResult {
     Title: string;
     Summary: string;
     Properties: { [key: string]: string };
+    Path:string;
 }
 
 export interface SearchResultsWithPaginationProps {
@@ -115,7 +116,7 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                     <div key={index} className="col mt-1 mb-1 search-result">
                         <div className="card h-100">
                             <div className="card-body">
-                                <h5 className="card-title">{res.Title}</h5>
+                                <a href={res.Path} target='_blank'><h5 className="card-title">{res.Title}</h5></a>
                                 {/* <p className="card-text">{res.Summary}</p> */}
                                 <p className="card-text"><span dangerouslySetInnerHTML={{ __html:`${res.Summary.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
                             </div>

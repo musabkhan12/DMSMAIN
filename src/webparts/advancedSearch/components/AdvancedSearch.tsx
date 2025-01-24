@@ -572,7 +572,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                         ))} */}
                                         {
 
-                                        (searchResult && searchResult.length>0)?<SearchResultsWithPagination searchResult={searchResult.map(s=>({Title:s.Title,Summary:s.Summary,Properties:s.Properties} as SearchResult))} fieldnamesmapping={fieldnamesmapping} />:<div>No Results</div>
+                                        (searchResult && searchResult.length>0)?<SearchResultsWithPagination searchResult={searchResult.map(s=>({Title:s.Title,Summary:s.Summary,Properties:s.Properties,Path:s.Path} as SearchResult))} fieldnamesmapping={fieldnamesmapping} />:<div>No Results</div>
                                         
                                         }
                                     </section>
