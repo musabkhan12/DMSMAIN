@@ -80,6 +80,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
         const _searchQuery = searchQueryFromUrl ? decodeURIComponent(searchQueryFromUrl) : getSearchFilter();
         const _searchPath = searchPathFromUrl ? decodeURIComponent(searchPathFromUrl) : searchPath;
         settSearchPath(new Map<string,string[]>()); 
+        setSearchText(_searchQuery);
         runSearch(_searchQuery,_searchQuery, _searchPath, searchQueryRefiners, getSearchRefineFiltersArray());
     }, []);
 
@@ -363,7 +364,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                 {/* <h1 style={{fontSize:'20px', fontWeight:'600'}} className='text-dark'>Search</h1> */}
                                 <form>
                                     <div className="input-group">
-                                        <input style={{ padding: '.75rem .75rem' }} type="text" className="form-control" placeholder="Search Files.." onChange={searchTextChangeHandler} onKeyDown={handleKeyPress} />
+                                        <input style={{ padding: '.75rem .75rem' }} type="text" className="form-control" placeholder="Search Files.." onChange={searchTextChangeHandler} onKeyDown={handleKeyPress} value={searchText}/>
                                         <button style={{ fontSize: '1rem' }} className="btn btn-primary" type="button" onClick={searchClickHandler}>Advance Search</button>
                                     </div>
                                 </form>
