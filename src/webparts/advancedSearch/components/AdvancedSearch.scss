@@ -48,3 +48,21 @@
 
 
 }
+.search-result span+span{
+  background: #008751 !important;
+  border-color: #008751 !important;
+}
+.search-result span+span+span{
+  background: #fff !important;
+  border-color: #ccc !important;
+  color: #000 !important;
+}
+.newdesign{margin-left: 10px; display: flex;}
+
+.pagination-container {
+  float: right;
+  margin: 8px 0px 0px 0px;
+}
+.pagination-container ul{margin-bottom: 0px;}
+.newdesign {display: flex;}
+.newdesign  label{width:240px ; padding: 10px 0px 0px 0px;}

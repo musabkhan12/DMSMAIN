@@ -46,17 +46,17 @@ const CheckedFilterDropDown: React.FC<ICheckedFilterDropDownProps> = ({options, 
     return (
         <>
             <>
-                <div className="mb-3">
+                <div className="mb-0">
                     {/* <Form.Label>Filter By</Form.Label> */}
                     <div className="d-flex flex-wrap">
                         {selected.map((item, index) => (
-                            <Button key={index} variant="outline-primary" className="me-1 mb-1" size="sm">
+                            <Button key={index} variant="outline-primary" className="me-1 mb-1 p-0" size="sm">
                                 {item.label}
                                 <span className="ms-1" onClick={() => handleSelect(item)}>&times;</span>
                             </Button>
                         ))}
                     </div>
-                    <Button variant="link" onClick={handleShowList}>Show List</Button>
+                    <Button variant="link" style={{textAlign:'left'}} onClick={handleShowList} className='p-0 mb-2'>Show List</Button>
                     {showList && (
                         <div className="position-absolute bg-white p-2 border shadow-sm" style={{zIndex:1000}}>
                             <div className="d-flex justify-content-between mb-2">

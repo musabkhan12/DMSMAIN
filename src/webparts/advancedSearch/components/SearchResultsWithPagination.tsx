@@ -91,18 +91,8 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
 
     return (
         <div>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <Form.Group controlId="itemsPerPageSelect">
-                    <Form.Label>Items per page:</Form.Label>
-                    <Form.Control as="select" value={itemsPerPage} onChange={handleItemsPerPageChange}>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={30}>30</option>
-                        <option value={50}>50</option>
-                    </Form.Control>
-                </Form.Group>
-            </div>
-            <div className="pagination-container">
+           
+            {/* <div className="pagination-container">
                 <Pagination className="flex-wrap">
                     <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
                     <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
@@ -110,11 +100,11 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                     <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
                     <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
                 </Pagination>
-            </div>
-            <div className="row">
+            </div> */}
+            <div className="row p-2 pt-0">
                 {currentItems.map((res, index) => (
-                    <div key={index} className="col mt-1 mb-1 search-result">
-                        <div className="card h-100">
+                    <div key={index} className="col-sm-4 mt-0 mb-3 search-result">
+                        <div style={{border:'1px solid #1fb0e5', borderRadius:'30px'}}  className="card h-100">
                             <div className="card-body">
                                 <a href={res.Path} target='_blank'><h5 className="card-title">{res.Title}</h5></a>
                                 {/* <p className="card-text">{res.Summary}</p> */}
@@ -125,7 +115,22 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                     </div>
                 ))}
             </div>
-            <div className="pagination-container">
+            <div className='row'>
+                <div className='col-sm-4'>
+                <div className="d-flex justify-content-start align-items-center mt-0 mb-2">
+                <Form.Group controlId="itemsPerPageSelect" className='newdesign'>
+                    <Form.Label>Items per page:</Form.Label>
+                    <Form.Control as="select" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={30}>30</option>
+                        <option value={50}>50</option>
+                    </Form.Control>
+                </Form.Group>
+            </div>
+                </div>
+                <div className='col-sm-8'>
+                <div className="pagination-container">
                 <Pagination className="flex-wrap">
                     <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
                     <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
@@ -134,6 +139,10 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                     <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
                 </Pagination>
             </div>
+
+                    </div>
+            </div>
+            
             <style>jsx{`
                 .pagination-container {
                     display: flex;

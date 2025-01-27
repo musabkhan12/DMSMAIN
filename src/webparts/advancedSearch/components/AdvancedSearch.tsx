@@ -371,8 +371,9 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                             </header>
 
                             <main className="mt-3 p-3 pb-0 col-12">
-                                <div className='row mt-3'>
-                                    <section className='col-3'>
+                                <div className='row mt-3 p-3'>
+                                    <section className='col-sm-3'>
+                                        <div  style={{border:'1px solid #1fb0e5', borderRadius:'30px'}}  className='card'>
                                         
                                         <DMSSearchFilterCheckedDropDown context={props.context} 
                                         
@@ -474,12 +475,13 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                             runSearch(searchText, getSearchFilter(), newserachpath, searchfields.map(sf=>sf.fieldname), getSearchRefineFiltersArray());
 
                                         }}/>
+                                        </div>
                                         <div>
-                                            <h5 className='font-16 text-dark p-3 pt-0 mb-3'>Refiners</h5>
-                                            <div className='row'>
+                                            <h5 style={{textAlign:'left', fontSize:'20px'}} className='font-16 text-dark p-0 pt-4 mb-2'>Refiners</h5>
+                                            <div className='row p-2'>
                                                 {searchRefiners?.map(refiner => (
-                                                    <div key={refiner.field} className="card col-12 mb-3 pt-2">
-                                                        <h6>{(fieldnamesmapping[refiner.field])?fieldnamesmapping[refiner.field]:refiner.field}</h6>
+                                                    <div  style={{border:'1px solid #1fb0e5', borderRadius:'30px'}} key={refiner.field} className="card col-12 mb-3 pt-2">
+                                                        <h6 style={{textAlign:'left', fontSize:'16px'}} className='mt-2'>{(fieldnamesmapping[refiner.field])?fieldnamesmapping[refiner.field]:refiner.field}</h6>
 
                                                         <div className="form-check">
                                                             {
@@ -528,8 +530,8 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                                                             }}
                                                                         />
                                                                         </div>
-                                                                        <div className="col mt-1">
-                                                                            <button type='button' className="btn btn-primary float-end" onClick={() => ClearFilter(refiner.field)}>
+                                                                        <div className="col mt-1 mb-3">
+                                                                            <button type='button' className="btn btn-primary float-end mt-2 mb-3" onClick={() => ClearFilter(refiner.field)}>
                                                                                 Clear
                                                                             </button>
                                                                         </div>
@@ -537,8 +539,8 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                                                     :
                                                                     <>
                                                                     <FilterCheckBox refiner={refiner} handleCheckboxChange={handleCheckboxChange} searchRefinerFilters={searchRefinerFilters} />
-                                                                    <div className="col mt-1">
-                                                                        <button type='button' className="btn btn-primary float-end" onClick={() => ClearRefinerFilter(refiner.field)}>
+                                                                    <div className="col mt-1 mb-3">
+                                                                        <button type='button' className="btn btn-primary float-end mt-2 mb-3 me-2" onClick={() => ClearRefinerFilter(refiner.field)}>
                                                                             Clear
                                                                         </button>
                                                                     </div>
@@ -550,14 +552,14 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                                     </div>
                                                 ))}
                                                 {(searchRefiners && searchRefiners.length>0)?<div className="col">
-                                                    <button type='button' className="btn btn-primary" onClick={() => handleApplyFilters()}>
+                                                    <button type='button' className="btn btn-success" onClick={() => handleApplyFilters()}>
                                                         Apply Filters
                                                     </button>
                                                 </div>:<></>}
                                             </div>
                                         </div>
                                     </section>
-                                    <section style={{ background: "#fff", border: '1px solid #1fb0e5', borderRadius: '20px' }} className="col-9">
+                                    <section className="col-sm-9">
                                         {/* {searchResult.map(res => (
                                             <div className="col mt-1 mb-1 search-result">
                                                 <div className="card h-100">
