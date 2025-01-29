@@ -111,20 +111,98 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     console.log(currentUserEmailRef.current ,"my current id")
     const fetchUsers = async () => {
       try {
-        // start
-        const siteContext = await sp.site.openWebById(OthProps.SiteID);
-        const user0 = await siteContext.web.siteUsers();
+        if(OthProps.externalFolder === "true"){
+          const user0 = await sp.web.siteUsers();
+          const user1 = await sp.web.siteGroups();
+          const groupsArray=user1.map((user)=>(
+            {
+            PrincipalType:user.PrincipalType,
+            userId:user.Id,
+            value: user.Title,
+            label: user.Title,
+            email: user.Title,
+            }
+          ))
+          const combineUsersArray=user0.map((user)=>(
+                {
+                userId:user.Id,
+                value: user.Title,
+                label: user.Title,
+                email: user.Email,
+            }
+          ))
+          let resultArray =[...combineUsersArray, ...groupsArray];
+          console.log("resultArray --->",resultArray)
+          setUsers(resultArray);
+        }else{
+        //   const siteContext = await sp.site.openWebById(OthProps.SiteID);
+        //   const user0 = await siteContext.web.siteUsers();
+        //   const combineUsersArray=user0.map((user)=>(
+        //       {
+        //       userId:user.Id,
+        //       value: user.Title,
+        //       label: user.Title,
+        //       email: user.Email,
+        //   }
+        // ))
+        // setUsers(combineUsersArray);
+        // console.log("Sub site users",combineUsersArray);
+        // fetch the data from site Gropus
+        const [
+          users,
+          users1,
+          users2,
+          users3,
+          users4,
+          users5,
+          users6,
+          users7
+        ] = await Promise.all([
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Read`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Initiator`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Contribute`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Admin`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_View`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_AllUsers`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Approval`).users(),
+          sp.web.siteGroups.getByName(`DMSSuper_Admin`).users(),
+        ]);
 
-        const combineUsersArray=user0.map((user)=>(
-              {
-              userId:user.Id,
-              value: user.Title,
-              label: user.Title,
-              email: user.Email,
+        const combineArray = [
+          ...(users || []),
+          ...(users1 || []),
+          ...(users2 || []),
+          ...(users3 || []),
+          ...(users4 || []),
+          ...(users5 || []),
+          ...(users6 || []),
+          ...(users7 || []),
+        ];
+        setUsers(
+          combineArray.map((user) => ( 
+          {
+            userId:user.Id,
+            value: user.Title,
+            label: user.Title,
+            email: user.Email,
           }
         ))
-        setUsers(combineUsersArray);
-        console.log("Sub site users",combineUsersArray);
+        );
+        console.log("combineArray", combineArray);
+        }
+        // start
+        // const siteContext = await sp.site.openWebById(OthProps.SiteID);
+        // const user0 = await siteContext.web.siteUsers();
+        // const combineUsersArray=user0.map((user)=>(
+        //       {
+        //       userId:user.Id,
+        //       value: user.Title,
+        //       label: user.Title,
+        //       email: user.Email,
+        //   }
+        // ))
+        // setUsers(combineUsersArray);
+        // console.log("Sub site users",combineUsersArray);
         // const user0 = await sp.web.siteUsers();
         // const [
         //   users,
@@ -529,7 +607,11 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                   await securableObject.breakRoleInheritance(true); // First `true` copies permissions, second `true` clears unique assignments
               }
           }
-
+          // t222_Admin
+          // const roleDefinition = await web.roleDefinitions.getByName('Edit')();
+          // const roleDefinitionId = roleDefinition.Id;
+          // const group = await sp.web.siteGroups.getByName('t222_Admin')();
+          // await securableObject.roleAssignments.add(group.Id, roleDefinitionId);
           // Iterate through filteredArray and add role assignments
           rowsForPermission.forEach(async(row:any)=>{
               try {
@@ -863,7 +945,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
 
   return (
-    <div className="container mt-4 second">
+    <div className="container mt-0 second">
             <div className="modal show d-block" tabIndex={-1}>
                     <div className="modal-dialog">
                         <div className="modal-content" style={{
@@ -882,33 +964,37 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                               width:"auto",
                           }}
                           >
-                          <h5 className="mb-3 " style={{
+                          
+                         
+                          <div  className='row'>
+                            <div className='col-sm-8 w90'>
+                            <h5 className="mb-3 " style={{
                               display:"block", margin:'inherit'
                              
                           }}>
-                              <strong>Manage Permission</strong>
+                              Manage Permission
+                              
                           </h5>
-                          <div>
+                          <div  className='font-12 text-muted'>
                             {path}
                           </div>
-                          <div style={{top:'-51px', position:'relative'}} className='row'>
-                            <div className='col-sm-6'>
 
                             </div>
-                            <div className='col-sm-6'>
+                            <div className='col-sm-4'>
                             <div  className="mb-0">
                             <div style={{height:'20px'}} className="col-12 d-flex justify-content-end">
                               <a onClick={handleAddRow}>
-                                <img className="bi bi-plus" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
+                                <img className="bi bi-plus newl" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
                               </a>
                             </div>
                           </div>
                             </div>
+                            <div style={{borderBottom:'1px solid #ccc', marginBottom:'15px', height:'15px', float:'left', width:'100%',  paddingBottom:'10px'}}></div>
                           </div>
                         
                           {rowsForPermission.map((row)=>(
-                          <div className="row mb-2 approvalheirarcystyle" key={row.id}>
-                                  <div className="col-12 col-md-6">
+                          <div style={{clear:'both'}} className="row  approvalheirarcystyle" key={row.id}>
+                                  <div className="col-12 col-md-6 mb-2">
                                       <Select
                                           value={row.selectedUserForPermission}
                                           isMulti
@@ -920,7 +1006,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           noOptionsMessage={() => "No User Found..."}
                                       />
                                   </div>
-                                  <div className="col-12 col-md-4" style={{
+                                  <div className="col-12 col-md-4 mb-2" style={{
                                
                                   }}>
                                       <Select
@@ -934,7 +1020,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                       />
                                   </div>
                                   {/* {row.id === 0 ? null : ( */}
-                                    <div className="col-12 col-md-2 d-flex align-items-end">
+                                    <div className="col-12 mb-2 col-md-2 d-flex align-items-end">
                                       <a onClick={(e) => handleRemoveRow(row.id, e)} style={{ width: "50px",    height: "50px", cursor: "pointer" }}>
                                         <img className="fas fa-trash" src={require("../assets/del.png")} alt="delete" />
                                       </a>
@@ -954,7 +1040,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             <thead>
                             <tr>
                                 <th style={{minWidth:'55px', maxWidth:'55px'}}>S.No.</th>
-                                <th>User</th>
+                                <th>User/Groups</th>
                                 {/* <th className={styles.tabledept}>Email</th> */}
                                 <th >Permisson</th>
                                 <th style={{minWidth:'75px', maxWidth:'75px'}}>Action</th>
@@ -964,8 +1050,8 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             {currentData.map((item:any, index:any) => (
                                 <React.Fragment key={item.Id}>
                                 <tr >
-                                    <td >
-                                  <span className='indexdesign'>{index + 1}</span>   
+                                    <td style={{minWidth:'55px', maxWidth:'55px'}} >
+                                  <span style={{marginLeft:'20px'}}  className='indexdesign'>{index + 1}</span>   
                                     </td>
                                     <td >
                                     {item.value || ''}
@@ -994,12 +1080,36 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             ))}
                         </tbody>
                         </table>
-                        <Pagination
+                        <div className='row'>
+                          <div className='col-md-8 newpag'>
+                          <Pagination
                           currentPage={currentPage}
                           totalPages={totalPages}
                           handlePageChange={handlePageChange}
   
                         />
+
+                            </div>
+                            <div className='col-md-4'>
+                            <div style={{textAlign:'right'}} className="text-right pb-0">
+                                    <button type="button" className="btn btn-primary me-2" 
+                                    onClick={handleCreate}
+                                    >
+                                    Create
+                                    </button>
+                                    <button type="button" className="btn btn-secondary" 
+                                    //   onClick={toggleModal}
+                                    onClick={onReturnToMain}
+                                    >
+                                        Cancel{" "}
+                                    </button>
+                            </div>
+
+                              </div>
+
+                          </div>
+                        
+                       
                         </div>
                       </div>
                           </div>   
@@ -1042,19 +1152,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
                             </div>
                             </div> */}
-                            <div className="modal-footer pb-0">
-                                    <button type="button" className="btn btn-primary" 
-                                    onClick={handleCreate}
-                                    >
-                                    Create
-                                    </button>
-                                    <button type="button" className="btn btn-secondary" 
-                                    //   onClick={toggleModal}
-                                    onClick={onReturnToMain}
-                                    >
-                                        Cancel{" "}
-                                    </button>
-                            </div>
+                           
                       </div>
                     )
                     :null

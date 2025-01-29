@@ -7,6 +7,16 @@
     padding-top: 47px;
     padding-left:0px;padding-right:0px;
 }
+.createc,.mtbalenew tbody{overflow: inherit !important;}
+.createc tbody td{
+    overflow: inherit !important;
+    text-overflow: inherit !important;
+    white-space: inherit !important;
+
+}
+.createc tbody{
+overflow-y: inherit !important;
+}
 .second{padding:0px;}
 .BackButton{
     background-color: #6f757c;
@@ -50,7 +60,7 @@ input[type=password], input[type=text], input[type=file], input:not([type]), sel
     border: 1px solid #dee2e6; font-size:14px;
  
 }
-.form-control{font-size:14px !important;}
+
 label{font-weight:500;}
 .Permissionsectionstyle{
     text-align: left;
@@ -120,6 +130,12 @@ background-color:#d0d2d4
 @media (max-width: 998px) {
 .row {
     display: block;
+}
+.mtbalenew{
+    overflow: auto !important;
+}
+.mtbalenew td,.mtbalenew th{
+    min-width: 260px !important; max-width: 260px !important; white-space: nowrap !important;
 }
 .approvalheirarchyfield,
 .approvalheirarcystyle {

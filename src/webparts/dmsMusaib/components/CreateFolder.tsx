@@ -32,6 +32,7 @@ let togglecolumneDetails=true;
 let toggleaddFieldsButton=true;
 let togglefolderPrivacy=true;
 // let toggleApprovalForFolder=true;
+let locationPath=window.location.pathname.match(/\/sites\/[^\/]+/)[0];
 
 const CreateFolder: React.FC<CreateFolderProps> = ({
   OthProps,
@@ -39,11 +40,14 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 }) => {
   console.log(OthProps, "oth props");
   const sp: SPFI = getSP();
+
+  const siteUrl = window.location.origin;
+  // alert(`siteUrl : ${siteUrl}${locationPath}/SitePages/DMSAdmin.aspx`)
   const [toggleApproval, setToggleApproval] = React.useState(false);
   const [approvalOption, setApprovalOption]=useState("");
   console.log("Approval option",approvalOption);
 
-  
+  console.log("Location URL",window.location.pathname.match(/\/sites\/[^\/]+/)[0]);
 
 
   
@@ -258,13 +262,18 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
     const newErrors: { [key: number]: { fieldName?: string; selectField?: string } } = {};
 
     formFields.forEach((field) => {
-      if (!field.fieldName.trim()) {
-        newErrors[field.id] = { ...newErrors[field.id], fieldName: 'Field Name is required' };
-        isValid = false;
-      }
-      if (!field.selectField) {
-        newErrors[field.id] = { ...newErrors[field.id], selectField: 'Field Type is required' };
-        isValid = false;
+      const nonAlphaNumericForEntity = field.fieldName.replace(/[^a-zA-Z0-9 -]/g, '');
+      // if (!field.fieldName.trim()) {
+      //   newErrors[field.id] = { ...newErrors[field.id], fieldName: 'Field Name is required' };
+      //   isValid = false;
+      // }
+      // if (!field.selectField) {
+      //   newErrors[field.id] = { ...newErrors[field.id], selectField: 'Field Type is required' };
+      //   isValid = false;
+      // }
+      if(field.fieldName !== nonAlphaNumericForEntity){
+          newErrors[field.id] = { ...newErrors[field.id], fieldName: 'Special characters are not allowed.' };
+          isValid = false;
       }
     });
 
@@ -291,39 +300,106 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         // console.log("Site Users",combineUsersArray);
         // setSiteUsers(combineUsersArray);
 
-        // fetch the data from site Gropus
-          const [
-          users,
-          users1,
-          users2,
-          users3,
-          users4,
-        ] = await Promise.all([
-          sp.web.siteGroups.getByName(`${OthProps.Entity}_Read`).users(),
-          sp.web.siteGroups.getByName(`${OthProps.Entity}_Initiator`).users(),
-          sp.web.siteGroups.getByName(`${OthProps.Entity}_Contribute`).users(),
-          sp.web.siteGroups.getByName(`${OthProps.Entity}_Admin`).users(),
-          sp.web.siteGroups.getByName(`${OthProps.Entity}_View`).users(),
-        ]);
-
-        const combineArray = [
-          ...(users || []),
-          ...(users1 || []),
-          ...(users2 || []),
-          ...(users3 || []),
-          ...(users4 || []),
-        ];
-        setSiteUsers(
-          combineArray.map((user) => ( 
-          {
+        if(OthProps.IsExternal === 'true'){
+          const user0 = await sp.web.siteUsers();
+          const user1 = await sp.web.siteGroups();
+          const groupsArray=user1.map((user)=>(
+            {
+            PrincipalType:user.PrincipalType,
             userId:user.Id,
             value: user.Title,
             label: user.Title,
-            email: user.Email,
-          }
-        ))
-        );
-        console.log("combineArray", combineArray);
+            email: user.Title,
+            }
+          ))
+          const combineUsersArray=user0.map((user)=>(
+                {
+                userId:user.Id,
+                value: user.Title,
+                label: user.Title,
+                email: user.Email,
+            }
+          ))
+          let resultArray =[...combineUsersArray, ...groupsArray];
+          console.log("resultArray --->",resultArray)
+          setSiteUsers(resultArray);
+        }else{
+          // fetch the data from site Gropus
+          const [
+            users,
+            users1,
+            users2,
+            users3,
+            users4,
+            users5,
+            users6,
+            users7
+          ] = await Promise.all([
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_Read`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_Initiator`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_Contribute`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_Admin`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_View`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_AllUsers`).users(),
+            sp.web.siteGroups.getByName(`${OthProps.Entity}_Approval`).users(),
+            sp.web.siteGroups.getByName(`DMSSuper_Admin`).users(),
+          ]);
+  
+          const combineArray = [
+            ...(users || []),
+            ...(users1 || []),
+            ...(users2 || []),
+            ...(users3 || []),
+            ...(users4 || []),
+            ...(users5 || []),
+            ...(users6 || []),
+            ...(users7 || []),
+          ];
+          setSiteUsers(
+            combineArray.map((user) => ( 
+            {
+              userId:user.Id,
+              value: user.Title,
+              label: user.Title,
+              email: user.Email,
+            }
+          ))
+          );
+          console.log("combineArray", combineArray);
+        }
+        // // fetch the data from site Gropus
+        //   const [
+        //   users,
+        //   users1,
+        //   users2,
+        //   users3,
+        //   users4,
+        // ] = await Promise.all([
+        //   sp.web.siteGroups.getByName(`${OthProps.Entity}_Read`).users(),
+        //   sp.web.siteGroups.getByName(`${OthProps.Entity}_Initiator`).users(),
+        //   sp.web.siteGroups.getByName(`${OthProps.Entity}_Contribute`).users(),
+        //   sp.web.siteGroups.getByName(`${OthProps.Entity}_Admin`).users(),
+        //   sp.web.siteGroups.getByName(`${OthProps.Entity}_View`).users(),
+        // ]);
+
+        // const combineArray = [
+        //   ...(users || []),
+        //   ...(users1 || []),
+        //   ...(users2 || []),
+        //   ...(users3 || []),
+        //   ...(users4 || []),
+        // ];
+        // setSiteUsers(
+        //   combineArray.map((user) => ( 
+        //   {
+        //     userId:user.Id,
+        //     value: user.Title,
+        //     label: user.Title,
+        //     email: user.Email,
+        //   }
+        // ))
+        // );
+        // console.log("combineArray", combineArray);
 
     }
     fetchUserFromSitLevel();
@@ -503,7 +579,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
     let validateUser=false;
     let formFieldValidation=false;
     // console.log("Handcreate called");
-
+    const nonAlphaNumericForEntity = folderName.replace(/[^a-zA-Z0-9 -]/g, '');
     // Validate the form
     let validationErrors: FormErrors = {};
 
@@ -511,6 +587,12 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
       console.log("create Folder");
       if (!folderName.trim()) {
         validationErrors.folderName = "Folder Name is required.";
+      }
+      if(folderName !== nonAlphaNumericForEntity){
+        validationErrors.folderName = "Special charaters are not allowed.";
+      }
+      if(nonAlphaNumericForEntity.length > 50){
+        validationErrors.folderName = "Input cannot exceed 50 characters in the folder name field.";
       }
       if (!folderOverview.trim()) {
         validationErrors.folderOverview = "Folder Overview is required.";
@@ -520,6 +602,12 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
       console.log("create document library");
       if (!folderName.trim()) {
         validationErrors.folderName = "Folder Name is required.";
+      }
+      if(folderName !== nonAlphaNumericForEntity){
+        validationErrors.folderName = "Special charaters are not allowed.";
+      }
+      if(nonAlphaNumericForEntity.length > 50){
+        validationErrors.folderName = "Input cannot exceed 50 characters in the folder name field.";
       }
       if(!approvalOption.trim()){
         validationErrors.approvalOption = "Approval Option is required.";
@@ -550,9 +638,11 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
     // If errors exist, set them to the state and prevent submission
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-    }else if(validateColumns){
+    }
+    else if(validateColumns){
         // alert("Add Columns Fields and Type");
-    }else if(validateUser){
+    }
+    else if(validateUser){
         // alert("Please select at least one user");
     }else if(formFieldValidation){
       Swal.fire(
@@ -569,9 +659,10 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
       }
 
       if(OthProps.DocumentLibrary === ""){
-        (payloadForFolderMaster as any).DocumentLibraryName=folderName;
+        (payloadForFolderMaster as any).DocumentLibraryName=folderName.trim();
         //  (payloadForFolderMaster as any).FolderPath=`/sites/IntranetUAT/${OthProps.Entity}/${folderName}`;
-         (payloadForFolderMaster as any).FolderPath=`/sites/AlRostmanispfx2/${OthProps.Entity}/${folderName}`;
+        //  (payloadForFolderMaster as any).FolderPath=`/sites/AlRostmanispfx2/${OthProps.Entity}/${folderName}`;
+         (payloadForFolderMaster as any).FolderPath=`${locationPath}/${OthProps.Entity}/${folderName.trim()}`;
         //  (payloadForFolderMaster as any).FolderPath=`/sites/AlRostmani/${OthProps.Entity}/${folderName}`;
         (payloadForFolderMaster as any).IsLibrary=true;
         (payloadForFolderMaster as any).IsActive=false;
@@ -583,16 +674,23 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         if(OthProps.IsFolderDeligationUser === "true"){
           (payloadForFolderMaster as any).IsFolderDeligation=true;
         }
+        if(OthProps.IsExternal === 'true'){
+          (payloadForFolderMaster as any).External=true;
+        }
       }else{
         (payloadForFolderMaster as any).DocumentLibraryName=OthProps.DocumentLibrary;
-        (payloadForFolderMaster as any).FolderPath=`${OthProps.folderpath}/${folderName}`;
+        (payloadForFolderMaster as any).FolderPath=`${OthProps.folderpath}/${folderName.trim()}`;
         (payloadForFolderMaster as any).IsFolder=true;
-        (payloadForFolderMaster as any).IsActive=true;
+        if(OthProps.IsFolderDeligationUser === "true"){
+          (payloadForFolderMaster as any).IsActive=false;
+        }else if(OthProps.IsFolderDeligationUser === "false"){
+          (payloadForFolderMaster as any).IsActive=true;
+        }
 
         if(OthProps.Folder ===  ""){
-            (payloadForFolderMaster as any).FolderName=folderName;
+            (payloadForFolderMaster as any).FolderName=folderName.trim();
         }else{
-            (payloadForFolderMaster as any).FolderName=folderName;
+            (payloadForFolderMaster as any).FolderName=folderName.trim();
             (payloadForFolderMaster as any).ParentFolderId=OthProps.Folder;
             
         }
@@ -604,6 +702,9 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 
         if(OthProps.IsFolderDeligationUser === "true"){
           (payloadForFolderMaster as any).IsFolderDeligation=true;
+        }
+        if(OthProps.IsExternal === 'true'){
+          (payloadForFolderMaster as any).External=true;
         }
       }
 
@@ -630,7 +731,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
           
             console.log("Create Folder Inside this Document Library -",OthProps.DocumentLibraryName);
             const {web}=await sp.site.openWebById(OthProps.siteID);
-            const folderAddResult = await web.folders.addUsingPath(`${OthProps.folderpath}/${folderName}`);
+            const folderAddResult = await web.folders.addUsingPath(`${OthProps.folderpath}/${folderName.trim()}`);
             console.log("Folder created successfully -",folderAddResult);
           } catch (error) {
             console.log("Error In creating Folder Inside the Document Library",error);
@@ -644,7 +745,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 
             let payloadForFolderPermissionMaster={
               SiteName:OthProps.Entity,
-              DocumentLibraryName:folderName,
+              DocumentLibraryName:folderName.trim(),
               CurrentUser:currentUserEmailRef.current,
             }
 
@@ -652,7 +753,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 
               payloadForFolderPermissionMaster={
                 SiteName:OthProps.Entity,
-                DocumentLibraryName:folderName,
+                DocumentLibraryName:folderName.trim(),
                 CurrentUser:currentUserEmailRef.current,
   
               }
@@ -704,7 +805,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
           console.log("Add the Columns when create document library");
           const payloadForPreviewFormMaster={
             SiteName:OthProps.Entity,
-            DocumentLibraryName:folderName,
+            DocumentLibraryName:folderName.trim(),
             IsRequired:true,
             AddorRemoveThisColumn:"Add To Library",
             IsInProgress:true
@@ -727,7 +828,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
 
           const payload={
             SiteName:OthProps.Entity,
-            DocumentLibraryName:folderName,
+            DocumentLibraryName:folderName.trim(),
             IsDocumentLibrary:true,
             IsPrivate:optionSelectedForPrivacy,
             IsHardDelete:false,
@@ -736,17 +837,31 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
           console.log("payload for DMSPreviewFormField for IsDocumentLibrary",payload)
           const addedItem = await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.add(payload);
           console.log("Item added successfully in the DMSPreviewFormField for IsDocumentLibrary", addedItem);
+          
+          if(formFields.length > 0){
+            if(formFields[0].fieldName !== '' && formFields[0].selectField !== ''){
+              formFields.forEach(async(field)=>{
+                // type.replace(/\s+/g, '').toLowerCase();
+                    (payloadForPreviewFormMaster as any).ColumnName=field.fieldName.replace(/\s+/g,'');
+                    (payloadForPreviewFormMaster as any).ColumnType=field.selectField
+                    console.log("Call the Api with this payload",payloadForPreviewFormMaster)
+    
+                    const addedItem = await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.add(payloadForPreviewFormMaster);
+                    console.log("Item added successfully in the DMSPreviewFormField", addedItem);
+                    
+              })
+            }
+          }
+          // formFields.forEach(async(field)=>{
+          //   // type.replace(/\s+/g, '').toLowerCase();
+          //       (payloadForPreviewFormMaster as any).ColumnName=field.fieldName.replace(/\s+/g,'');
+          //       (payloadForPreviewFormMaster as any).ColumnType=field.selectField
+          //       console.log("Call the Api with this payload",payloadForPreviewFormMaster)
 
-          formFields.forEach(async(field)=>{
-            // type.replace(/\s+/g, '').toLowerCase();
-                (payloadForPreviewFormMaster as any).ColumnName=field.fieldName.replace(/\s+/g,'');
-                (payloadForPreviewFormMaster as any).ColumnType=field.selectField
-                console.log("Call the Api with this payload",payloadForPreviewFormMaster)
-
-                const addedItem = await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.add(payloadForPreviewFormMaster);
-                console.log("Item added successfully in the DMSPreviewFormField", addedItem);
+          //       const addedItem = await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.add(payloadForPreviewFormMaster);
+          //       console.log("Item added successfully in the DMSPreviewFormField", addedItem);
                 
-          })
+          // })
     }
 
     // new code  creating payload for DMSFolderPrivacy and add the data
@@ -761,10 +876,10 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
             // DocumentLibraryName:folderName
           }
           if(OthProps.DocumentLibrary === ""){
-            (payloadForDMSFolderPrivacy as any).DocumentLibraryName=folderName;
+            (payloadForDMSFolderPrivacy as any).DocumentLibraryName=folderName.trim();
           }else{
             (payloadForDMSFolderPrivacy as any).DocumentLibraryName=OthProps.DocumentLibrary;
-            (payloadForDMSFolderPrivacy as any).FolderName=folderName;
+            (payloadForDMSFolderPrivacy as any).FolderName=folderName.trim();
           }
 
           if(folderPrivacy === "private"){
@@ -821,12 +936,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
           Status:'Pending',
           SubmitStatus:'Submitted'
         }
-
+        
         if(OthProps.DocumentLibrary === ""){
-          (payloadForFolderDelegation as any).DocumentLibraryName=folderName;
+          (payloadForFolderDelegation as any).DocumentLibraryName=folderName.trim();
           //  (payloadForFolderDelegation as any).FolderPath=`/sites/IntranetUAT/${OthProps.Entity}/${folderName}`;
-           (payloadForFolderMaster as any).FolderPath=`/sites/AlRostmanispfx2/${OthProps.Entity}/${folderName}`;
+          //  (payloadForFolderDelegation as any).FolderPath=`/sites/AlRostmanispfx2/${OthProps.Entity}/${folderName}`;
           //  (payloadForFolderDelegation as any).FolderPath=`/sites/AlRostmani/${OthProps.Entity}/${folderName}`;
+           (payloadForFolderDelegation as any).FolderPath=`${locationPath}/${OthProps.Entity}/${folderName.trim()}`;
           (payloadForFolderDelegation as any).IsLibrary=true;
           // (payloadForFolderDelegation as any).IsActive=false;
           if(folderPrivacy === "private"){
@@ -844,14 +960,14 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
           }
         }else{
           (payloadForFolderDelegation as any).DocumentLibraryName=OthProps.DocumentLibrary;
-          (payloadForFolderDelegation as any).FolderPath=`${OthProps.folderpath}/${folderName}`;
+          (payloadForFolderDelegation as any).FolderPath=`${OthProps.folderpath}/${folderName.trim()}`;
           (payloadForFolderDelegation as any).IsFolder=true;
           // (payloadForFolderDelegation as any).IsActive=true;
   
           if(OthProps.Folder ===  ""){
-              (payloadForFolderDelegation as any).FolderName=folderName;
+              (payloadForFolderDelegation as any).FolderName=folderName.trim();
           }else{
-              (payloadForFolderDelegation as any).FolderName=folderName;
+              (payloadForFolderDelegation as any).FolderName=folderName.trim();
               (payloadForFolderDelegation as any).ParentFolderId=OthProps.Folder;
               
           }
@@ -883,12 +999,11 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
       }
       // Clear form on successful submission
       Swal.fire({
-        title: "Folder Created Successfully",
-        text: "Folder Created Successfully. It will reflect after a few seconds as we set up everything for the folder.",
+        title: "Success",
+        text: "Your request to create a folder has been submitted successfully. The folder will appear shortly as we complete the setup process.",
         icon: "success",
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No'
+        // showCancelButton: true,
+        confirmButtonText: 'OK',
       }).then((result) => {
         if (result.isConfirmed) {
           location.reload(); // This will reload the page
@@ -945,7 +1060,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
             <div className="row mt-0">
               <h3 className="header-title text-dark font-16 mb-1">Basic Information</h3>
               <p className="subheader font-14 mb-3">Specify Basic Information and create folder  </p>
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-6 mb-3">
                 <div className="form-group">
                   <label htmlFor="folderName" className="headerfont">
                     Folder Name
@@ -964,8 +1079,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                 </div>
               </div>
               {/* {togglefolderPrivacy &&  ( */}
-                  <div className="col-12 col-md-6" id="folderPrivacy" style={{
-                      width:"25%"
+                  <div className="col-12 col-md-3 mb-3" id="folderPrivacy" style={{
+                     
                   }}>
                         <div className="form-group">
                           <label htmlFor="folderPrivacy" className="headerfont">
@@ -1017,8 +1132,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               {/* )} */}
 
               {togglefolderPrivacy &&  (
-              <div className="col-12 col-md-6" id="approvalOption" style={{
-                   width:"25%"
+              <div className="col-12 col-md-3 mb-3" id="approvalOption" style={{
+                  
               }}>
                 <div className="form-group">
                           <label htmlFor="approvalOption" className="headerfont">
@@ -1098,9 +1213,9 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
         <div className="">
         {toggleaddFieldsButton && ( 
               <div className="row mt-0" id="addFieldsButton">
-                <div className="col-md-10">
-                <h3 className="header-title text-dark font-16 mb-1">List of Document</h3>
-                <p className="subheader font-14 mb-3">Specify sub folder and create list of documents to be prepared and submitted bt team members.  </p>
+                <div className="col-md-10  w90">
+                <h3 className="header-title text-dark font-16 mb-1">List of metadata</h3>
+                <p className="subheader font-14 mb-3">Specify sub folder and create list of metadata to be prepared and submitted by team members.</p>
                 </div>
                
                 <div style={{position:'relative'}} className="col-md-2">
@@ -1121,14 +1236,24 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                   
               </div>
           )}
-  
+  <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th>  Field Name</th>
+        <th>    Select Field Type</th>
+        <th style={{minWidth:'40px',maxWidth:'40px'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+
           {togglecolumneDetails && formFields.map((formField) => (
-      <div className="row mt-3" key={formField.id} id="columnDetail">
-        <div className="col-12 col-md-6">
+            
+      <tr  key={formField.id} id="columnDetail">
+        <td>
           <div className="form-group">
-            <label htmlFor={`fieldName-${formField.id}`} className="headerfont">
+            {/* <label htmlFor={`fieldName-${formField.id}`} className="headerfont">
               Field Name
-            </label>
+            </label> */}
             <input
               type="text"
               className="form-control fieldmargin"
@@ -1143,13 +1268,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               <span className="text-danger">{errors1[formField.id].fieldName}</span>
             )}
           </div>
-        </div>
+        </td>
 
-        <div className="col-12 col-md-5">
+        <td>
           <div className="form-group">
-            <label htmlFor={`selectField-${formField.id}`} className="headerfont">
+            {/* <label htmlFor={`selectField-${formField.id}`} className="headerfont">
               Select Field Type
-            </label>
+            </label> */}
             <select
               className="form-control"
               id={`selectField-${formField.id}`}
@@ -1170,21 +1295,22 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
               <span className="text-danger">{errors1[formField.id].selectField}</span>
             )}
           </div>
-        </div>
-
+        </td>
+        <td style={{minWidth:'40px',maxWidth:'40px',textAlign:'center'}}>
+        <div >
         {formField.id === 0 ? (
                 null
               ) : (
-                <div className="col-12 col-md-1 d-flex align-items-end">
+                <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                   <a
                     onClick={(e) => handleRemoveField(formField.id, e)}
                     style={{
                       width: "50px",
-                      height: "50px",
+                   
                       cursor: "pointer",
                     }}
                   >
-                    <img style={{marginTop:'14px'}}
+                    <img style={{marginTop:'0px'}}
                       className="fas fa-trash"
                       src={require("../assets/del.png")}
                       alt="delete"
@@ -1192,9 +1318,14 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                   </a>
                 </div>
               )}
-      </div>
+
+          </div>
+          </td>
+      </tr>
       
             ))}
+            </tbody>
+              </table>
 
         </div>
       </div>
@@ -1209,46 +1340,68 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
             {/* <h5 className="mb-1 Permissionsectionstyle">
               <strong>Approval Hierarchy</strong>
             </h5> */}
-            <h3 className="header-title text-dark font-16 mb-1">Approval Hierarchy</h3>
+            <div className="row">
+              <div className="col-sm-10 w90">
+              <h3 className="header-title text-dark font-16 mb-1">Approval Hierarchy</h3>
      
-            <p className="subheader font-14 mb-3">
-              Define approval hierarchy for the documents submitted by Team
-              members in this folder.
-            </p>
+     <p className="subheader font-14 mb-3">
+       Define approval hierarchy for the documents submitted by Team
+       members in this folder.
+     </p>
 
-            <div style={{height:'0px', position:'relative'}} className="mb-0">
+              </div>
+
+              <div className="col-sm-2">
+              <div style={{height:'0px', position:'relative'}} className="mb-0">
               <div className="col-12 d-flex justify-content-end">
                 <a onClick={handleAddRow}>
                   <img
                     className="bi bi-plus"
                     src={require("../assets/plus.png")}
                     alt="add"
-                    style={{ width: "50px", top:'-60px', position:'absolute', right:'0px', left:'auto', height: "50px" }}
+                    style={{ width: "50px", top:'0px', position:'absolute', right:'0px', left:'auto', height: "50px" }}
                   />
                 </a>
               </div>
             </div>
-            <div className="row mb-1 approvalheirarcystyle">
-              <div className="col-12 col-md-4">
+
+              </div>
+            </div>
+            
+
+           
+            <div style={{clear:'both'}} className="row mb-2 approvalheirarcystyle">
+            <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th> Level</th>
+        <th> Approver</th>
+        <th style={{textAlign:'center', minWidth:'70px', maxWidth:'70px'}}> Select</th>
+        <th style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+
+
+              {/* <div className="col-12 col-md-4">
                 <label
                   htmlFor="level"
                   className="form-label approvalhierarcyfont"
                 >
                   Level
                 </label>
-              </div>
-              <div className="col-12 col-md-5">
+              </div> */}
+              {/* <div className="col-12 col-md-5">
                 <label
                   htmlFor="approver"
                   className="form-label approvalhierarcyfont"
                 >
                   Approver
                 </label>
-              </div>
-            </div>
-            {rows.map((row) => (
-              <div className="row mb-3 approvalheirarchyfield" key={row.id}>
-                <div className="col-12 col-md-4">
+              </div> */}
+               {rows.map((row) => (
+              <tr className="approvalheirarchyfield" key={row.id}>
+                <td>
                   <input style={{height:'36px'}}
                     type="text"
                     className="form-control"
@@ -1256,8 +1409,8 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     value={`Level ${row.id + 1}`}
                     disabled
                   />
-                </div>
-                <div className="col-12 col-md-5">
+                </td>
+                <td>
                   {/* start */}
                   <Select
                     isMulti
@@ -1276,9 +1429,10 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       <span className="text-danger">{errorsForUserSelection[row.id].userSelect}</span>
                   )}
                   {/* end */}
-                </div>
+                </td>
                 {/* start */}
-                <div style={{gap:'10px'}} className="col-12 col-md-2 d-flex">
+                <td style={{textAlign:'center', minWidth:'70px', maxWidth:'70px'}}>
+                <div style={{gap:'10px', justifyContent:'center'}} className="d-flex">
                   <div className="form-check">
                     <input
                       className="form-check-input"
@@ -1314,17 +1468,18 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     </label>
                   </div>
                 </div>
+                </td>
                 {/* end */}
-
+                <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
                 {row.id === 0 ? (
                  null
                 ) : (
-                  <div className="col-12 col-md-1 d-flex align-items-end">
+                  <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                     <a
                       onClick={(e) => handleRemoveRow(row.id, e)}
                       style={{
                         width: "50px",
-                        height: "50px",
+                       
                         cursor: "pointer",
                       }}
                     >
@@ -1336,8 +1491,16 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                     </a>
                   </div>
                 )}
-              </div>
+                </td>
+
+               
+              </tr>
             ))}
+            </tbody>
+            </table>
+            </div>
+           
+
           </div>
         </div>
       ) : null
@@ -1353,7 +1516,7 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                       </h5> */}
                                   
                       <div className="row">
-                        <div className="col-md-10">
+                        <div className="col-md-10 w90">
 
                         <h3 className="header-title text-dark font-16 mb-1">Permission</h3>
      
@@ -1380,10 +1543,19 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                         </div>
 
                       </div>
-                      
+                      <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th> Name</th>
+        <th> Permission</th>
+      
+        <th style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
                       {rowsForPermission.map((rowForPermission)=>(
-                          <div className="row mb1 approvalheirarcystyle" key={rowForPermission.id}>
-                              <div className="col-12 col-md-6">
+                          <tr className="approvalheirarcystyle" key={rowForPermission.id}>
+                              <td className="">
                                   <Select
                                       isMulti
                                       options={siteUsers}
@@ -1392,9 +1564,10 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                       }
                                       placeholder="Enter names or email addresses..."
                                       noOptionsMessage={() => "No User Found..."}
+                                     
                                   />
-                              </div>
-                              <div className="col-12 col-md-5" 
+                              </td>
+                              <td className="" 
                               
                               >
                                   <Select
@@ -1405,16 +1578,17 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                       placeholder="Select Permission"
                                       noOptionsMessage={() => "No Such Permission Find"}
                                   />
-                              </div>
-                              {rowForPermission.id === 0 ? (
+                              </td>
+                            <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
+                            {rowForPermission.id === 0 ? (
                                 null
                                 ) : (
-                                  <div className="col-12 col-md-1 d-flex align-items-end">
+                                  <div style={{justifyContent:'center'}} className="d-flex align-items-end">
                                     <a
                                       onClick={(e) => handleRemoveRowForPermission(rowForPermission.id, e)}
                                       style={{
                                         width: "50px",
-                                        height: "50px",
+                                       
                                         cursor: "pointer",
                                       }}
                                     >
@@ -1426,8 +1600,13 @@ const CreateFolder: React.FC<CreateFolderProps> = ({
                                     </a>
                                   </div>
                                 )}
-                          </div>
+
+                            </td>
+                             
+                          </tr>
                       ))}
+                      </tbody>
+                      </table>
 
                 </div>
 
