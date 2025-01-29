@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Pagination, Form, Container } from 'react-bootstrap';
 import TagsComponent from './SearchResultsTags';
+import { GetFieldName, GetFieldValue,enumfieldtype } from './Common';
+import { IField } from './AdvancedSearch';
 // import TagsComponent from './'; // Adjust the import path as necessary
 
 export interface SearchResult {
@@ -13,9 +15,10 @@ export interface SearchResult {
 export interface SearchResultsWithPaginationProps {
     searchResult: SearchResult[];
     fieldnamesmapping: { [key: string]: string };
+    fieldtypemappings:IField[];
 }
 
-export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationProps> = ({ searchResult, fieldnamesmapping }) => {
+export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationProps> = ({ searchResult, fieldnamesmapping,fieldtypemappings }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -110,7 +113,8 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
                                 {/* <p className="card-text">{res.Summary}</p> */}
                                 <p className="card-text"><span dangerouslySetInnerHTML={{ __html:`${res.Summary.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
                             </div>
-                            <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${fieldnamesmapping[key] ? fieldnamesmapping[key] : key}: ${value}`)} />
+                            {/* <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${fieldnamesmapping[key] ? fieldnamesmapping[key] : key}: ${value}`)} /> */}
+                            <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${GetFieldName(key)}: ${GetFieldValue(fieldtypemappings,key,value)}`)} />
                         </div>
                     </div>
                 ))}

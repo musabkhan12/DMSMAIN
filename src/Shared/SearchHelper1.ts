@@ -155,7 +155,8 @@ export class GraphSearchHelper {
 
   public async searchAll(query: string, size: number = 100,refiners:string[]=[],refinerfilters:string[]=[]): Promise<SearchHitsContainer> {
     try {
-      const searchaggegators:AggregationOption[]=getUniqueItems<string>(['lastModifiedDateTime','FileType','createdBy'].concat(refiners)).map(ref=>{return  ({
+      // const searchaggegators:AggregationOption[]=getUniqueItems<string>(['lastModifiedDateTime','FileType','createdBy'].concat(refiners)).map(ref=>{return  ({
+        const searchaggegators:AggregationOption[]=getUniqueItems<string>(['LastModifiedTime','FileType','createdBy'].concat(refiners)).map(ref=>{return  ({
         "field": ref,
         "size": 100,
         "bucketDefinition": {
@@ -174,7 +175,8 @@ export class GraphSearchHelper {
       
       from: 0,
       size: size,            
-      fields:getUniqueItems<string>(['name','lastModifiedDateTime','webUrl','createdBy','FileType','FileExtension'].concat(refiners))
+      // fields:getUniqueItems<string>(['name','lastModifiedDateTime','webUrl','createdBy','FileType','FileExtension'].concat(refiners))
+      fields:getUniqueItems<string>(['name','LastModifiedTime','webUrl','createdBy','FileType','FileExtension'].concat(refiners))
       
     };
 
@@ -212,28 +214,7 @@ export class GraphSearchHelper {
     }
   }
 
-  // exceuteasyncsearch=async (searchrequestparam:SearchRequest,start=0,pagesize=500, results:any[] = []):Promise<any>=>{
-
-  //   searchrequestparam.from=start;
-  //   searchrequestparam.size=pagesize;  
-  // const requestBody:ISearchQuery = {
-  //   requests: [searchrequestparam]
-  // };
-
-  // const result = await this.graphClient.api('/search/query').post(requestBody);
-  // let hitcont=(result.value[0] as SearchResponse).hitsContainers[0];
-
-  // results=results.concat(hitcont.hits);
-
-  // // Base condition
-  // if (!hitcont.moreResultsAvailable) {
-  //   return results;
-  // }
-
-  // // Recursive call
-  // return await this.exceuteasyncsearch(searchrequestparam,resul);
-
-  // }
+  
 
   /**
    * Helper function to format results for display

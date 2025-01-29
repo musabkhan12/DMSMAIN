@@ -34,6 +34,8 @@ const CheckedFilterDropDown: React.FC<ICheckedFilterDropDownProps> = ({options, 
 
     const handleClear = () => {
         setSelected([]);
+        if(onChange) onChange([]);
+
     }
 
     const handleApply = () => {

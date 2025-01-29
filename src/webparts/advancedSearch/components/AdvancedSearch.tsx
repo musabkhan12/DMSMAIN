@@ -25,8 +25,9 @@ import  './AdvancedSearch.scss';
 import { FilterCheckBox } from './FilterCheckBoxes';
 import TreeView from './EnitySearchtree';
 import { DMSSearchFilterCheckedDropDown } from './DMSSearchFilterCheckedDropDown';
-import { fieldnamesmapping, removeDuplicates } from './Common';
+import { fieldnamesmapping, GetFieldName, removeDuplicates } from './Common';
 import {SearchResultsWithPagination,SearchResult} from './SearchResultsWithPagination';
+// import { AnyPtrRecord } from 'dns';
 
 export const getUrlParameter = (name: string) => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -41,8 +42,14 @@ export interface IField {
 export enum enumPathType
 {library, site}
 
-const fieldsinit:IField[]=[{
-    fieldname:'lastModifiedDateTime',
+const fieldsinit:IField[]=[
+//     {
+//     fieldname:'lastModifiedDateTime',
+//     fieldtype:enumfieldtype.DateTime,    
+//    }
+//,
+{
+    fieldname:'LastModifiedTime',
     fieldtype:enumfieldtype.DateTime,    
 },{
     fieldname:'FileType',
@@ -188,7 +195,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
         let enddate=(enddt)?enddt:endDate.get(datefield);
         if (stdate && enddate) {
             // return `LastModifiedTime:Range(${startDate}..${endDate})`;
-            return `${datefield}>=${stdate} AND ${datefield}<=${enddate}`;
+            return `(${datefield}>=${stdate} AND ${datefield}<=${enddate})`;
         } else if (stdate) {
             return `${datefield}>=${stdate}`;
         } else if (enddate) {
@@ -237,6 +244,12 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
         const updatedFilters = new Map([...searchFilter]);
         updatedFilters.delete(filterfield);
         setSearchFilter(updatedFilters);
+        const stdt=new Map([...startDate]);
+        stdt.delete(filterfield);
+        setStartDate(stdt);
+        const endt=new Map([...endDate]);
+        endt.delete(filterfield);
+        setEndDate(endt);
         runSearch(searchText, getSearchFilter(updatedFilters), searchPath, searchQueryRefiners, getSearchRefineFiltersArray());
 
     }
@@ -293,6 +306,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
             // }
 
             allpaths.push("site:"+s);
+            // allpaths.push("path:"+s);
             allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
 
             // if(_searchpaths.get(s).length!=0)
@@ -303,6 +317,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
 
         // let updatedpath=(allpaths.length>0)?allpaths.map(d=>"path:"+d).join(' '):("path:"+props.context.pageContext.site.absoluteUrl);
         let updatedpath= (allpaths.length>0)?allpaths.join(" "):("site:"+props.context.pageContext.site.absoluteUrl);
+        // let updatedpath= (allpaths.length>0)?allpaths.join(" "):("path:"+props.context.pageContext.site.absoluteUrl);
         setSearchPath(updatedpath);
         return updatedpath;
 
@@ -481,7 +496,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                             <div className='row p-2'>
                                                 {searchRefiners?.map(refiner => (
                                                     <div  style={{border:'1px solid #1fb0e5', borderRadius:'30px'}} key={refiner.field} className="card col-12 mb-3 pt-2">
-                                                        <h6 style={{textAlign:'left', fontSize:'16px'}} className='mt-2'>{(fieldnamesmapping[refiner.field])?fieldnamesmapping[refiner.field]:refiner.field}</h6>
+                                                        <h6 style={{textAlign:'left', fontSize:'16px'}} className='mt-2'>{GetFieldName(refiner.field)}</h6>
 
                                                         <div className="form-check">
                                                             {
@@ -574,7 +589,7 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
                                         ))} */}
                                         {
 
-                                        (searchResult && searchResult.length>0)?<SearchResultsWithPagination searchResult={searchResult.map(s=>({Title:s.Title,Summary:s.Summary,Properties:s.Properties,Path:s.Path} as SearchResult))} fieldnamesmapping={fieldnamesmapping} />:<div>No Results</div>
+                                        (searchResult && searchResult.length>0)?<SearchResultsWithPagination searchResult={searchResult.map(s=>({Title:s.Title,Summary:s.Summary,Properties:s.Properties,Path:s.Path} as SearchResult))} fieldnamesmapping={fieldnamesmapping} fieldtypemappings={searchfields} />:<div>No Results</div>
                                         
                                         }
                                     </section>
