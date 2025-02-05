@@ -175,7 +175,8 @@ let mydatacard = ""
 let IsFolderDeligationUser=false;
 let IsExternal=false;
 let mydata: string[] = [];
-
+// Object to store folder details
+const folderDetailsMap: Record<string, any> = {};
 // start
 // let searchArray:any=[];
 let routeToDiffSideBar="";
@@ -784,7 +785,8 @@ const myrequestbuttonclick =()=>{
 
               // setShowMyrequButtons(false)
               // setShowMyfavButtons(false)
-              handleNavigation(value.entityTitle, null , null , docLibName , null )
+              // handleNavigation(value.entityTitle, null , null , docLibName , null )
+              updateBreadcrumb(data.folderPath);
               toggleVisibility(folderList);
               getdoclibdata(data.folderPath , value.siteID , docLibName);
               IsExternal=data.External;
@@ -888,7 +890,8 @@ const myrequestbuttonclick =()=>{
                       console.log(parentfolder , "parentfolder")
                       IsExternal=item.External;
                       console.log(currentfolderpath , "currentfolderpath");
-                      handleNavigation(value.entityTitle, null , null , docLibName , folderName )
+                      // handleNavigation(value.entityTitle, null , null , docLibName , folderName )
+                      updateBreadcrumb(item.FolderPath);
                       event.stopPropagation();
                       getdoclibdata(item.FolderPath,currentsiteID ,docLibName )
                       // if (myButton) {
@@ -1044,7 +1047,10 @@ const myrequestbuttonclick =()=>{
                   console.log("currentEntity", currentEntity);
                   console.log("currentDevision", currentDevision);
                   console.log("currentDepartment", currentDepartment);
-                  handleNavigation(value.entityTitle, devisionTitle , departmentTitle , null , null )
+                  const container = document.getElementById("files-container");
+                  container.innerHTML = "";
+                  // handleNavigation(value.entityTitle, devisionTitle , departmentTitle , null , null )
+                  updateBreadcrumb(`${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/${currentEntity}`);
               event.stopPropagation();
               // if (myButton) {
               //   myButton.textContent = `Create Library under ${departmentTitle}`;
@@ -1181,7 +1187,8 @@ const myrequestbuttonclick =()=>{
                   console.log("currentfolderpath", currentfolderpath);
                   console.log("parentfolder", parentfolder);
                   getdoclibdata(data.folderPath , value.siteID , docLibName)
-                  handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , null )
+                  // handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , null )
+                  updateBreadcrumb(currentfolderpath);
                     console.log(
                       "FolderPath for document library:",
                       data.folderPath
@@ -1256,7 +1263,8 @@ const myrequestbuttonclick =()=>{
                           console.log("currentDocumentLibrary", currentDocumentLibrary);
                           console.log("currentfolderpath", item.FolderPath);
                           getdoclibdata(item.FolderPath,currentsiteID , docLibName)
-                          handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , folderName )
+                          // handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , folderName )
+                          updateBreadcrumb(item.FolderPath);
                           //      const createFileButton=document.getElementById("createFileButton")
                           // createFileButton.style.display="block";
                           //      const createFileButton2=document.getElementById("createFileButton")
@@ -1362,7 +1370,8 @@ const myrequestbuttonclick =()=>{
                   console.log("currentDocumentLibrary", currentDocumentLibrary);
                   console.log("currentfolderpath", currentfolderpath);
                   getdoclibdata(item.FolderPath , value.siteID , item.DocumentLibraryName)
-                  handleNavigation(value.entityTitle , devisionTitle, null , item.DocumentLibraryName )
+                  // handleNavigation(value.entityTitle , devisionTitle, null , item.DocumentLibraryName )
+                  updateBreadcrumb(item.FolderPath );
                   // const createFileButton=document.getElementById("createFileButton")
                   // createFileButton.style.display="block";
                   // const createFileButton2=document.getElementById("createFileButton2")
@@ -1459,7 +1468,8 @@ const myrequestbuttonclick =()=>{
                                 console.log("currentFolder", currentFolder);
                                 console.log("currentfolderpath", folderPath);
                                 console.log("parentfolder", parentfolder);
-                                handleNavigation(value.entityTitle , devisionTitle ,null , item.DocumentLibraryName , folderName)
+                                // handleNavigation(value.entityTitle , devisionTitle ,null , item.DocumentLibraryName , folderName)
+                                updateBreadcrumb(folderPath);
                                 event.stopPropagation();
                                 toggleVisibility(subFolderList2);
                                 console.log("enter ee");
@@ -1530,7 +1540,10 @@ const myrequestbuttonclick =()=>{
             console.log("currentsiteID", currentsiteID);
             console.log("currentEntity", currentEntity);
             console.log("currentDevision", currentDevision);
-            handleNavigation(value.entityTitle , devisionTitle , null , null , null)
+            const container = document.getElementById("files-container");
+            container.innerHTML = "";
+            // handleNavigation(value.entityTitle , devisionTitle , null , null , null)
+            updateBreadcrumb(`${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/${currentEntity}`);
             toggleVisibility(departmentList);
             // Toggle plus/minus icon
             devisionElement.classList.remove("expanded");
@@ -2533,7 +2546,7 @@ const myrequestbuttonclick =()=>{
     
     //  ismyrequordoclibforfilepreview = "getdoclibdata"
     //  ismyrequordoclibforfilepreview = "getdoclibdata"
-    console.log('path   ', FolderPath)
+    console.log('path   inside getdoclib', FolderPath)
     console.log('SiteID :    ', siteID)
     console.log('docLibName :    ', docLibName);
     console.log('currentEntity :    ', currentEntity);
@@ -2556,7 +2569,7 @@ const myrequestbuttonclick =()=>{
     const segments = FolderPath?.split('/');
     const currentSubsite = segments[3]; 
     console.log("segments",segments);
-    console.log(currentSubsite);
+    console.log("Inside get doclib current entity",currentSubsite);
     console.log("Devision",currentDevision);
     console.log("Department",currentDepartment);
     // set current entity ,current document library and folder name
@@ -2889,7 +2902,8 @@ const myrequestbuttonclick =()=>{
       }
     }
     ismyrequordoclibforfilepreview = "getdoclibdata"
-    handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+    // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+    updateBreadcrumb(FolderPath);
       const container = document.getElementById("files-container");
       container.innerHTML = "";
       const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
@@ -2930,11 +2944,13 @@ const myrequestbuttonclick =()=>{
             
             if(file.ListItemAllFields.IsDeleted === null){
                 if(file.ListItemAllFields.Status !== "Pending"){
+                  if(file.ListItemAllFields.Status !== "Rejected"){
                   let permission=file.ListItemAllFields.Status; 
                   const {fileIcon} = getFileIcon(file.Name);
                   const card=createFileCardForDocumentLibrary(file,fileIcon,siteID,false,docLibName,displayPropertyforUnFillFavourite,displayPropertyforFillFavourite,favouriteText,permission,FolderPath,);
                   container.appendChild(card);
                 }
+              }
               }
       });
     } catch (error) {
@@ -10582,7 +10598,7 @@ FilesItems.forEach(async (fileItem, index) => {
     //   )();
     const filesData = await sp.web.lists
           .getByTitle(`${fileItem.FileMasterList}`)
-          .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted","MyRequest").filter(
+          .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted","MyRequest" ,"Modified" ).filter(
             `CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`
           ).orderBy("Modified", false)();
     console.log("My reaquest Called");
@@ -10778,14 +10794,14 @@ FilesItems.forEach(async (fileItem, index) => {
     
     container.appendChild(card);
     // check file status if approved hide the delete button
-    const menu1 = document.getElementById(`menu-${file.FileUID}`);
+    // const menu1 = document.getElementById(`menu-${file.FileUID}`);
     // console.log("menu1",menu1);
-    if(file.Status === "Approved" || file.Status === null){
-      const firstItem = menu1.children[0]?.children[0] as HTMLElement;
-      if (firstItem && firstItem.style.display !== "none") {
-          firstItem.style.display = "none";
-      }
-    }
+    // if(file.Status === "Approved" || file.Status === null){
+    //   const firstItem = menu1.children[0]?.children[0] as HTMLElement;
+    //   if (firstItem && firstItem.style.display !== "none") {
+    //       firstItem.style.display = "none";
+    //   }
+    // }
   }
 //   const card = document.createElement("div");
   
@@ -10916,29 +10932,543 @@ const fileNotFound=(fileName:any)=>{
   const [selectedText,setSelectedText]=useState<string | null>(null);
   const [dynamicContent, setDynamicContent] = useState<string | null>(null);
    // Function to update the breadcrumb navigation
-   const updateBreadcrumb = (path:any) => {
-      console.log(path, "path")
-    // For toggle the breadcrumb and selectedTextForSideBar
-    const selectedTextDiv=document.getElementById('selectedText');
-    const breadcrumbElement=document.getElementById("breadcrumb");
+  //  const updateBreadcrumb = (path:any) => {
+  //     console.log(path, "path")
+  //   // For toggle the breadcrumb and selectedTextForSideBar
+  //   const selectedTextDiv=document.getElementById('selectedText');
+  //   const breadcrumbElement=document.getElementById("breadcrumb");
 
-    if(breadcrumbElement){
-      // breadcrumbElement.style.position = "absolute"
-      breadcrumbElement.style.width = ""      // Change width  by Amjad
-      breadcrumbElement.style.top = "115px"
-      breadcrumbElement.style.display='block';
-    }
- if(selectedTextDiv){
-  selectedTextDiv.style.display='none';
- }
+  //   // if(breadcrumbElement){
+  //   //   // breadcrumbElement.style.position = "absolute"
+  //   //   breadcrumbElement.style.width = ""      // Change width  by Amjad
+  //   //   breadcrumbElement.style.top = "115px"
+  //   //   breadcrumbElement.style.display='block';
+  //   // }
+
+  //   if (breadcrumbElement) {
+  //     breadcrumbElement.style.width = "";  // Change width by Amjad
+  //     breadcrumbElement.style.top = "115px";
+  //     breadcrumbElement.style.display = 'block';
+  //     breadcrumbElement.innerHTML = ""; 
+
+  //     // Split path into parts
+  //     const pathParts = path.split(" > ");
+  //     let currentPath = "";
+  //     console.log("currentDocumentLibrary---->",currentDocumentLibrary)
+  //     console.log("currentfolderpath->",currentfolderpath)
+  //     console.log("currentDevision---->",currentDevision)
+  //     console.log("currentDepartment---->",currentDepartment)
+  //     console.log("currentsiteID---->",currentsiteID)
+  //     pathParts.forEach((part:any, index:any) => {
+  //         // Build path dynamically
+  //         currentPath += (index === 0 ? "" : " > ") + part; 
+  //         console.log("currentPath inside the breadcrumb",currentPath)
+  //         const breadcrumbLink = document.createElement("a");
+  //         breadcrumbLink.href = "#"; 
+  //         breadcrumbLink.textContent = part;
+  //         breadcrumbLink.style.marginRight = "5px";
+  //         breadcrumbLink.style.color = "blue";
+  //         breadcrumbLink.style.cursor = "pointer";
+
+  //         // Store the details for this folder
+  //         folderDetailsMap[currentPath] = {
+  //           path: currentfolderpath,
+  //           documentLibraryName: currentDocumentLibrary,
+  //           siteID: currentsiteID,
+  //           division: currentDevision,
+  //           department: currentDepartment,
+  //       };
+          
+  //         breadcrumbLink.onclick = (event) => {
+  //             event.preventDefault();
+  //             console.log("Breadcrumb clicked:", currentPath);
+
+  //               // Retrieve the stored details for this folder
+  //           const folderData = folderDetailsMap[currentPath];
+
+  //           if (folderData) {
+  //               console.log("Using stored folder details:", folderData);
+  //               // Call `getdoclibdata` with stored parameters
+  //               getdoclibdata(folderData.path, folderData.siteID, folderData.documentLibraryName);
+  //           }
+  //             // Store the selected breadcrumb details
+  //           //   const breadcrumbData = {
+  //           //     path: currentfolderpath,
+  //           //     documentLibraryName: currentDocumentLibrary,
+  //           //     siteID: currentsiteID,
+  //           //     division: currentDevision,
+  //           //     department: currentDepartment,
+  //           // };
+  //           // console.log("breadcrumbData",breadcrumbData);
+  //           // Call `getdoclibdata` function with correct parameters
+  //           // getdoclibdata(breadcrumbData.path, breadcrumbData.siteID, breadcrumbData.documentLibraryName);
+
+  //           // Call updateBreadcrumb with the selected path
+  //           // updateBreadcrumb(currentPath);
+  //         };
+
+  //         breadcrumbElement.appendChild(breadcrumbLink);
+
+  //         // Add separator if it's not the last part
+  //         if (index < pathParts.length - 1) {
+  //             const separator = document.createTextNode(" > ");
+  //             breadcrumbElement.appendChild(separator);
+  //         }
+  //     });
+  // }
+
+  //   if(selectedTextDiv){
+  //     selectedTextDiv.style.display='none';
+  //   }
    
- 
- 
-    if (breadcrumbElement) {
-      breadcrumbElement.textContent = path;
-    }
-  };
+  //   // if (breadcrumbElement) {
+  //   //   breadcrumbElement.textContent = path;
+  //   // }
+  // };
+
+//   const updateBreadcrumb = (fullPath: string) => {
+//     console.log("Full path:", fullPath);
+//     const selectedTextDiv=document.getElementById('selectedText');
+    
+//     const breadcrumbElement = document.getElementById("breadcrumb");
+//     if (!breadcrumbElement) return;
+
+//     breadcrumbElement.innerHTML = ""; 
+//     if (breadcrumbElement) {
+//       breadcrumbElement.style.width = ""      // Change width  by Amjad
+//       breadcrumbElement.style.top = "115px"
+//       breadcrumbElement.style.display='block'; 
+//   }
+//     // Remove the base part of the path, keeping just the folder structure
+//     const basePath = `${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/`;
+//     if (!fullPath.startsWith(basePath)) return; 
+//     // alert(`basePath ${basePath }`)
+//     // alert(`basePath ${window.location.}`)
+//     const relativePath = fullPath.replace(basePath, ""); 
+//     const pathParts = relativePath.split("/"); 
+//     // alert(`pathParts ${pathParts }`)
+//     let currentPath = ""; 
+
+//     pathParts.forEach((part, index) => {
+//         currentPath += part + "/"; // Build the folder path incrementally
+
+//         // Create breadcrumb link
+//         const breadcrumbLink = document.createElement("a");
+//         breadcrumbLink.href = "#";
+//         breadcrumbLink.textContent = part;
+//         breadcrumbLink.style.marginRight = "5px";
+//         breadcrumbLink.style.color = "blue";
+//         breadcrumbLink.style.cursor = "pointer";
+
+//         // Store details for each folder
+//         folderDetailsMap[currentPath] = {
+//             path: `${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/${currentPath}`,
+//             documentLibraryName: currentDocumentLibrary,
+//             siteID: currentsiteID,
+//             division: currentDevision,
+//             department: currentDepartment,
+//         };
+//         console.log("folderDetailsMap[currentPath]",folderDetailsMap[currentPath])
+//         breadcrumbLink.onclick = (event) => {
+//             event.preventDefault();
+//             console.log("Breadcrumb clicked:", currentPath);
+//             const folderData = folderDetailsMap[currentPath];
+//             console.log("folderData-folderData",folderData)
+//             if (folderData) {
+//                 console.log("Using stored folder details:", folderData);
+//                 getdoclibdata(folderData.path, folderData.siteID, folderData.documentLibraryName);
+//             }
+//         };
+
+//         breadcrumbElement.appendChild(breadcrumbLink);
+
+//         // Add separator if it's not the last part
+//         if (index < pathParts.length - 1) {
+//             const separator = document.createTextNode(" > ");
+//             breadcrumbElement.appendChild(separator);
+//         }
+//     });
+
+//       if(selectedTextDiv){
+//       selectedTextDiv.style.display='none';
+//     }
+// };
+
+// const updateBreadcrumb = (fullPath: string) => {
+//   console.log("Full path:", fullPath);
+//   const selectedTextDiv = document.getElementById("selectedText");
+//   const breadcrumbElement = document.getElementById("breadcrumb");
+
+//   if (!breadcrumbElement) return;
+
+//   breadcrumbElement.innerHTML = "";
+//   breadcrumbElement.style.width = ""; // Change width by Amjad
+//   breadcrumbElement.style.top = "115px";
+//   breadcrumbElement.style.display = "block";
+
+//   const basePath = `${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/`;
+//   if (!fullPath.startsWith(basePath)) return;
+
+//   const relativePath = fullPath.replace(basePath, "");
+//   const pathParts = relativePath.split("/");
+//   let currentPath = "";
+
+//   const tempFolderDetailsMap: Record<string, any> = {}; // Temporary storage
+
+//   pathParts.forEach((part, index) => {
+//       currentPath += part + "/"; // Build the folder path incrementally
+
+//       // Store folder details at this moment
+//       tempFolderDetailsMap[currentPath] = {
+//           path: `${basePath}/${currentPath}`.replace(/\/$/, ""),
+//           documentLibraryName: currentDocumentLibrary, 
+//           siteID: currentsiteID, 
+//           division: currentDevision, 
+//           department: currentDepartment
+//       };
+
+//       // Create breadcrumb link
+//       const breadcrumbLink = document.createElement("a");
+//       breadcrumbLink.href = "#";
+//       breadcrumbLink.textContent = part;
+//       breadcrumbLink.style.marginRight = "5px";
+//       breadcrumbLink.style.color = "blue";
+//       breadcrumbLink.style.cursor = "pointer";
+
+//       breadcrumbLink.onclick = (event) => {
+//           event.preventDefault();
+//           console.log("Breadcrumb clicked:", currentPath);
+          
+//           const folderData = tempFolderDetailsMap[currentPath]; // Get correct data
+//           console.log("folderData:", folderData);
+
+//           if (folderData) {
+//               console.log("Using stored folder details:", folderData);
+//               getdoclibdata(folderData.path, folderData.siteID, folderData.documentLibraryName);
+//           }
+//       };
+
+//       breadcrumbElement.appendChild(breadcrumbLink);
+
+//       if (index < pathParts.length - 1) {
+//           const separator = document.createTextNode(" > ");
+//           breadcrumbElement.appendChild(separator);
+//       }
+//   });
+
+//   // Remove outdated keys from global folderDetailsMap
+//   Object.keys(folderDetailsMap).forEach((key) => {
+//       if (!tempFolderDetailsMap[key]) {
+//           delete folderDetailsMap[key];
+//       }
+//   });
+//   // Copy temp data to global object
+//   Object.assign(folderDetailsMap, tempFolderDetailsMap);
+//   console.log("folderDetailsMap",folderDetailsMap);
+//   if (selectedTextDiv) {
+//       selectedTextDiv.style.display = "none";
+//   }
+// };
+
+
  // Function to handle navigation and update breadcrumb
+ const updateBreadcrumb = (fullPath: string) => {
+  console.log("Full path:", fullPath);
+  const selectedTextDiv = document.getElementById("selectedText");
+  const breadcrumbElement = document.getElementById("breadcrumb");
+
+  if (!breadcrumbElement) return;
+
+  breadcrumbElement.innerHTML = "";
+  breadcrumbElement.style.width = "";
+  breadcrumbElement.style.top = "115px";
+  breadcrumbElement.style.display = "block";
+
+  const basePath = `${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/`;
+  if (!fullPath.startsWith(basePath)) return;
+
+  const relativePath = fullPath.replace(basePath, "").replace(/^\/|\/$/g, ""); 
+  let pathParts = relativePath.split("/");
+  
+   // Insert division and department at correct positions
+   if (pathParts.length > 0) {
+    const entityName = pathParts[0]; 
+    let updatedPathParts = [entityName];
+
+    if (currentDevision !== "") {
+        updatedPathParts.push(currentDevision);
+    }
+    if (currentDepartment !== "") {
+        updatedPathParts.push(currentDepartment);
+    }
+
+    updatedPathParts = updatedPathParts.concat(pathParts.slice(1));
+    pathParts = updatedPathParts;
+  }
+  let currentPath = "";
+  const tempFolderDetailsMap: Record<string, any> = {}; // Temporary storage
+
+  pathParts.forEach((part, index) => {
+      currentPath += (currentPath ? "/" : "") + part; 
+
+      // Remove division and department from path if they exist
+      let storedPath = currentPath;
+      if (currentDevision && storedPath.includes(`/${currentDevision}`)) {
+             storedPath = storedPath.replace(`/${currentDevision}`, "");
+      }
+      if (currentDepartment && storedPath.includes(`/${currentDepartment}`)) {
+             storedPath = storedPath.replace(`/${currentDepartment}`, "");
+      }
+      // Store folder details
+      tempFolderDetailsMap[currentPath] = {
+          path: `/${basePath}${storedPath}`.replace(/^\/|\/$/g, ""),
+          documentLibraryName: currentDocumentLibrary,
+          siteID: currentsiteID,
+          division: currentDevision,
+          department: currentDepartment
+      };
+
+      // Create breadcrumb link
+      const breadcrumbLink = document.createElement("a");
+      breadcrumbLink.href = "#";
+      breadcrumbLink.textContent = part;
+      breadcrumbLink.style.marginRight = "5px";
+      breadcrumbLink.style.color = "blue";
+      breadcrumbLink.style.cursor = "pointer";
+
+      // Fix closure issue by using an IIFE
+      breadcrumbLink.onclick = ((pathCopy, level) => (event) => {
+          event.preventDefault();
+          console.log("Breadcrumb clicked:", pathCopy);
+
+          console.log("Current Entity",currentEntity)
+          console.log("level",level);
+          if (tempFolderDetailsMap[pathCopy]) {
+              console.log("Using stored folder details:", tempFolderDetailsMap[pathCopy]);
+
+              // Ensure getdoclibdata is called with correct details
+              if(pathCopy === currentEntity){
+                console.log("Its Entity pathCopy",pathCopy);
+                console.log("Its Entity currentEntity",currentEntity);
+                const newUrl = `${window.location.origin}${window.location.pathname}`;
+                window.history.pushState(null, '', newUrl)
+                const container = document.getElementById("files-container");
+                container.innerHTML = "";
+                setdisplayuploadfileandcreatefolder(true)
+                currentDevision=""
+                currentDepartment =''
+                currentDocumentLibrary=""
+                currentFolder=""
+                currentfolderpath=""
+                const hidegidvewlistviewbutton = document.getElementById("hidegidvewlistviewbutton");
+                const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+                if (hidegidvewlistviewbutton) {
+                    console.log("enter here .....................");
+                    hidegidvewlistviewbutton.style.display = 'none';
+                }
+                if (hidegidvewlistviewbutton2) {
+                    console.log("enter here .....................");
+                    hidegidvewlistviewbutton2.style.display = 'none';
+                }
+
+                const checkEntityPermission=async()=>{
+                const CreateFolder=document.getElementById("CreateFolder")
+                const createFileButton=document.getElementById("createFileButton")
+                const currentUser = await sp.web.currentUser();
+                const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+                try {
+                  // const currentUser = await sp.web.currentUser();
+                  // const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+                  const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+                  const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+                  const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+                  console.log("isMemberOfDeligation",isMemberOfDeligation);
+                  console.log("isMemberOfSuperAdmin",isMemberOfSuperAdmin);
+                  console.log(`Is member of ${currentEntity}_Admin:`, isMemberOfGroup);
+                  // console.log(`User is a member of the group: ${currentEntity}_Admin`);
+                  if (isMemberOfGroup || isMemberOfSuperAdmin) {
+                    IsFolderDeligationUser=false;
+                  console.log(`User is a member of the group: ${currentEntity}_Admin`);
+                  if(createFileButton){
+                    createFileButton.style.display=  "none";
+                  }
+                  if(CreateFolder){
+                    CreateFolder.style.display="block";
+                  }
+                  // if(CreateRoot){
+                  //   CreateRoot.style.display="none";
+                  // }
+                 }else if(isMemberOfDeligation){
+                    IsFolderDeligationUser=true;
+                    console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+                    if(createFileButton){
+                      createFileButton.style.display=  "none";
+                    }
+                    if(CreateFolder){
+                      CreateFolder.style.display="block";
+                    }
+                 }else {
+                    console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+                    if(createFileButton){
+                      createFileButton.style.display="none";
+                    }
+                    if(CreateFolder){
+                      CreateFolder.style.display="none";
+                    }
+                  
+              
+                   }
+                } catch (error) {
+                  console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+                  if(createFileButton){
+                    createFileButton.style.display="none";
+                  }
+                  if(CreateFolder){
+                    CreateFolder.style.display="none";
+                  }
+              
+                 
+                }
+                }
+                checkEntityPermission();
+                updateBreadcrumb(tempFolderDetailsMap[pathCopy].path)
+              }else if(pathCopy !== currentEntity){
+                console.log("pathCopy--->",pathCopy.substring(pathCopy.lastIndexOf("/") + 1))
+                const checkPermission=async()=>{
+                  const newUrl = `${window.location.origin}${window.location.pathname}`;
+                  window.history.pushState(null, '', newUrl)
+                  const container = document.getElementById("files-container");
+                  container.innerHTML = "";
+                  const hidegidvewlistviewbutton = document.getElementById("hidegidvewlistviewbutton");
+                  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+                  if (hidegidvewlistviewbutton) {
+                      console.log("enter here .....................");
+                      hidegidvewlistviewbutton.style.display = 'none';
+                  }
+                  if (hidegidvewlistviewbutton2) {
+                      console.log("enter here .....................");
+                      hidegidvewlistviewbutton2.style.display = 'none';
+                  }
+                  setdisplayuploadfileandcreatefolder(true)
+                  const CreateFolder=document.getElementById("CreateFolder")
+                  const CreateRoot=document.getElementById("CreateFolder1")
+                  const createFileButton=document.getElementById("createFileButton")
+                  try {
+                    const currentUser = await sp.web.currentUser();
+                    const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+                    const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+                    const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+                    const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+                    console.log("isMemberOfDeligation",isMemberOfDeligation);
+                    console.log("isMemberOfSuperAdmin",isMemberOfSuperAdmin);
+                    console.log(`Is member of ${currentEntity}_Admin:`, isMemberOfGroup);
+                    // console.log(`User is a member of the group: ${currentEntity}_Admin`);
+                    if (isMemberOfGroup || isMemberOfSuperAdmin) {
+                      IsFolderDeligationUser=false;
+                    console.log(`User is a member of the group: ${currentEntity}_Admin`);
+                    if(createFileButton){
+                      createFileButton.style.display=  "none";
+                    }
+                    if(CreateFolder){
+                      CreateFolder.style.display="block";
+                    }
+                   }else if(isMemberOfDeligation){
+                      IsFolderDeligationUser=true;
+                      console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+                      if(createFileButton){
+                        createFileButton.style.display=  "none";
+                      }
+                      if(CreateFolder){
+                        CreateFolder.style.display="block";
+                      }
+                   }else {
+                      console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+                      if(createFileButton){
+                        createFileButton.style.display="none";
+                      }
+                      if(CreateFolder){
+                        CreateFolder.style.display="none";
+                      }
+                    
+                
+                     }
+                  } catch (error) {
+                    console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+                    if(createFileButton){
+                      createFileButton.style.display="none";
+                    }
+                    if(CreateFolder){
+                      CreateFolder.style.display="none";
+                    }
+                
+                   
+                  }
+                  }
+                if(level === "division"){
+                  console.log("Division  clicked");
+                  currentDepartment = ''
+                  currentDocumentLibrary = ''
+                  currentFolder =''
+                  currentfolderpath = ''
+                  checkPermission()
+                  updateBreadcrumb(tempFolderDetailsMap[pathCopy].path)
+                }else if(level === "department"){
+                  console.log("Department clicked");
+                  currentDocumentLibrary = ''
+                  currentFolder = ''
+                  currentfolderpath = ''
+                  checkPermission()
+                  updateBreadcrumb(tempFolderDetailsMap[pathCopy].path)
+                }else{
+                  console.log("Folder clicked")
+                  getdoclibdata(
+                    tempFolderDetailsMap[pathCopy].path,
+                    tempFolderDetailsMap[pathCopy].siteID,
+                    tempFolderDetailsMap[pathCopy].documentLibraryName
+                  );
+                }
+                
+              }
+             
+
+              // Clean up old data
+              Object.keys(folderDetailsMap).forEach((key) => {
+                  if (!tempFolderDetailsMap[key]) {
+                      delete folderDetailsMap[key];
+                  }
+              });
+
+              // Update the global folderDetailsMap
+              Object.assign(folderDetailsMap, tempFolderDetailsMap);
+          }
+      // })(currentPath);
+    })(currentPath, index === 0 ? "entity" : (index === 1 && currentDevision) ? "division" : (index === 2 && currentDepartment) ? "department" : "folder");
+
+
+      breadcrumbElement.appendChild(breadcrumbLink);
+
+      if (index < pathParts.length - 1) {
+          const separator = document.createTextNode(" > ");
+          breadcrumbElement.appendChild(separator);
+      }
+  });
+
+  // Final cleanup for removed paths
+  Object.keys(folderDetailsMap).forEach((key) => {
+      if (!tempFolderDetailsMap[key]) {
+          delete folderDetailsMap[key];
+      }
+  });
+
+  Object.assign(folderDetailsMap, tempFolderDetailsMap);
+  console.log("Updated folderDetailsMap:", folderDetailsMap);
+
+  if (selectedTextDiv) {
+      selectedTextDiv.style.display = "none";
+  }
+};
+
+
  const handleNavigation = (title:string,Devision:string  , Department:string ,  docLibName:string=null, folderName:string=null) => {
   let path = title;
   if(Devision) {
@@ -11196,14 +11726,14 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
 
   console.log("New Fields:", newFields);
     // Validation for forbidden column names
-    const forbiddenNames = ["Status", "IsDeleted"];
-    const invalidFields = newFields.filter((field) => forbiddenNames.includes(field.columnName));
+    const forbiddenNames = ["status", "isdeleted"];
+    const invalidFields = newFields.filter((field) => forbiddenNames.includes(field.columnName.toLocaleLowerCase().trim()));
   
     if (invalidFields.length > 0) {
       popupContainer.style.display = 'none';
       Swal.fire(
         'Validation Error',
-        `The column names "${invalidFields.map(f => f.columnName).join(', ')}" are not allowed. Please choose different names.`,
+        `The field names "${invalidFields.map(f => f.columnName).join(', ')}" are not allowed. Please choose different names.`,
         'error'
       );
       return; 
@@ -11216,7 +11746,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
       popupContainer.style.display = 'none';
       Swal.fire(
         'Validation Error',
-        'Column names must be unique. Please choose different names for the new columns.',
+        'field names must be unique. Please choose different names for the new field.',
         'error'
       );
       return;
@@ -11233,11 +11763,25 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
     popupContainer.style.display = 'none';
     Swal.fire(
       'Validation Error',
-      `The column names "${invalidNewColumns.map(f => f.columnName).join(', ')}" already exist. Please choose different names.`,
+      `The field names "${invalidNewColumns.map(f => f.columnName).join(', ')}" already exist. Please choose different names.`,
       'error'
     );
     return;
   }
+
+  // Check if column name is filled and corresponding column type is missing
+  const invalidTypeFields = newFields.filter(field => field.columnName && !field.columnType);
+  if (invalidTypeFields.length > 0) {
+    popupContainer.style.display = 'none';
+      Swal.fire(
+          'Validation Error',
+          `Please select a field type for "${invalidTypeFields.map(f => f.columnName).join(', ')}"`,
+          'error'
+      );
+      return;
+  }
+  // Filter out fields where both columnName and columnType are missing
+  const fieldsToAdd = newFields.filter(field => field.columnName && field.columnType);
   try {
     const payloadForPreviewFormMaster={
       SiteName:siteName,
@@ -11268,7 +11812,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
     // })
 
     // Create an array of promises for all columns
-    const addColumnPromises = newFields.map(async (column) => {
+    const addColumnPromises = fieldsToAdd.map(async (column) => {
       (payloadForPreviewFormMaster as any).ColumnName = column.columnName.replace(/\s+/g, '');
       (payloadForPreviewFormMaster as any).ColumnType = column.columnType;
 
@@ -12096,7 +12640,8 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
             // console.log("Data added successfully in the",newItem);
             try {
               const subject = `File shared with you: ${fileName}`;
-              const body = `File shared with you: ${fileName}`;
+              // const body = `File shared with you: ${fileName}`;
+              const body = `File shared with you: <a href="${preURL}" target="_blank">${fileName}</a>`;
               const emailProps:any = {
                 To: [user.email],
                 Subject: subject,
@@ -13731,7 +14276,7 @@ if (input) {
   
       // Extract the last part after the last '/'
       const fileName:any = filePath.substring(filePath.lastIndexOf('/') + 1);
-      alert(fileName);
+      // alert(fileName);
       // console.log("fileName",fileName);
       // Extract the rest of the path
       const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -13767,7 +14312,7 @@ if (input) {
         }
       });
      
-      if(clickedReplace){
+    if(clickedReplace){
         const fileInput = document.getElementById('fileInput') as HTMLInputElement;
         const selectedFile = fileInput?.files?.[0]; 
   
@@ -13815,18 +14360,18 @@ if (input) {
         const fileExtensionOfSelectedFile = selectedFile.name.split('.').pop();
         const fileExtensionOfOldFile =fileName.split('.').pop();
         // for same file extension
-        if(fileExtensionOfSelectedFile === fileExtensionOfOldFile){
-            // alert("Same file extension");
-            const file = web.getFileByServerRelativePath(filePath);
-              await file.setContentChunked(selectedFile);
-              if (file.exists) {
-                const fileToUpdate = await file.getItem();
-                const uploadResult = await fileToUpdate.update(payload);
-                console.log("uploadResult",uploadResult);
-              }
-            showReplaceMessage('File replaced successfully.');
-            myRequest(null,null,null);
-        }else{
+        // if(fileExtensionOfSelectedFile === fileExtensionOfOldFile){
+        //     // alert("Same file extension");
+        //     const file = web.getFileByServerRelativePath(filePath);
+        //       await file.setContentChunked(selectedFile);
+        //       if (file.exists) {
+        //         const fileToUpdate = await file.getItem();
+        //         const uploadResult = await fileToUpdate.update(payload);
+        //         console.log("uploadResult",uploadResult);
+        //       }
+        //     showReplaceMessage('File replaced successfully.');
+        //     myRequest(null,null,null);
+        // }else{
           // alert("file extension are not same");
           const folderInWhichWeUploadTheFile=web.getFolderByServerRelativePath(folderPath);
           const uploadResult = await folderInWhichWeUploadTheFile.files.addChunked(selectedFile.name, selectedFile);
@@ -13911,7 +14456,7 @@ if (input) {
       
       showReplaceMessage('File replaced successfully.');
       myRequest(null,null,null);
-    }
+    // }
         
           // console.log('File replaced successfully!');
           

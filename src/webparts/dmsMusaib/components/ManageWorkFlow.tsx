@@ -246,8 +246,48 @@ const handleCreate = async(e: any) => {
               await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.getById(IsApprovalColumnId).update({
                 IsApproval:true
               });
-
               console.log("Item Updated in DMSPreviewFormMaster");
+              try {
+                const { web } = await sp.site.openWebById(`${OthProps.SiteID}`);
+              
+              // const getItems=await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.getById(IsApprovalColumnId)();
+              // console.log("getItems",getItems);
+
+              let securableObject: any;
+              securableObject =await web.lists.getByTitle(`${OthProps.DocumentLibraryName}`);
+              console.log("securableObject",securableObject);
+              // Break inheritance if needed (optional)
+              const hasUniquePermissions = await securableObject.hasUniqueRoleAssignments;
+              if (!hasUniquePermissions) {
+                  await securableObject.breakRoleInheritance(true); 
+              }
+              // Fetch all the groups in the subsite
+              interface IMember {
+                PrincipalType: number;
+                Title:String;
+                Id:number 
+              }
+              interface IRoleAssignmentInfo {
+                Member?: IMember; 
+              }
+              const groups:IRoleAssignmentInfo[] = await web.roleAssignments.expand("Member")();
+              console.log("groups",groups);
+              const filteredMembers=groups.filter(roleAssignment => {
+                return roleAssignment.Member.PrincipalType === 8;
+              });
+           
+              const filteredObject = filteredMembers.filter(item => item.Member.Title === `${OthProps.SiteTitle}_Approval`);
+
+              console.log("filteredObject",filteredObject);
+              const roleDefinition = await web.roleDefinitions.getByName("Edit")();
+              const roleDefinitionId = roleDefinition.Id;
+              const principalId = filteredObject[0].Member.Id;
+              await securableObject.roleAssignments.add(principalId, roleDefinitionId);
+              console.log("Approval group added successfully")
+              } catch (error) {
+                console.log("Error in adding Approval group",error)
+              }
+              
           }
           const LibraryApproverDdetails = await sp.web.lists
           .getByTitle("DMSFolderPermissionMaster")

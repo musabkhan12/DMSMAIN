@@ -10,6 +10,7 @@ import './uploadfilecss'
 import * as XLSX from 'xlsx';
 import './uploadfilecss'
 import Swal from 'sweetalert2';
+let showbulkupload : any;
 let IsApproval : any
 let status :any;
 let buttontext :any = 'Submit'
@@ -25,26 +26,27 @@ submitButton.textContent= buttontext
 submitButton.id="submitBtn";
 submitButton.type="submit";
 
-
-// const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
-// if(submitBtn){
-
-//   submitBtn.disabled = true;
-// }
-
 const UploadFile: React.FC<UploadFileProps> = ({ currentfolderpath , onReturnToMain  }) => {
   const sp: SPFI = getSP();
   let locationPath=window.location.pathname.match(/\/sites\/[^\/]+/)[0];
   // check whether folder is private or public and save state
+
+  const [showBulkUpload, setShowBulkUpload] = useState<boolean | null>(null);
+  const [isChecked, setIsChecked] = useState(false);
   const checkfolderprivace = async() =>{
     const folderItems = await sp.web.lists.getByTitle("DMSPreviewFormMaster")
     .items.filter(`DocumentLibraryName eq '${currentfolderpath.DocumentLibrary}' and SiteName eq '${currentfolderpath.Entity}' and IsDocumentLibrary eq 1`).select("IsApproval","IsPrivate")();
     console.log("folderItems",folderItems);
+    showbulkupload = folderItems[0].IsApproval;
+    setShowBulkUpload(folderItems[0].IsApproval)
+
     IsApproval=folderItems[0].IsApproval;
 
     console.log('currentfolderpath' , currentfolderpath)
   }
+  useEffect(() => {
   checkfolderprivace();
+  }, []);
 
 
 const [data, setData] = useState({
@@ -83,77 +85,6 @@ const documentLibraryName  = data.DocumentLibrary;
 console.log("documentLibraryName" , documentLibraryName)
 
 
-  // const [libraryName, setLibraryName] = useState("Shared Documents"); // Set your library name here
-
-  // let selectedFile:any=null;
-
-
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files![0];
-  //   // if (file) {
-  //   //   // selectedFile=file;
-  //   //   uploadFile(file);
-  //   // }
-
-  
-  //   if (file) {
-  //     const allowedExtensions = ['doc', 'docx', 'ppt', 'pdf', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg'];
-  //     const nonAlphaNumericForEntity = file.name.replace(/[^a-zA-Z0-9 -]/g, '');
-  //     const fileExtension = file.name.split('.').pop()?.toLowerCase();
-  
-  //     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-  //       // alert('Invalid file type. Only DOC, DOCX, PPT, PDF, XLS, XLSX, TXT, PNG, JPG, JPEG are allowed.');
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Invalid file type',
-  //         text: 'Only DOC, DOCX, PPT, PDF, XLS, XLSX, TXT, PNG, JPG, JPEG are allowed.',
-  //       });
-  //       event.target.value = ''; // Clear the input
-  //     } else if(nonAlphaNumericForEntity !== file.name) {
-  //       // alert('Special charaters are not allowed.');
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Invalid file name',
-  //         text: 'File names can only contain letters, numbers, spaces, and hyphens.',
-  //       });
-  //       event.target.value = ''; // Clear the input
-  //     } else {
-  //       uploadFile(file);
-  //     }
-  //   }
-  // };
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files![0];
-  
-  //   if (file) {
-  //     const allowedExtensions = ['doc', 'docx', 'ppt', 'pdf', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg'];
-  //     const fileExtension = file.name.split('.').pop()?.toLowerCase();
-  //     const invalidCharacters = /[^a-zA-Z0-9 -]/g; // Allowed: letters, numbers, spaces, and hyphens
-  
-  //     // Check for invalid characters in the file name
-  //     if (invalidCharacters.test(file.name)) {
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Invalid file name',
-  //         text: 'File names can only contain letters, numbers, spaces, and hyphens.',
-  //       });
-  //       event.target.value = ''; // Clear the input
-  //     } 
-  //     // Check for invalid file extensions
-  //     else if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Invalid file type',
-  //         text: 'Only DOC, DOCX, PPT, PDF, XLS, XLSX, TXT, PNG, JPG, JPEG are allowed.',
-  //       });
-  //       event.target.value = ''; // Clear the input
-  //     } 
-  //     // If all validations pass, upload the file
-  //     else {
-  //       uploadFile(file);
-  //     }
-  //   }
-  // };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files![0];
 
@@ -187,12 +118,6 @@ console.log("documentLibraryName" , documentLibraryName)
     }
   }
 };
-
-  
-  
-  
-  
-  
   const uploadFile = async (file: File) => {
     try {
       
@@ -211,6 +136,7 @@ console.log("documentLibraryName" , documentLibraryName)
       console.error("Error uploading file:", error);
     }
   };
+
 
   const generatePreviewUrl = async (serverRelativeUrl: string) => {
     // Encode the file name and construct the preview URL
@@ -295,28 +221,166 @@ const previewFile = async (previewUrl: string) => {
 
   };
 
-  // const entity=data.Entity;
+
+  //  handle bulk file
+
+  
+const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]); // Store uploaded files for preview
+const [isUploading, setIsUploading] = useState(false);
+
+// const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//   const files = event.target.files; // Get all selected files
+
+//   if (!files || files.length === 0) return; // Exit if no files are selected
+
+//   const allowedExtensions = ['doc', 'docx', 'ppt', 'pdf', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg'];
+//   const invalidCharacters = /[^a-zA-Z0-9 -]/g; // Allowed: letters, numbers, spaces, and hyphens
+
+//   const validFiles: File[] = []; // Store valid files
+
+//   for (let i = 0; i < files.length; i++) {
+//     const file = files[i];
+//     const fileExtension = file.name.split('.').pop()?.toLowerCase(); // Extract file extension
+//     const baseFileName = file.name.substring(0, file.name.lastIndexOf('.')); // Extract filename before extension
+
+//     // Validate file extension
+//     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+//       Swal.fire({
+//         icon: 'error',
+//         title: 'Invalid file type',
+//         text: `File "${file.name}" is not allowed. Only DOC, DOCX, PPT, PDF, XLS, XLSX, TXT, PNG, JPG, JPEG are accepted. and special character is not allowed`,
+//       });
+//       continue; // Skip this file and move to the next
+//     }
+
+//     // Validate file name
+//     if (invalidCharacters.test(baseFileName)) {
+//       Swal.fire({
+//         icon: 'error',
+//         title: 'Invalid file name',
+//         text: `File "${file.name}" contains invalid characters. Only letters, numbers, spaces, and hyphens are allowed.`,
+//       });
+//       continue; // Skip this file
+//     }
+
+//     // If the file passes all checks, add it to the validFiles array
+//     validFiles.push(file);
+//   }
+
+//   // If there are valid files, proceed with upload
+//   if (validFiles.length > 0) {
+//     if (validFiles.length === 1) {
+//       uploadFile(validFiles[0]); // Upload single file
+//     } else {
+//       const fileList = new DataTransfer();
+//       validFiles.forEach((file) => fileList.items.add(file));
+//       bulkUploadFile(fileList.files); 
+//       // Upload multiple files
+//       //  bulkUploadFile(validFiles); // Upload multiple files
+//     }
+//   }
+
+//   // Clear input field to allow re-selection of the same files
+//   event.target.value = '';
+// };
+const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const files = event.target.files; // Get all selected files
+
+  if (!files || files.length === 0) return; // Exit if no files are selected
+
+  const allowedExtensions = ['doc', 'docx', 'ppt', 'pdf', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg'];
+  const invalidCharacters = /[^a-zA-Z0-9 -]/g; // Allowed: letters, numbers, spaces, and hyphens
+
+  const validFiles: File[] = []; // Store valid files
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileExtension = file.name.split('.').pop()?.toLowerCase(); // Extract file extension
+    const baseFileName = file.name.substring(0, file.name.lastIndexOf('.')); // Extract filename before extension
+
+    // Validate file extension
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid file type',
+        text: `File "${file.name}" is not allowed. Only DOC, DOCX, PPT, PDF, XLS, XLSX, TXT, PNG, JPG, JPEG are accepted. and special character is not allowed`,
+      });
+      continue; // Skip this file and move to the next
+    }
+
+    // Validate file name
+    if (invalidCharacters.test(baseFileName)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid file name',
+        text: `File "${file.name}" contains invalid characters. Only letters, numbers, spaces, and hyphens are allowed.`,
+      });
+      continue; // Skip this file
+    }
+
+    // If the file passes all checks, add it to the validFiles array
+    validFiles.push(file);
+  }
+
+  // If there are valid files, proceed with upload
+  if (validFiles.length > 0) {
+    if (validFiles.length === 1) {
+      uploadFile(validFiles[0]); // Upload single file
+    } else {
+      const fileList = new DataTransfer();
+      validFiles.forEach((file) => fileList.items.add(file));
+      bulkUploadFile(fileList.files); 
+      // Upload multiple files
+      //  bulkUploadFile(validFiles); // Upload multiple files
+    }
+  }
+
+  // Clear input field to allow re-selection of the same files
+  event.target.value = '';
+};
+
+
+const bulkUploadFile = async (files: FileList) => {
+  console.log("Bulk uploading files:", files);
+  setIsUploading(true);
+  const uploadedFilesList: { name: string; url: string }[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const file = files[i];
+      console.log(`Uploading file.name: ${file.name}`);
+      console.log(`Uploading file: ${file.name}`);
+      const folder = sp.web.getFolderByServerRelativePath("DMSOrphanDocs");
+
+      const uploadResult = await folder.files.addChunked(file.name, file);
+      console.log(`File ${file.name} uploaded successfully`, uploadResult);
+
+      // Generate the preview URL dynamically
+      const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
+
+      uploadedFilesList.push({ name: file.name, url: previewUrl });
+    } catch (error) {
+      console.error(`Error uploading file ${files[i].name}:`, error);
+    }
+  }
+
+  // setUploadedFiles(uploadedFilesList); // Update state with all uploaded files
+  setUploadedFiles((prevFiles) => [...prevFiles, ...uploadedFilesList]);
+  setIsUploading(false);
+};
+
+
+const handlePreview = (previewUrl: string) => {
+  previewFile(previewUrl); // Call your preview function
+};
+  
+
 
 
   
 React.useEffect(()=>{
   const  loadFormOptions = async ()=> {
     try {
-      // const testidsub = await sp.site.openWebById(data.siteID);
-      
-      // console.log("current Entity URL",testidsub.data.Url
-      //   )
-      
-      // const fields = await testidsub.web.lists.getByTitle(`${documentLibraryName}`).fields.filter("Hidden eq false and ReadOnlyField eq false")();
-      // console.log("Fields of document Library",fields);
-
-
-      // const forms = await sp.web.lists.getByTitle("DMSPreviewformfields").items.select('*','SiteTitle/Title', 'SiteTitle/SiteURL').expand('SiteTitle')
-      // .filter(`SiteTitle/Title eq '${propsDeatils.currentEntity}' `)();
-      // console.log(forms, "forms");
-
-      // start
-      
       const documentLibraryFields=await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.select("ColumnName","ColumnType","IsRequired","IsRename")
       .filter(
             `SiteName eq '${currentfolderpath.Entity}' 
@@ -337,18 +401,28 @@ React.useEffect(()=>{
             }
             const inputContainer = document.createElement("div"); 
             inputContainer.className = "input-container";
-    
+             
             // Create and set label
             const label = document.createElement("label");
             label.setAttribute("htmlFor", fieldName);
             // label.textContent = fieldName;
-            label.textContent = fName;
+            // label.textContent = fName;
+             // Append an asterisk if the field is required 
+              if (required) {
+                const asterisk = document.createElement("span");
+                asterisk.textContent = " *";
+                asterisk.style.color = "red";
+                label.textContent = fName;
+                label.appendChild(asterisk); 
+              } else {
+                label.textContent = fName;
+              }
             inputContainer.appendChild(label);
     
             let inputElement: HTMLInputElement | null = null;
     
             // Dynamically create the input field based on FieldType
-            let modifiedType = type.replace(/\s+/g, '').toLowerCase();
+            let modifiedType = type?.replace(/\s+/g, '').toLowerCase();
             console.log("modifiedType",modifiedType);
 
             if (
@@ -412,7 +486,12 @@ React.useEffect(()=>{
       const label = document.createElement("label");
       label.setAttribute("htmlFor", 'fileInput');
       label.textContent = 'Upload File';
-
+      
+      // Add a red asterisk if the field is required
+      const asterisk = document.createElement("span");
+      asterisk.textContent = " *";
+      asterisk.style.color = "red"; 
+      label.appendChild(asterisk);
       uploadFileDiv.appendChild(label);
       uploadFileDiv.appendChild(uploadFileInput);
       formSelector.appendChild(uploadFileDiv);
@@ -431,165 +510,6 @@ React.useEffect(()=>{
       loadFormOptions();
 },[])
   
-
-
-// const handleSubmit = async (event: any) => {
-
-//   event.preventDefault();
-//   console.log("Button clicked");
-
-//   const formSelector = document.getElementById("formSelector") as HTMLFormElement;
-//   if (!formSelector.checkValidity()) {
-//       formSelector.reportValidity(); // Show validation errors
-//       return;
-//   }
-
-//   // Prepare the payload for SharePoint dynamically
-//   const inputs = document.querySelectorAll('.dynamic-input');
-//   // console.log("inputs",inputs)
-
-  
-//   const payload: any = {};
-
-//   inputs.forEach((input) => {
-//       const inputElement = input as HTMLInputElement;
-//       const fieldName = inputElement.id;
-//       if (!fieldName) return; // Skip if field name is invalid
-
-//       if (inputElement.type === "checkbox") {
-//           // console.log("fieldName",fieldName.includes(' '));
-//           payload[fieldName] = inputElement.checked;
-//       } else if (inputElement.type !== "file") {
-//           if(inputElement.value === ""){
-//              console.log("skip");
-//           }else{
-//             // if(fieldName.includes(' '))
-//             // console.log("fieldName",fieldName.includes(' '));
-//             payload[fieldName] = inputElement.value;
-//           }
-          
-//       }
-//   });
-
-//   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-//   const selectedFile = fileInput?.files?.[0]; 
-
-//   if (!selectedFile) {
-//       console.error("No file selected.");
-
-//       return;
-//   }
-
-//   try {
-//       console.log("Payload:", payload);
-//       console.log("SiteID:", currentfolderpath.siteID);
-
-//       const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
-//       if (!testidsub) throw new Error("Subsite not found.");
-
-//       const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
-//       console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
-
-//       const files = await documentLibraryInWhichWeUploadTheFile.files();
-//       const fileExists = files.some(file => file.Name === selectedFile.name);
-  
-//       if (fileExists) {
-//          Swal.fire({
-//            icon: 'error',
-//            title: 'File already exists',
-//            text: 'The file you are trying to upload already exists in the document library. Please choose a different file name.',
-//          })
-//          return
-//       }
-  
-      
-//       const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(selectedFile.name, selectedFile);
-//       console.log("File uploaded successfully", uploadResult.data.Name);
-//       const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
-//       submitBtn.disabled = true; 
-//       submitBtn.innerText = "Submitting..."; // Optional: Change button text to indicate progress
-    
-//       const listItem = await uploadResult.file.getItem();
-//       console.log("ListItems ",listItem);
-      
-//       const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
-//       const siteUrl = window.location.origin;
-//       const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
-//       console.log(encodedFilePath , "encodedFilePath")
-//         const previewUrl = `${siteUrl}/sites/AlRostmani/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
-//       //  const previewUrl = `${siteUrl}/sites/AlRostmanispfx2/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
-//         //  const previewUrl = `${siteUrl}/sites/IntranetUAT/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
-      
-//       console.log("Generated Preview URL:", previewUrl);
-//       if (!listItem) throw new Error("List item not found for the uploaded file.");
-
-
-//       if(IsApproval === true){
-  
-//         status="Pending";
-//       }else if(IsApproval === false){
-
-//         status="Auto Approved";
-//       }
-//       (payload as any).Status=status;
-//       await listItem.update(payload);
-//       console.log("File metadata updated successfully with:", payload);
-     
-      
-//       // alert(`status,${status}`);
-//       const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
-//           FileName: String(uploadResult.data.Name),
-//           FileSize: String(uploadResult.data.Length),
-//           FileVersion: String(uploadResult.data.MajorVersion),
-//           CurrentFolderPath: String(currentfolderpath.folderpath),
-//           FileUID: String(uploadResult.data.UniqueId),
-//           CurrentUser: String(currentUserEmailRef.current),
-//           SiteID: String(currentfolderpath.siteID),
-//           Status: status,
-//           FilePreviewURL : String(previewUrl),
-//           DocumentLibraryName:String(currentfolderpath.DocumentLibrary),
-//           SiteName : String(currentfolderpath.Entity),
-//           MyRequest: true,
-//           RequestNo: `DMS-${uploadResult.data.UniqueId}`
-//       });
-//       console.log(newItem, "New item added FileMaster");
-
-      
-//       if(IsApproval === true){
-//         const AddIteminDMSFileApprovalList = await sp.web.lists.getByTitle('DMSFileApprovalList').items.add({
-//           SiteName : String(currentfolderpath.Entity),  
-//            DocumentLibraryName : String(currentfolderpath.DocumentLibrary),
-//            RequestedBy  : String(currentUserEmailRef.current),
-//            FileName: String(uploadResult.data.Name),
-//            FileUID: String(uploadResult.data.UniqueId),
-//            FilePreviewUrl: String(previewUrl),
-//            Status: String('Pending'),
-//            FolderPath : String(currentfolderpath.folderpath),
-//            ApproveAction : String('Submitted'),
-//            ApprovedLevel : 1,
-//            RequestNo: `DMS-${uploadResult.data.UniqueId}`
-//       })
-//       }
-
-
-//     // console.log(AddIteminDMSFileApprovalList, "New item added to DMSFileApprovalList");
-
-//     if(newItem ){
-//       Deletemedia()
-//       setTimeout(() => {
-//         location.reload()
-//         onReturnToMain(); // Call onReturnToMain after 3 seconds
-//     }, 3000); // 3000 milliseconds = 3 seconds
-//      }
-
-    
-
-//   }catch (error) {
-//       console.error("Error during submission:", error);
-//   }
-
-
-// };
 const getUniqueRequestNo = async () => {
   const counterItem = await sp.web.lists.getByTitle('DMSFileCounterList').items.getById(1)();
   console.log("Counter Item 0", counterItem);
@@ -611,178 +531,821 @@ const getUniqueRequestNo = async () => {
 };
 
 const handleSubmit = async (event: any) => {
- 
-  event.preventDefault();
-  console.log("Button clicked");
- 
-  const formSelector = document.getElementById("formSelector") as HTMLFormElement;
-  if (!formSelector.checkValidity()) {
-      formSelector.reportValidity(); // Show validation errors
-      return;
-  }
- 
-  // Prepare the payload for SharePoint dynamically
-  const inputs = document.querySelectorAll('.dynamic-input');
-  // console.log("inputs",inputs)
- 
- 
-  const payload: any = {};
- 
-  inputs.forEach((input) => {
-      const inputElement = input as HTMLInputElement;
-      const fieldName = inputElement.id;
-      if (!fieldName) return; // Skip if field name is invalid
- 
-      if (inputElement.type === "checkbox") {
-          // console.log("fieldName",fieldName.includes(' '));
-          payload[fieldName] = inputElement.checked;
-      } else if (inputElement.type !== "file") {
-          if(inputElement.value === ""){
-             console.log("skip");
-          }else{
-            // if(fieldName.includes(' '))
+    alert(` isChecked ${isChecked}`);
+  
+    event.preventDefault();
+    console.log("Button clicked");
+   
+    const formSelector = document.getElementById("formSelector") as HTMLFormElement;
+    if (!formSelector.checkValidity()) {
+        formSelector.reportValidity(); // Show validation errors
+        return;
+    }
+   
+    // Prepare the payload for SharePoint dynamically
+    const inputs = document.querySelectorAll('.dynamic-input');
+    // console.log("inputs",inputs)
+   
+   
+    const payload: any = {};
+   
+    inputs.forEach((input) => {
+        const inputElement = input as HTMLInputElement;
+        const fieldName = inputElement.id;
+        if (!fieldName) return; // Skip if field name is invalid
+   
+        if (inputElement.type === "checkbox") {
             // console.log("fieldName",fieldName.includes(' '));
-            payload[fieldName] = inputElement.value;
-          }
-         
-      }
-  });
- 
-  const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-  const selectedFile = fileInput?.files?.[0];
- 
-  if (!selectedFile) {
-      console.error("No file selected.");
- 
-      return;
-  }
- 
-  try {
-      console.log("Payload:", payload);
-      console.log("SiteID:", currentfolderpath.siteID);
- 
-      const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
-      if (!testidsub) throw new Error("Subsite not found.");
- 
-      const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
-      console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
- 
-      const files = await documentLibraryInWhichWeUploadTheFile.files();
-      // const fileExists = files.some(file => file.Name === selectedFile.name);
- 
-      // if (fileExists) {
-      //    Swal.fire({
-      //      icon: 'error',
-      //      title: 'File already exists',
-      //      text: 'The file you are trying to upload already exists in the document library. Please choose a different file name.',
-      //    })
-      //    return
-      // }
-      const originalFileName = selectedFile.name;
-      const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
-      const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
-      console.log("originalFileName",originalFileName);
-      console.log("fileExtension",fileExtension);
-      console.log("baseFileName",baseFileName);
-      let uniqueFileName = originalFileName;
-      let counter = 1;
- 
-      while (files.some(file => file.Name === uniqueFileName)) {
-        uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
-        counter++;
-      }
-      console.log(`Unique file name generated: ${uniqueFileName}`);
-      // const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(selectedFile.name, selectedFile);
-      const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, selectedFile);
-      console.log("File uploaded successfully", uploadResult.data.Name);
-      const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Submitting..."; // Optional: Change button text to indicate progress
+            payload[fieldName] = inputElement.checked;
+        } else if (inputElement.type !== "file") {
+            if(inputElement.value === ""){
+               console.log("skip");
+            }else{
+              // if(fieldName.includes(' '))
+              // console.log("fieldName",fieldName.includes(' '));
+              payload[fieldName] = inputElement.value;
+            }
+           
+        }
+    });
    
-      const listItem = await uploadResult.file.getItem();
-      console.log("ListItems ",listItem);
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    const selectedFile = fileInput?.files?.[0];
+   
+    if (!selectedFile) {
+        console.error("No file selected.");
+   
+        return;
+    }
+   
+    try {
+        console.log("Payload:", payload);
+        console.log("SiteID:", currentfolderpath.siteID);
+   
+        const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+        if (!testidsub) throw new Error("Subsite not found.");
+   
+        const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+        console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
+   
+        const files = await documentLibraryInWhichWeUploadTheFile.files();
+  
+        const originalFileName = selectedFile.name;
+        const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+        const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+        console.log("originalFileName",originalFileName);
+        console.log("fileExtension",fileExtension);
+        console.log("baseFileName",baseFileName);
+        let uniqueFileName = originalFileName;
+        let counter = 1;
+   
+        while (files.some(file => file.Name === uniqueFileName)) {
+          uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+          counter++;
+        }
+        console.log(`Unique file name generated: ${uniqueFileName}`);
+        // const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(selectedFile.name, selectedFile);
+        console.log("unique file name in single", uniqueFileName);
+        console.log("selectedFile in single", selectedFile);
+        const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, selectedFile);
+        console.log("File uploaded successfully", uploadResult.data.Name);
+        const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting..."; // Optional: Change button text to indicate progress
      
-      const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
-      const siteUrl = window.location.origin;
-      const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
-      console.log(encodedFilePath , "encodedFilePath")
-        // const previewUrl = `${siteUrl}/sites/AlRostmani/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
-      //  const previewUrl = `${siteUrl}/sites/AlRostmanispfx2/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
-         const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+        const listItem = await uploadResult.file.getItem();
+        console.log("ListItems ",listItem);
+       
+        const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+        const siteUrl = window.location.origin;
+        const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+        console.log(encodedFilePath , "encodedFilePath")
+          // const previewUrl = `${siteUrl}/sites/AlRostmani/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+        //  const previewUrl = `${siteUrl}/sites/AlRostmanispfx2/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+           const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+       
+        console.log("Generated Preview URL:", previewUrl);
+        if (!listItem) throw new Error("List item not found for the uploaded file.");
+   
+   
+        if(IsApproval === true){
+           alert(`check tru ${IsApproval}`);
+          status="Pending";
+        }else if(IsApproval === false){
+          alert(`check fas ${IsApproval}`);
+          status="Auto Approved";
+        }
+        (payload as any).Status=status;
+        await listItem.update(payload);
+        console.log("File metadata updated successfully with:", payload);
+       
+        const newRequestNo = await getUniqueRequestNo();
+        // alert(`status,${status}`);
+        const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+            FileName: String(uploadResult.data.Name),
+            FileSize: String(uploadResult.data.Length),
+            FileVersion: String(uploadResult.data.MajorVersion),
+            CurrentFolderPath: String(currentfolderpath.folderpath),
+            FileUID: String(uploadResult.data.UniqueId),
+            CurrentUser: String(currentUserEmailRef.current),
+            SiteID: String(currentfolderpath.siteID),
+            Status: status,
+            FilePreviewURL : String(previewUrl),
+            DocumentLibraryName:String(currentfolderpath.DocumentLibrary),
+            SiteName : String(currentfolderpath.Entity),
+            MyRequest: true,
+            Processname : 'New File Request',
+            // RequestNo: `DMS-${uploadResult.data.UniqueId}`
+            RequestNo: newRequestNo
+        });
+        console.log(newItem, "New item added FileMaster");
+   
+       
+        if(IsApproval === true){
+          const AddIteminDMSFileApprovalList = await sp.web.lists.getByTitle('DMSFileApprovalList').items.add({
+            SiteName : String(currentfolderpath.Entity),  
+             DocumentLibraryName : String(currentfolderpath.DocumentLibrary),
+             RequestedBy  : String(currentUserEmailRef.current),
+             FileName: String(uploadResult.data.Name),
+             FileUID: String(uploadResult.data.UniqueId),
+             FilePreviewUrl: String(previewUrl),
+             Status: String('Pending'),
+             FolderPath : String(currentfolderpath.folderpath),
+             ApproveAction : String('Submitted'),
+             ApprovedLevel : 1,
+             RequestNo: newRequestNo,
+             Processname : 'New File Request',
+        })
+        }
+  
+      if(newItem ){
+        Deletemedia()
+        setTimeout(() => {
+          location.reload()
+          onReturnToMain();
+      }, 3000);
+       }
+   
      
-      console.log("Generated Preview URL:", previewUrl);
-      if (!listItem) throw new Error("List item not found for the uploaded file.");
- 
- 
-      if(IsApproval === true){
- 
-        status="Pending";
-      }else if(IsApproval === false){
- 
-        status="Auto Approved";
-      }
-      (payload as any).Status=status;
-      await listItem.update(payload);
-      console.log("File metadata updated successfully with:", payload);
-     
-      const newRequestNo = await getUniqueRequestNo();
-      // alert(`status,${status}`);
-      const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
-          FileName: String(uploadResult.data.Name),
-          FileSize: String(uploadResult.data.Length),
-          FileVersion: String(uploadResult.data.MajorVersion),
-          CurrentFolderPath: String(currentfolderpath.folderpath),
-          FileUID: String(uploadResult.data.UniqueId),
-          CurrentUser: String(currentUserEmailRef.current),
-          SiteID: String(currentfolderpath.siteID),
-          Status: status,
-          FilePreviewURL : String(previewUrl),
-          DocumentLibraryName:String(currentfolderpath.DocumentLibrary),
-          SiteName : String(currentfolderpath.Entity),
-          MyRequest: true,
-          Processname : 'New File Request',
-          // RequestNo: `DMS-${uploadResult.data.UniqueId}`
-          RequestNo: newRequestNo
-      });
-      console.log(newItem, "New item added FileMaster");
- 
-     
-      if(IsApproval === true){
-        const AddIteminDMSFileApprovalList = await sp.web.lists.getByTitle('DMSFileApprovalList').items.add({
-          SiteName : String(currentfolderpath.Entity),  
-           DocumentLibraryName : String(currentfolderpath.DocumentLibrary),
-           RequestedBy  : String(currentUserEmailRef.current),
-           FileName: String(uploadResult.data.Name),
-           FileUID: String(uploadResult.data.UniqueId),
-           FilePreviewUrl: String(previewUrl),
-           Status: String('Pending'),
-           FolderPath : String(currentfolderpath.folderpath),
-           ApproveAction : String('Submitted'),
-           ApprovedLevel : 1,
-           RequestNo: newRequestNo,
-           Processname : 'New File Request',
-      })
-      }
- 
- 
-    // console.log(AddIteminDMSFileApprovalList, "New item added to DMSFileApprovalList");
- 
-    if(newItem ){
-      Deletemedia()
-      setTimeout(() => {
-        location.reload()
-        onReturnToMain(); // Call onReturnToMain after 3 seconds
-    }, 3000); // 3000 milliseconds = 3 seconds
-     }
- 
+   
+    }catch (error) {
+        console.error("Error during submission:", error);
+    }
+   
    
  
-  }catch (error) {
-      console.error("Error during submission:", error);
-  }
- 
- 
+
 };
+const handleSubmitBulk = async (event: any) => {
+  event.preventDefault();
+  console.log("Bulk upload button clicked");
+   try {
+    console.log("SiteID:", currentfolderpath.siteID);
+
+    const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+    if (!testidsub) throw new Error("Subsite not found.");
+
+    // Get the folder in the static document library
+    const documentLibrary = testidsub.web.getFolderByServerRelativePath(documentLibraryName);
+    console.log("Current Path:", documentLibrary);
+
+    // Loop through each file and upload it
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      const { name, url } = uploadedFiles[i];
+
+      try {
+        console.log(`Uploading file: ${name}`);
+
+        // Fetch the file from the URL and create a File object
+        const fileBlob = await fetch(url).then((res) => res.blob());
+        const fileToUpload = new File([fileBlob], name, { type: fileBlob.type });
+        console.log("File to upload in loop:", fileToUpload);
+        // Upload the file using the add method (or addChunked if needed)
+        console.log("File to upload in bulk :", fileToUpload);
+        console.log("File name to upload in bulk :", name);
+        const uploadResult = await documentLibrary.files.addChunked(name, fileToUpload);
+        console.log(`${name} uploaded successfully to ${documentLibraryName}`, uploadResult);
+
+        // Generate the preview URL for the uploaded file
+        const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
+        console.log("Generated Preview URL:", previewUrl);
+
+        // Optionally, update metadata (e.g., file status)
+        const listItem = await uploadResult.file.getItem();
+        if (listItem) {
+          const status = "Auto Approved";
+          await listItem.update({ Status: status });
+          console.log("File metadata updated successfully.");
+        }
+		}catch{
+		}
+		
+		}
+   } catch (error) {
+    
+   }
+  // try {
+  //   // Get the SharePoint subsite
+  //   const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+  //   if (!testidsub) throw new Error("Subsite not found.");
+
+  //   // Get the target document library folder
+  //   const documentLibrary = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+  //   console.log("Current Path:", documentLibrary);
+
+  //   // Upload files sequentially (one by one)
+  //   for (const { name, url } of uploadedFiles) {
+  //     try {
+  //       console.log(`Uploading file: ${name}`);
+
+  //       // Fetch the file directly from the URL
+  //       const response = await fetch(url);
+  //       if (!response.ok) throw new Error(`Failed to fetch file: ${name}`);
+
+  //       // Use the response blob directly for upload
+  //       const blob = await response.blob();
+
+  //       // Upload the file using addChunked
+  //       const uploadResult = await documentLibrary.files.addChunked(name, blob);
+  //       console.log(`File ${name} uploaded successfully`, uploadResult);
+
+  //       // Generate the preview URL dynamically
+  //       const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
+  //       console.log("Generated Preview URL:", previewUrl);
+
+  //       // Update metadata (optional)
+  //       const status = "Auto Approved";
+  //       const listItem = await uploadResult.file.getItem();
+  //       if (listItem) {
+  //         await listItem.update({ Status: status });
+  //         console.log("File metadata updated successfully.");
+  //       }
+
+  //       // Add entry to the FileMaster list (optional)
+  //       const newRequestNo = await getUniqueRequestNo();
+  //       await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+  //         FileName: String(uploadResult.data.Name),
+  //         FileSize: String(uploadResult.data.Length),
+  //         FileVersion: String(uploadResult.data.MajorVersion),
+  //         CurrentFolderPath: String(currentfolderpath.folderpath),
+  //         FileUID: String(uploadResult.data.UniqueId),
+  //         CurrentUser: String(currentUserEmailRef.current),
+  //         SiteID: String(currentfolderpath.siteID),
+  //         Status: status,
+  //         FilePreviewURL: String(previewUrl),
+  //         DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+  //         SiteName: String(currentfolderpath.Entity),
+  //         MyRequest: true,
+  //         Processname: 'New File Request',
+  //         RequestNo: newRequestNo
+  //       });
+  //       console.log("File added to FileMaster successfully.");
+  //     } catch (error) {
+  //       console.error(`Error uploading file ${name}:`, error);
+  //     }
+  //   }
+
+  //   console.log("Bulk upload process completed.");
+
+  //   // Cleanup media after upload
+  //   Deletemedia();
+
+  //   // Reload the page once all files are processed
+  //   setTimeout(() => {
+  //     location.reload();
+  //     onReturnToMain();
+  //   }, 3000);
+
+  // } catch (error) {
+  //   console.error("Error during bulk submission:", error);
+  // }
+};
+// const handleSubmitBulk = async (event: any) => {
+//   event.preventDefault();
+//   console.log("Bulk upload button clicked");
+
+//   try {
+//     // Get the SharePoint subsite
+//     const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+//     if (!testidsub) throw new Error("Subsite not found.");
+
+//     // Get the target document library folder
+//     const documentLibrary = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+//     console.log("Current Path:", documentLibrary);
+
+//     // Upload files sequentially (one by one)
+//     for (const { name, url } of uploadedFiles) {
+//       try {
+//         console.log(`Uploading file: ${name}`);
+
+//         // Use the actual file object from uploadedFiles
+//         const file = new File([await fetch(url).then(res => res.blob())], name);
+         
+//         // Upload the file using addChunked
+//         const uploadResult = await documentLibrary.files.addChunked(name, file);
+//         console.log(`File ${name} uploaded successfully`, uploadResult);
+
+//         // Generate the preview URL dynamically
+//         const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
+//         console.log("Generated Preview URL:", previewUrl);
+
+//         // Update metadata (optional)
+//         const status = "Auto Approved";
+//         const listItem = await uploadResult.file.getItem();
+//         if (listItem) {
+//           await listItem.update({ Status: status });
+//           console.log("File metadata updated successfully.");
+//         }
+
+//         // Add entry to the FileMaster list (optional)
+//         const newRequestNo = await getUniqueRequestNo();
+//         await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+//           FileName: String(uploadResult.data.Name),
+//           FileSize: String(uploadResult.data.Length),
+//           FileVersion: String(uploadResult.data.MajorVersion),
+//           CurrentFolderPath: String(currentfolderpath.folderpath),
+//           FileUID: String(uploadResult.data.UniqueId),
+//           CurrentUser: String(currentUserEmailRef.current),
+//           SiteID: String(currentfolderpath.siteID),
+//           Status: status,
+//           FilePreviewURL: String(previewUrl),
+//           DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+//           SiteName: String(currentfolderpath.Entity),
+//           MyRequest: true,
+//           Processname: 'New File Request',
+//           RequestNo: newRequestNo
+//         });
+//         console.log("File added to FileMaster successfully.");
+//       } catch (error) {
+//         console.error(`Error uploading file ${name}:`, error);
+//       }
+//     }
+
+//     console.log("Bulk upload process completed.");
+
+//     // Cleanup media after upload
+//     Deletemedia();
+
+//     // Reload the page once all files are processed
+//     setTimeout(() => {
+//       location.reload();
+//       onReturnToMain();
+//     }, 3000);
+
+//   } catch (error) {
+//     console.error("Error during bulk submission:", error);
+//   }
+// };
+
+
+// const handleSubmitBulk = async (event: any) => {
+//   event.preventDefault();
+//   console.log("Bulk upload button clicked");
+
+//   try {
+//     console.log("SiteID:", currentfolderpath.siteID);
+
+//     const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+//     if (!testidsub) throw new Error("Subsite not found.");
+
+//     const documentLibrary = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+//     console.log("Current Path:", documentLibrary);
+
+//     const existingFiles = await documentLibrary.files();
+
+//     // Upload all files in sequence (not parallel)
+//     for (const file of uploadedFiles) {
+//       try {
+//         console.log(`Uploading file: ${file.name}`);
+
+//         // Fetch file blob
+//         const response = await fetch(file.url);
+//         if (!response.ok) throw new Error(`Failed to fetch file: ${file.name}`);
+//         const blob = await response.blob();
+
+//         // Generate a unique file name to avoid conflicts
+//         const { name: originalFileName } = file;
+//         const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+//         const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+//         let uniqueFileName = originalFileName;
+//         let counter = 1;
+
+//         while (existingFiles.some(f => f.Name === uniqueFileName)) {
+//           uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+//           counter++;
+//         }
+
+//         console.log(`Final filename: ${uniqueFileName}`);
+
+//         // Upload the file using addChunked()
+//         const uploadResult = await documentLibrary.files.addChunked(uniqueFileName, blob);
+//         console.log("Upload successful:", uploadResult.data.Name);
+
+//         // Ensure the file is available before updating metadata
+//         await new Promise(resolve => setTimeout(resolve, 1500));
+
+//         // Get the uploaded file item
+//         const listItem = await uploadResult.file.getItem();
+//         if (!listItem) {
+//           console.error("List item not found for uploaded file.");
+//           continue;
+//         }
+
+//         // Generate Preview URL
+//         const siteUrl = window.location.origin;
+//         const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+//         const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+//         const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+
+//         console.log("Generated Preview URL:", previewUrl);
+
+//         // Update metadata with preview URL
+//         const status = "Auto Approved";
+//         await listItem.update({
+//           Status: status,
+
+//         });
+
+//         console.log("File metadata updated successfully.");
+
+//         // Create an entry in the FileMaster list
+//         const newRequestNo = await getUniqueRequestNo();
+//         await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+//           FileName: String(uploadResult.data.Name),
+//           FileSize: String(uploadResult.data.Length),
+//           FileVersion: String(uploadResult.data.MajorVersion),
+//           CurrentFolderPath: String(currentfolderpath.folderpath),
+//           FileUID: String(uploadResult.data.UniqueId),
+//           CurrentUser: String(currentUserEmailRef.current),
+//           SiteID: String(currentfolderpath.siteID),
+//           Status: status,
+//           FilePreviewURL: String(previewUrl),
+//           DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+//           SiteName: String(currentfolderpath.Entity),
+//           MyRequest: true,
+//           Processname: 'New File Request',
+//           RequestNo: newRequestNo
+//         });
+
+//         console.log("File added to FileMaster successfully.");
+//       } catch (error) {
+//         console.error(`Error uploading file ${file.name}:`, error);
+//       }
+//     }
+
+//     console.log("Bulk upload process completed.");
+
+//     // Cleanup media after upload
+//     Deletemedia();
+
+//     // Reload the page once all files are processed
+//     setTimeout(() => {
+//       location.reload();
+//       onReturnToMain();
+//     }, 3000);
+
+//   } catch (error) {
+//     console.error("Error during bulk submission:", error);
+//   }
+// };
+
+// const handleSubmitBulk = async (event: any) => {
+//   event.preventDefault();
+//   console.log("Bulk upload button clicked");
+
+//   try {
+//     console.log("SiteID:", currentfolderpath.siteID);
+
+//     const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+//     if (!testidsub) throw new Error("Subsite not found.");
+
+//     const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+//     console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
+
+//     let files = await documentLibraryInWhichWeUploadTheFile.files();
+
+//     // Upload all files in parallel
+//     const uploadPromises = uploadedFiles.map(async (file) => {
+//       try {
+//         const response = await fetch(file.url);
+//         if (!response.ok) throw new Error(`Failed to fetch file: ${file.name}`);
+//         const blob = await response.blob();
+
+//         const originalFileName = file.name;
+//         const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+//         const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+//         console.log("originalFileName", originalFileName);
+//         console.log("fileExtension", fileExtension);
+//         console.log("baseFileName", baseFileName);
+
+//         let uniqueFileName = originalFileName;
+//         let counter = 1;
+
+//         while (files.some(f => f.Name === uniqueFileName)) {
+//           uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+//           counter++;
+//         }
+//         console.log(`Unique file name generated: ${uniqueFileName}`);
+
+//         const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, blob);
+//         console.log("File uploaded successfully", uploadResult.data.Name);
+
+//         // Fetch the latest files list again to ensure correct metadata
+//         files = await documentLibraryInWhichWeUploadTheFile.files();
+
+//         // Add delay to ensure file availability before retrieving metadata
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+
+//         const listItem = await uploadResult.file.getItem();
+//         console.log("ListItems ", listItem);
+
+//         if (!listItem) throw new Error("List item not found for the uploaded file.");
+
+//         // Break role inheritance to ensure correct permissions
+//         await listItem.breakRoleInheritance(false);
+//         console.log("Permissions set correctly");
+
+//         // Construct preview URL
+//         const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+//         const siteUrl = window.location.origin;
+//         const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+//         const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+//         console.log("Generated Preview URL:", previewUrl);
+
+//         const status = "Auto Approved"; // Set status to Auto Approved for bulk upload
+
+//         // Update metadata
+//         const payload: any = { Status: status };
+//         await listItem.update(payload);
+//         console.log("File metadata updated successfully with:", payload);
+
+//         const newRequestNo = await getUniqueRequestNo();
+
+//         const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+//           FileName: String(uploadResult.data.Name),
+//           FileSize: String(uploadResult.data.Length),
+//           FileVersion: String(uploadResult.data.MajorVersion),
+//           CurrentFolderPath: String(currentfolderpath.folderpath),
+//           FileUID: String(uploadResult.data.UniqueId),
+//           CurrentUser: String(currentUserEmailRef.current),
+//           SiteID: String(currentfolderpath.siteID),
+//           Status: status,
+//           FilePreviewURL: String(previewUrl),
+//           DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+//           SiteName: String(currentfolderpath.Entity),
+//           MyRequest: true,
+//           Processname: 'New File Request',
+//           RequestNo: newRequestNo
+//         });
+//         console.log(newItem, "New item added to FileMaster");
+
+//         return newItem;
+//       } catch (error) {
+//         console.error(`Error uploading file ${file.name}:`, error);
+//         return null; // Continue with other files even if one fails
+//       }
+//     });
+
+//     // Wait for all uploads to complete
+//     const results = await Promise.all(uploadPromises);
+
+//     // Check if any uploads failed
+//     const failedUploads = results.filter(result => result === null).length;
+//     if (failedUploads > 0) {
+//       console.warn(`${failedUploads} files failed to upload.`);
+//     } else {
+//       console.log("All files uploaded successfully.");
+//     }
+
+//     // Reload the page only once after all files are processed
+//     if (failedUploads === 0) {
+//       Deletemedia();
+//       setTimeout(() => {
+//         location.reload();
+//         onReturnToMain();
+//       }, 3000);
+//     }
+//   } catch (error) {
+//     console.error("Error during bulk submission:", error);
+//   }
+// };
+// const handleSubmitBulk = async (event: any) => {
+//   event.preventDefault();
+//   console.log("Bulk upload button clicked");
+
+//   try {
+//     console.log("SiteID:", currentfolderpath.siteID);
+
+//     const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+//     if (!testidsub) throw new Error("Subsite not found.");
+
+//     const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+//     console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
+
+//     const files = await documentLibraryInWhichWeUploadTheFile.files();
+
+//     // Upload all files in parallel
+//     const uploadPromises = uploadedFiles.map(async (file) => {
+//       try {
+//         const response = await fetch(file.url);
+//         if (!response.ok) throw new Error(`Failed to fetch file: ${file.name}`);
+//         const blob = await response.blob();
+
+//         const originalFileName = file.name;
+//         const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+//         const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+//         console.log("originalFileName", originalFileName);
+//         console.log("fileExtension", fileExtension);
+//         console.log("baseFileName", baseFileName);
+
+//         let uniqueFileName = originalFileName;
+//         let counter = 1;
+
+//         while (files.some(f => f.Name === uniqueFileName)) {
+//           uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+//           counter++;
+//         }
+//         console.log(`Unique file name generated: ${uniqueFileName}`);
+
+//         const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, blob);
+//         console.log("File uploaded successfully", uploadResult.data.Name);
+
+//         const listItem = await uploadResult.file.getItem();
+//         console.log("ListItems ", listItem);
+
+//         const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+//         const siteUrl = window.location.origin;
+//         const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+//         console.log(encodedFilePath, "encodedFilePath");
+
+//         const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+//         console.log("Generated Preview URL:", previewUrl);
+
+//         if (!listItem) throw new Error("List item not found for the uploaded file.");
+
+//         const status = "Auto Approved"; // Set status to Auto Approved for bulk upload
+
+//         const payload: any = {
+//           Status: status
+//         };
+
+//         await listItem.update(payload);
+//         console.log("File metadata updated successfully with:", payload);
+
+//         const newRequestNo = await getUniqueRequestNo();
+
+//         const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+//           FileName: String(uploadResult.data.Name),
+//           FileSize: String(uploadResult.data.Length),
+//           FileVersion: String(uploadResult.data.MajorVersion),
+//           CurrentFolderPath: String(currentfolderpath.folderpath),
+//           FileUID: String(uploadResult.data.UniqueId),
+//           CurrentUser: String(currentUserEmailRef.current),
+//           SiteID: String(currentfolderpath.siteID),
+//           Status: status,
+//           FilePreviewURL: String(previewUrl),
+//           DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+//           SiteName: String(currentfolderpath.Entity),
+//           MyRequest: true,
+//           Processname: 'New File Request',
+//           RequestNo: newRequestNo
+//         });
+//         console.log(newItem, "New item added to FileMaster");
+
+//         return newItem;
+//       } catch (error) {
+//         console.error(`Error uploading file ${file.name}:`, error);
+//         return null; // Continue with other files even if one fails
+//       }
+//     });
+
+//     // Wait for all uploads to complete
+//     const results = await Promise.all(uploadPromises);
+
+//     // Check if all uploads were successful
+//     const failedUploads = results.filter(result => result === null).length;
+//     if (failedUploads > 0) {
+//       console.warn(`${failedUploads} files failed to upload.`);
+//     } else {
+//       console.log("All files uploaded successfully.");
+//     }
+
+//     // Reload the page only once after all files are processed
+//     if(failedUploads ){
+//       Deletemedia()
+//       setTimeout(() => {
+//         location.reload()
+//         onReturnToMain();
+//     }, 3000);
+//      }
+//   } catch (error) {
+//     console.error("Error during bulk submission:", error);
+//   }
+// };
+// const handleSubmitBulk = async (event: any) => {
+//   event.preventDefault();
+//   console.log("Bulk upload button clicked");
+
+//   // const formSelector = document.getElementById("formSelector") as HTMLFormElement;
+//   // if (!formSelector.checkValidity()) {
+//   //     formSelector.reportValidity(); // Show validation errors
+//   //     return;
+//   // }
+
+//   // Assuming uploadedFiles is an array of objects with name and url properties
+//   // const uploadedFiles = [
+//   //     { name: "file1.pdf", url: "https://example.com/file1.pdf" },
+//   //     { name: "file2.docx", url: "https://example.com/file2.docx" },
+//   //     // Add more files as needed
+//   // ];
+
+//   try {
+//       console.log("SiteID:", currentfolderpath.siteID);
+
+//       const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
+//       if (!testidsub) throw new Error("Subsite not found.");
+
+//       const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
+//       console.log("Current Path:", documentLibraryInWhichWeUploadTheFile);
+
+//       const files = await documentLibraryInWhichWeUploadTheFile.files();
+
+//       for (const file of uploadedFiles) {
+//           const response = await fetch(file.url);
+//           const blob = await response.blob();
+
+//           const originalFileName = file.name;
+//           const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+//           const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+//           console.log("originalFileName", originalFileName);
+//           console.log("fileExtension", fileExtension);
+//           console.log("baseFileName", baseFileName);
+//           let uniqueFileName = originalFileName;
+//           let counter = 1;
+
+//           while (files.some(f => f.Name === uniqueFileName)) {
+//               uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+//               counter++;
+//           }
+//           console.log(`Unique file name generated: ${uniqueFileName}`);
+
+//           const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, blob);
+//           console.log("File uploaded successfully", uploadResult.data.Name);
+
+//           const listItem = await uploadResult.file.getItem();
+//           console.log("ListItems ", listItem);
+
+//           const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+//           const siteUrl = window.location.origin;
+//           const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+//           console.log(encodedFilePath, "encodedFilePath");
+
+//           const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+//           console.log("Generated Preview URL:", previewUrl);
+
+//           if (!listItem) throw new Error("List item not found for the uploaded file.");
+
+//           const status = "Auto Approved"; // Set status to Auto Approved for bulk upload
+
+//           const payload: any = {
+//               Status: status
+//           };
+
+//           await listItem.update(payload);
+//           console.log("File metadata updated successfully with:", payload);
+
+//           const newRequestNo = await getUniqueRequestNo();
+
+//           const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+//               FileName: String(uploadResult.data.Name),
+//               FileSize: String(uploadResult.data.Length),
+//               FileVersion: String(uploadResult.data.MajorVersion),
+//               CurrentFolderPath: String(currentfolderpath.folderpath),
+//               FileUID: String(uploadResult.data.UniqueId),
+//               CurrentUser: String(currentUserEmailRef.current),
+//               SiteID: String(currentfolderpath.siteID),
+//               Status: status,
+//               FilePreviewURL: String(previewUrl),
+//               DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+//               SiteName: String(currentfolderpath.Entity),
+//               MyRequest: true,
+//               Processname: 'New File Request',
+//               RequestNo: newRequestNo
+//           });
+//           console.log(newItem, "New item added to FileMaster");
+
+//           if (newItem) {
+//               setTimeout(() => {
+//                   location.reload();
+//                   onReturnToMain();
+//               }, 3000);
+//           }
+//       }
+//   } catch (error) {
+//       console.error("Error during bulk submission:", error);
+//   }
+// };
+
 
 const Deletemedia = () => {
  
@@ -794,102 +1357,42 @@ const Deletemedia = () => {
 
 
  setTimeout(() => {
-    Swal.close(); // Close the pop-up
-    onReturnToMain(); // Call onReturnToMain if needed
-  }, 3000); // 3000 milliseconds = 3 seconds
+    Swal.close();
+    onReturnToMain(); 
+  }, 3000);
 
 }
 
- 
-
-// const handleSubmit=async (event:any)=>{
-          
-//           event.preventDefault();
-//           console.log("Button clicked");
 
 
-//           const inputs = document.querySelectorAll('.dynamic-input');
-//           const formSelector = document.getElementById("formSelector") as HTMLFormElement;
-//           if (!formSelector.checkValidity()) {
-//               formSelector.reportValidity(); // Show validation errors
-//               return;
-//             }
+const handleToggle = () => {
+  alert(`isChecked before toggle: ${isChecked}`);
+   console.log("isChecked before toggle:", isChecked);
+  setIsChecked((prev) => {
+    const newCheckedState = !prev; // Get the updated state
+    console.log(`New isChecked state: ${newCheckedState}`);
+    // Get all elements with the class "input-container"
+    const inputContainers = document.getElementsByClassName("input-container");
 
-//           // Prepare the payload for SharePoint dynamically
-//           const payload: any = {};
-//           inputs.forEach((input) => {
-//               const inputElement = input as HTMLInputElement;
-//               const fieldName = inputElement.id; 
+    // Hide or show input fields based on the new state
+    for (let i = 0; i < inputContainers.length; i++) {
+      (inputContainers[i] as HTMLElement).style.display = newCheckedState ? "none" : "block";
+    }
+    const getsubmitbutton = document.getElementById("submitBtn") as HTMLButtonElement;
+    getsubmitbutton.style.display = newCheckedState ? "none" : "block";
+    return newCheckedState; // Update the state
+  });
+};
+const handleRemove = (fileIndex:any) => {
+  event.preventDefault();
+  const updatedFiles = uploadedFiles.filter((_, index) => index !== fileIndex);
+  setUploadedFiles(updatedFiles); // Update state
+  console.log(uploadedFiles , "uploadedFiles in remove")
+};
 
-//               // Based on input type, store the correct value
-//               if (inputElement.type === "checkbox") {
-//                   payload[fieldName] = inputElement.checked;
-//               }else if(fieldName === 'fileInput'){
-//                   console.log("skip");
-//               }else{
-//                   payload[fieldName] = inputElement.value;
-//               }
-
-//           });
-  
-
-
-  
-
-//           try {
-//                   console.log("payload",payload);
-//                   console.log("SiteID",data.siteID);
-//                   const testidsub = await sp.site.openWebById(data.siteID);
-//                   // console.log("subsite context",testidsub)
-          
-//                   const documentLibraryInWhichWeUploadTheFile = testidsub.web.getFolderByServerRelativePath(data.folderpath)
-//                   console.log("Current Path",documentLibraryInWhichWeUploadTheFile)
-                  
-//                   const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(selectedFile.name, selectedFile);
-//                   console.log("File uploaded successfully", uploadResult.data.Name);
-                  
-//                   await new Promise((resolve) => {
-//                     console.log(uploadResult , "uploadResult")
-//                     setTimeout(resolve, 1000)
-//                   });
-
-//                   // Fetch the associated list item for the uploaded file
-//                   const listItem = await uploadResult.file.getItem();
-//                   console.log("List item before upJdate:", listItem);
-
-//                   // Update the metadata on the file's list item
-//                   await listItem.update(payload);
-//                   console.log("File metadata updated successfully with:", payload);
-//                   console.log(SubsiteID , "SubsiteID")
-                  
-//                   const newItem = await sp.web.lists.getByTitle(`DMS${data.Entity}FileMaster`).items.add({
-              
-//                     FileName: String(uploadResult.data.Name),          // Example: Set the Title field
-//                     FileSize: String(uploadResult.data.Length),    // Example: Set the FileSize field
-//                     FileVersion: String(uploadResult.data.MajorVersion),// Example: Set the FileVersion field
-//                     CurrentFolderPath : String(currentPath),
-//                     FileUID: String(uploadResult.data.UniqueId),// Example: Set the FileVersion field
-//                     CurrentUser : String(currentUserEmailRef.current),
-//                     SiteID : String(SubsiteID),
-//                     Status:String("Pending")
-//             });
-//                     console.log(newItem, "Today")
-//           } catch (error) {
-//                   console.log("Error From Adding Field Name",error);
-//           } 
-// }
-
-    // const ArgPoc=()=>{
-      
-    // }
-    
     return (
       <>
           <button className='BackButton me-3 mb-3' 
-          // onClick={(event) => {
-          //       onReturnToMain();
-          //       // myRequest(event);
-          // }}
           onClick={()=>{location.reload() ;onReturnToMain()}}
           > Back 
           </button>
@@ -898,9 +1401,50 @@ const Deletemedia = () => {
                       <div className='column column1 p-3'>
                           <form id='formSelector'>
                               <h1>Upload file</h1>
-                              {/* <div className="uploadfile">
-                                  <input type="file" id="fileInput" onChange={handleFileChange} />
-                              </div> */}
+                              {/* <label className="switch">
+                              <input type="checkbox"/>
+                              <span className="slider round"></span>
+                            </label> */}
+                            {showBulkUpload === true && ( 
+                              <p>This folder requires approval for uploaded files. Once you upload a file, it will be submitted for approval. The file will only be visible and accessible after it has been reviewed and approved by an authorized user.</p>
+                             )}
+                             {/* <div>
+      {showBulkUpload === false && ( // Show only if IsApproval is false
+      <div>
+          <label className="switch">
+          <input type="checkbox" checked={isChecked} onChange={handleToggle} />
+          <span className="slider round"></span>
+        </label>
+         <p>Bulk upload: {isChecked ? "On" : "Off"}</p>
+        
+      </div>
+      
+        
+      )}
+     
+    </div>
+    <div>
+      {isChecked && (
+        <div className="input-container">
+                  <label htmlFor="Uplaod bulk">Bulk upload</label>
+        <input type="file" name="bulkfile" id="bulkfile" multiple onChange={(e)=>handlebulkFileChange(e)}/>
+        <ul>
+  {uploadedFiles.map((file, index) => (
+    <li key={index}>
+      {index + 1}. 
+      <a href="#" onClick={() => handlePreview(file.url)}>
+        {file.name}
+      </a>
+      <a href="" onClick={() => handleRemove(index)} >
+        <img src={require("../assets/del.png")} className="fas fa-trash"   alt="delete" />
+      </a>
+    </li>
+  ))}
+</ul>
+        <button id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
+        </div>
+      )}
+    </div> */}
                           </form>
                       </div>
                       <div className='column column2 p-3'>
@@ -911,13 +1455,6 @@ const Deletemedia = () => {
               </div>
           </div>
       </>
-      // <div className="uploadfile">
-      //   <input type="file" id="fileInput" onChange={handleFileChange} />
-      //   <div id="spinner" style={{display: "none"}}>Loading...</div>
-      //   <iframe id="filePreview" width="100%" height="500"></iframe>
-
-      //   <div id="fileMetadata"></div>
-      // </div>
     );
   }
 export default UploadFile;

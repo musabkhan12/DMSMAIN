@@ -48,6 +48,26 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     const [toggelPermission,setTogglePermission]=React.useState<string>();
     console.log("toggelPermission",toggelPermission);
 
+    const [errorsForPermissionSelection, setErrorsForPermissionSelection] = useState<{ [key: number]: { userSelect?: string, permissionSelect?: string } }>({});
+      const validatePermissionsSelect = () => {
+        let isValid = true;
+        const newErrors: { [key: number]: { userSelect?: string, permissionSelect?: string } } = {};
+      
+        rowsForPermission.forEach((row) => {
+          if (!row.selectedUserForPermission || row.selectedUserForPermission.length === 0) {
+            newErrors[row.id] = { ...newErrors[row.id], userSelect: 'Please select at least one user.' };
+            isValid = false;
+          }
+          if (!row.selectedPermission) {
+            newErrors[row.id] = { ...newErrors[row.id], permissionSelect: 'Please select a permission.' };
+            isValid = false;
+          }
+        });
+      
+        setErrorsForPermissionSelection(newErrors);
+        return isValid;
+      };
+
     const handlesetTogglePermission=()=>{
         setTogglePermission("Yes");
     }
@@ -542,6 +562,9 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     console.log("rowsForPermission",rowsForPermission);
     // console.log("selected User Array",defaultUser);
     // console.log("selected permission",selectedPermission);
+    if(!validatePermissionsSelect()){
+      return
+    }
 
     try {
         
@@ -1005,6 +1028,9 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           placeholder="Enter names or email addresses..."
                                           noOptionsMessage={() => "No User Found..."}
                                       />
+                                      {errorsForPermissionSelection[row.id]?.userSelect && (
+                                    <span className="text-danger">{errorsForPermissionSelection[row.id].userSelect}</span>
+                                  )}
                                   </div>
                                   <div className="col-12 col-md-4 mb-2" style={{
                                
@@ -1018,6 +1044,9 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           placeholder="Select Permission..."
                                           noOptionsMessage={() => "No Such Permission Find"}
                                       />
+                                      {errorsForPermissionSelection[row.id]?.permissionSelect && (
+                                    <span className="text-danger">{errorsForPermissionSelection[row.id].permissionSelect}</span>
+                                  )}
                                   </div>
                                   {/* {row.id === 0 ? null : ( */}
                                     <div className="col-12 mb-2 col-md-2 d-flex align-items-end">
