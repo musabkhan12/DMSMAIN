@@ -225,7 +225,7 @@ const previewFile = async (previewUrl: string) => {
   //  handle bulk file
 
   
-const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]); // Store uploaded files for preview
+const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string,file:File }[]>([]); // Store uploaded files for preview
 const [isUploading, setIsUploading] = useState(false);
 
 // const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -343,7 +343,7 @@ const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 const bulkUploadFile = async (files: FileList) => {
   console.log("Bulk uploading files:", files);
   setIsUploading(true);
-  const uploadedFilesList: { name: string; url: string }[] = [];
+  const uploadedFilesList: { name: string; url: string,file:File }[] = [];
 
   for (let i = 0; i < files.length; i++) {
     try {
@@ -358,7 +358,7 @@ const bulkUploadFile = async (files: FileList) => {
       // Generate the preview URL dynamically
       const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
 
-      uploadedFilesList.push({ name: file.name, url: previewUrl });
+      uploadedFilesList.push({ name: file.name, url: previewUrl,file:file });
     } catch (error) {
       console.error(`Error uploading file ${files[i].name}:`, error);
     }
@@ -704,45 +704,121 @@ const handleSubmitBulk = async (event: any) => {
 
     const testidsub = await sp.site.openWebById(currentfolderpath.siteID);
     if (!testidsub) throw new Error("Subsite not found.");
-
+    
     // Get the folder in the static document library
-    const documentLibrary = testidsub.web.getFolderByServerRelativePath(documentLibraryName);
+    // const documentLibrary = testidsub.web.getFolderByServerRelativePath(documentLibraryName);
+    const documentLibrary = testidsub.web.getFolderByServerRelativePath(currentfolderpath.folderpath);
     console.log("Current Path:", documentLibrary);
-
+    console.log("uploadedFiles",uploadedFiles)
+    
+    const files = await documentLibrary.files();
+    const siteUrl = window.location.origin;
     // Loop through each file and upload it
     for (let i = 0; i < uploadedFiles.length; i++) {
-      const { name, url } = uploadedFiles[i];
+      const { name, url,file } = uploadedFiles[i];
 
       try {
         console.log(`Uploading file: ${name}`);
+        console.log(`Uploading file url: ${url}`);
+        const originalFileName = name;
+        const fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+        const baseFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+        let uniqueFileName = originalFileName;
+        let counter = 1;
+  
+        while (files.some(file => file.Name === uniqueFileName)) {
+          uniqueFileName = `${baseFileName}(${counter})${fileExtension}`;
+          counter++;
+        }
+        console.log(`Unique file name generated: ${uniqueFileName}`);
 
         // Fetch the file from the URL and create a File object
-        const fileBlob = await fetch(url).then((res) => res.blob());
-        const fileToUpload = new File([fileBlob], name, { type: fileBlob.type });
-        console.log("File to upload in loop:", fileToUpload);
+        // const fileBlob = await fetch(url).then((res) => res.blob());
+        // Fetch the file and convert it to a Blob
+
+        // const response = await fetch(url);
+        // if (!response.ok) {
+        //     throw new Error(`Failed to fetch file: ${response.statusText}`);
+        // }
+  
+        // const fileBlob = await response.blob();
+        // console.log("Fetched Blob:", fileBlob);
+  
+        // // Check if Blob is valid
+        // if (!fileBlob || fileBlob.size === 0) {
+        //     throw new Error("File Blob is empty or corrupted.");
+        // }
+
+        // // Convert Blob to File
+        // const fileToUpload = new File([fileBlob], name, { type: fileBlob.type });
+        // console.log("File to upload:", fileToUpload);
+
+        // const fileToUpload = new File([fileBlob], name, { type: fileBlob.type });
+        // console.log("File to upload in loop:", fileToUpload);
+
         // Upload the file using the add method (or addChunked if needed)
-        console.log("File to upload in bulk :", fileToUpload);
-        console.log("File name to upload in bulk :", name);
-        const uploadResult = await documentLibrary.files.addChunked(name, fileToUpload);
-        console.log(`${name} uploaded successfully to ${documentLibraryName}`, uploadResult);
+        // console.log("File to upload in bulk :", fileToUpload);
+        // console.log("File name to upload in bulk :", name);
+
+        // const uploadResult = await documentLibrary.files.addChunked(name, fileToUpload);
+        // console.log(`${name} uploaded successfully to ${documentLibraryName}`, uploadResult);
 
         // Generate the preview URL for the uploaded file
-        const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
-        console.log("Generated Preview URL:", previewUrl);
+        // const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
+        // console.log("Generated Preview URL:", previewUrl);
 
         // Optionally, update metadata (e.g., file status)
+                // Generate preview URL
+        // Upload the file using addChunked (use add for small files)
+        const uploadResult = await documentLibrary.files.addChunked(uniqueFileName, file);
+        console.log(`${name} uploaded successfully`, uploadResult);
+
         const listItem = await uploadResult.file.getItem();
+        if (!listItem) throw new Error("List item not found for the uploaded file.");
+
+        const parentFolder = uploadResult.data.ServerRelativeUrl.substring(0, uploadResult.data.ServerRelativeUrl.lastIndexOf('/'));
+        const encodedFilePath = encodeURIComponent(uploadResult.data.ServerRelativeUrl);
+        const previewUrl = `${siteUrl}${locationPath}/${currentfolderpath.Entity}/${currentfolderpath.DocumentLibrary}/Forms/AllItems.aspx?id=${encodedFilePath}&parent=${encodeURIComponent(parentFolder)}`;
+        console.log("Generated Preview URL:", previewUrl);
         if (listItem) {
           const status = "Auto Approved";
           await listItem.update({ Status: status });
           console.log("File metadata updated successfully.");
         }
-		}catch{
+        const newRequestNo = await getUniqueRequestNo();
+        const newItem = await sp.web.lists.getByTitle(`DMS${currentfolderpath.Entity}FileMaster`).items.add({
+            FileName: String(uploadResult.data.Name),
+            FileSize: String(uploadResult.data.Length),
+            FileVersion: String(uploadResult.data.MajorVersion),
+            CurrentFolderPath: String(currentfolderpath.folderpath),
+            FileUID: String(uploadResult.data.UniqueId),
+            CurrentUser: String(currentUserEmailRef.current),
+            SiteID: String(currentfolderpath.siteID),
+            Status: String("Auto Approved"),
+            FilePreviewURL: String(previewUrl),
+            DocumentLibraryName: String(currentfolderpath.DocumentLibrary),
+            SiteName: String(currentfolderpath.Entity),
+            MyRequest: true,
+            Processname: 'New File Request',
+            RequestNo: newRequestNo,
+          });
+          console.log(newItem, "New item added to FileMaster");
+          if(newItem ){
+            Deletemedia()
+            setTimeout(() => {
+              location.reload()
+              onReturnToMain();
+          }, 3000);
+           }
+		}catch(error){
+            console.log("Error in uploading the file infolder",error);
+            
 		}
 		
 		}
+        Deletemedia();
    } catch (error) {
-    
+    console.log("Error in bulk upload",error);
    }
   // try {
   //   // Get the SharePoint subsite
@@ -1408,7 +1484,7 @@ const handleRemove = (fileIndex:any) => {
                             {showBulkUpload === true && ( 
                               <p>This folder requires approval for uploaded files. Once you upload a file, it will be submitted for approval. The file will only be visible and accessible after it has been reviewed and approved by an authorized user.</p>
                              )}
-                             {/* <div>
+                             <div>
       {showBulkUpload === false && ( // Show only if IsApproval is false
       <div>
           <label className="switch">
@@ -1444,7 +1520,7 @@ const handleRemove = (fileIndex:any) => {
         <button id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
         </div>
       )}
-    </div> */}
+    </div>
                           </form>
                       </div>
                       <div className='column column2 p-3'>

@@ -305,7 +305,9 @@ const AdvancedSearch: React.FC<IAdvancedSearchProps> = (props) => {
             //     allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
             // }
 
-            allpaths.push("site:"+s);
+            // allpaths.push("site:"+s);
+            allpaths.push("site:"+"\""+s+"\"");
+ 
             // allpaths.push("path:"+s);
             allpaths=allpaths.concat(_searchpaths.get(s).map(p=>`listid:${p}`));
 
