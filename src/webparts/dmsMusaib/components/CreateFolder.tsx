@@ -423,6 +423,7 @@ const validateFields = () => {
   // Fetch users from SharePoint
   React.useEffect(() => {
     getcurrentuseremail();
+    createBreadCrumb()
     console.log(currentUserEmailRef.current ,"my current id")
     const fetchUsers = async () => {
       try {
@@ -1202,6 +1203,34 @@ const validateFields = () => {
     setShowDiv(e.target.value === "private")
   };
 
+  const createBreadCrumb=()=>{
+    console.log("Props",OthProps)
+    let path = OthProps.Entity;
+    if(OthProps.Devision) {
+      path += ` > ${OthProps.Devision}`;
+    }
+    if(OthProps.Department) {
+      path += ` > ${OthProps.Department}`;
+    }
+    if (OthProps.DocumentLibrary !== "") {
+
+      let nameArray:any=OthProps.folderpath.replace(`${locationPath}/`, "").split("/");
+      console.log("nameArray bread crumb",nameArray);
+      // console.log("nameArray",nameArray);
+      nameArray.forEach((item:any,index:any)=>{
+        console.log("Item of bread crumb",item);
+        if(index !==0 ){
+          path +=` > ${item}`
+        }
+      })
+      nameArray = null
+    }
+    const breadCrumbElement=document.getElementById("breadCrumb")
+    breadCrumbElement.innerText=""
+    breadCrumbElement.innerText=`This Folder will create under: ${path}`;
+    console.log("Bread Crumb Structure bread crumb",path);
+  }
+
   return (
     <>
       <button className="BackButton me-0 mb-3"
@@ -1211,6 +1240,7 @@ const validateFields = () => {
         Back
       </button>
       <div className="mt-3">
+      <p id="breadCrumb"></p>
         <div className="card cardborder p-31" style={{
           
         }}>

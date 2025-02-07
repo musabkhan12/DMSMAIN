@@ -249,18 +249,6 @@ const handleCreate = async(e: any) => {
               console.log("Item Updated in DMSPreviewFormMaster");
               try {
                 const { web } = await sp.site.openWebById(`${OthProps.SiteID}`);
-              
-              // const getItems=await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.getById(IsApprovalColumnId)();
-              // console.log("getItems",getItems);
-
-              let securableObject: any;
-              securableObject =await web.lists.getByTitle(`${OthProps.DocumentLibraryName}`);
-              console.log("securableObject",securableObject);
-              // Break inheritance if needed (optional)
-              const hasUniquePermissions = await securableObject.hasUniqueRoleAssignments;
-              if (!hasUniquePermissions) {
-                  await securableObject.breakRoleInheritance(true); 
-              }
               // Fetch all the groups in the subsite
               interface IMember {
                 PrincipalType: number;
@@ -282,8 +270,39 @@ const handleCreate = async(e: any) => {
               const roleDefinition = await web.roleDefinitions.getByName("Edit")();
               const roleDefinitionId = roleDefinition.Id;
               const principalId = filteredObject[0].Member.Id;
-              await securableObject.roleAssignments.add(principalId, roleDefinitionId);
               console.log("Approval group added successfully")
+
+              const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}'`)();
+              console.log("documentNestedData",libraryNestedData);
+              if(libraryNestedData.length > 0){
+                for(let item of libraryNestedData){
+                  try {
+                    let securableObject: any;
+                    if(item.IsLibrary === true){
+                      securableObject =await web.lists.getByTitle(`${item.DocumentLibraryName}`);
+                      console.log("securableObject",securableObject);
+                      // Break inheritance if needed (optional)
+                      const hasUniquePermissions = await securableObject.hasUniqueRoleAssignments;
+                      if (!hasUniquePermissions) {
+                          await securableObject.breakRoleInheritance(true); 
+                      }
+                      await securableObject.roleAssignments.add(principalId, roleDefinitionId);
+                    }else if(item.IsFolder === true){
+                      const folder =await web.getFolderByServerRelativePath(`${item.FolderPath}`).getItem();
+                      securableObject=folder;
+                      const itemData = await folder.select("HasUniqueRoleAssignments")();
+                      const breaKRole=itemData.HasUniqueRoleAssignments;
+                      if (!breaKRole) {
+                        await folder.breakRoleInheritance(true);
+                        console.log("Inheritance broken, retaining previous permissions.");
+                      }
+                      await securableObject.roleAssignments.add(principalId, roleDefinitionId);
+                    }
+                  } catch (error) {
+                    console.log(`Error in adding Approvals group `,error)
+                  }
+                }
+              }
               } catch (error) {
                 console.log("Error in adding Approval group",error)
               }
