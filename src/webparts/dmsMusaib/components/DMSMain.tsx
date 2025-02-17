@@ -57,6 +57,7 @@ import * as React from "react";
 import { getSP } from "../loc/pnpjsConfig";
 import { SPFI } from "@pnp/sp";
 import "bootstrap/dist/css/bootstrap.min.css";
+
 // import "bootstrap//dist/"
 
 import {SharingRole} from "@pnp/sp/sharing";
@@ -91,6 +92,8 @@ import "@pnp/sp/webs";
 import "@pnp/sp/sites";
 import "@pnp/sp/site-users/web";
 import { PermissionKind } from "@pnp/sp/security";
+import { Dropdown, ButtonGroup } from "react-bootstrap";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../../CustomCss/mainCustom.scss";
 import "../../verticalSideBar/components/VerticalSidebar2.scss";
@@ -117,6 +120,11 @@ import { BaseWebPartContext } from "@microsoft/sp-webpart-base";
 import { GraphSearchHelper } from "../../../Shared/SearchHelper1";
 import { IDocumentDisplayFields } from "./DMSSearch/Interfaces";
 import { ISearchHitResource } from "../../../Shared/SearchHelperInterfaces";
+import Testfile from "../processcomponents/test";
+import Shownew from "../processcomponents/new";
+import NC from "../processcomponents/NC";
+import { FormComponent } from "../EDCprocessComponent/FormComponent/Form";
+import { Listing } from "../EDCprocessComponent/ListingComponent/Listing";
 
 let Undo = require('../assets/Undo.svg');
 let sharewithmeicon = require('../assets/nodes.png')
@@ -131,6 +139,15 @@ let Txticon = require("../assets/TXT.png");
 let Pdficon = require("../assets/PDF.png");
 let Xlsicon = require("../assets/XLS.png");
 let Zipicon = require("../assets/ZIP.png");
+
+let Ppticon = require("../assets/PPT.png");
+let Jpgicon = require("../assets/JPG.png");
+let Mp3icon = require("../assets/MP3.png");
+let Mp4icon = require("../assets/MP4.png");
+let Htmlicon = require("../assets/HTML.png");
+
+
+
 let AddMetaData = require("../assets/Add-Meta-Data.svg");
 let DeleteFolder = require("../assets/Delete-Folder.svg");
 let FilePreview = require("../assets/File-Preview.svg");
@@ -292,6 +309,42 @@ const ArgPoc = ({ props }: any) => {
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
 
+  // to render different process 
+  const [dropdownClicked, setDropdownClicked] = useState(false);
+  useEffect(() => { 
+    const params = new URLSearchParams(window.location.search);   
+    const url = window.location.href;
+    // const matches = url.match(/\/([^\/]+)\.aspx/);
+    let extractedPart = url.split('.aspx')[1]; 
+    let parameters = extractedPart.split('?')
+    
+    console.log("extractedPart",extractedPart);
+    console.log("parameters",parameters);
+    //  alert(dropdownClicked)
+     if(extractedPart  === '#/changerequest'){
+       alert("Change Request")
+
+      const get = document.getElementById('files-container')
+      get.innerHTML = null
+      setlistorgriddata('showGridView') // === 'showGridView'
+      setSelectedText('Change Request')
+
+      activeButton === "MyRequest" ? "active" : ""
+     
+     }
+    if(parameters[1] === "MyRequest"){
+      alert("MyRequest")
+    }
+  }, [dropdownClicked]);
+  // Function to handle dropdown toggle click
+  const handleDropdownToggle = () => {
+    setDropdownClicked(prev => !prev);
+  };
+
+  // Function to handle dropdown item click
+  const handleDropdownItemClick = () => {
+    setDropdownClicked(prev => !prev);
+  };
 
   // code to route to different document library and folder start
 useEffect(() => {
@@ -301,7 +354,12 @@ useEffect(() => {
   let extractedPart = url.split('.aspx')[1]; 
   let parameters = extractedPart.split('?')
   
+  console.log("extractedPart",extractedPart);
   console.log("parameters",parameters);
+
+  if(parameters[1] === "MyRequest"){
+    alert("MyRequest")
+  }
   let path="";
   let siteId="";
   let folderName="";
@@ -381,6 +439,7 @@ const [RootsiteUrl, setRootsiteUrl] = useState(location.origin); // Initially hi
 // console.log(Myreqormyfav , "Myreqormyfav")
   // console.log("This is current side ID",currentsiteID)
   const currentUserEmailRef = useRef('');
+  const currentUserIDref = useRef<number>(0);
   useEffect(() => {
      getcurrentuseremail()
 getdata()
@@ -424,6 +483,10 @@ const myrequestbuttonclick =()=>{
   console.log(userProfile , "userProfile")
   console.log(userProfile.Title , "userProfile userProfile.Title")
   const userdata = await sp.web.currentUser();
+
+  console.log(userdata , "user data edc")
+  console.log(userdata.Id , "user data edc")
+  currentUserIDref.current = userdata.Id;
   currentUserEmailRef.current = userdata.Email;
   myrequestbuttonclick()
   // console.log(currentUserEmailRef.current, "currentuser")
@@ -4251,26 +4314,114 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
    
   const fileExtension = fileName?.split(".").pop().toLowerCase();
   let fileIcon;
-  switch (fileExtension) {
+  // switch (fileExtension) {
+  //   case "doc":
+  //   case "docx":
+  //     fileIcon = require("../assets/DOC.png");
+  //     break;
+  //   case "txt":
+  //     fileIcon = require("../assets/TXT.png");
+  //     break;
+  //   case "pdf":
+  //     fileIcon = require("../assets/PDF.png");
+  //     break;
+  //   case "xls":
+  //   case "xlsx":
+  //     fileIcon = require("../assets/XLS.png");
+  //     break;
+  //   case "zip":
+  //     fileIcon = require("../assets/ZIP.png");
+  //     break;
+  //   default:
+  //     fileIcon = require("../assets/DOC.png"); // Default icon if no match
+  //     break;
+  // }
+  switch (fileExtension.toLowerCase()) {
+    // Documents
     case "doc":
     case "docx":
-      fileIcon = require("../assets/DOC.png");
+      fileIcon = Docicon;
       break;
     case "txt":
-      fileIcon = require("../assets/TXT.png");
+      fileIcon = Txticon;
       break;
     case "pdf":
-      fileIcon = require("../assets/PDF.png");
+      fileIcon = Pdficon;
       break;
     case "xls":
     case "xlsx":
-      fileIcon = require("../assets/XLS.png");
+    case "csv":
+      fileIcon = Xlsicon;
       break;
+    case "ppt":
+    case "pptx":
+      fileIcon = Ppticon;
+      break;
+  
+    // Images
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "bmp":
+    case "tiff":
+    case "svg":
+    case "webp":
+      fileIcon = Jpgicon;
+      break;
+  
+    // Audio
+    case "mp3":
+    case "wav":
+    case "aac":
+    case "ogg":
+    case "flac":
+      fileIcon = Mp3icon;
+      break;
+  
+    // Video
+    case "mp4":
+    case "avi":
+    case "mkv":
+    case "mov":
+    case "wmv":
+    case "flv":
+    case "webm":
+      fileIcon = Mp4icon;
+      break;
+  
+    // Compressed files
     case "zip":
-      fileIcon = require("../assets/ZIP.png");
+    case "rar":
+    case "7z":
+    case "tar":
+    case "gz":
+      fileIcon = Zipicon;
       break;
+  
+    // Code files
+    case "html":
+    case "css":
+    case "js":
+    case "ts":
+    case "json":
+    case "xml":
+    case "sql":
+    case "php":
+    case "py":
+    case "java":
+    case "c":
+    case "cpp":
+    case "cs":
+    case "swift":
+    case "go":
+    case "rb":
+      fileIcon = Htmlicon;
+      break;
+  
+    // Default
     default:
-      fileIcon = require("../assets/DOC.png"); // Default icon if no match
+      fileIcon = Docicon; // Default fallback icon
       break;
   }
   return {fileIcon,fileExtension};
@@ -6636,7 +6787,30 @@ FilesItems.forEach(async (fileItem) => {
         const card = document.createElement("div");
         let fileIcon;
         const fileExtension = file.FileName?.split(".").pop().toLowerCase();
-        switch (fileExtension) {
+        // switch (fileExtension) {
+        //   case "doc":
+        //   case "docx":
+        //     fileIcon = Docicon;
+        //     break;
+        //   case "txt":
+        //     fileIcon = Txticon;
+        //     break;
+        //   case "pdf":
+        //     fileIcon = Pdficon;
+        //     break;
+        //   case "xls":
+        //   case "xlsx":
+        //     fileIcon = Xlsicon;
+        //     break;
+        //   case "zip":
+        //     fileIcon = Zipicon;
+        //     break;
+        //   default:
+        //     fileIcon = Docicon; 
+        //     break;
+        // }
+        switch (fileExtension.toLowerCase()) {
+          // Documents
           case "doc":
           case "docx":
             fileIcon = Docicon;
@@ -6649,16 +6823,80 @@ FilesItems.forEach(async (fileItem) => {
             break;
           case "xls":
           case "xlsx":
+          case "csv":
             fileIcon = Xlsicon;
             break;
+          case "ppt":
+          case "pptx":
+            fileIcon = Ppticon;
+            break;
+        
+          // Images
+          case "jpg":
+          case "jpeg":
+          case "png":
+          case "gif":
+          case "bmp":
+          case "tiff":
+          case "svg":
+          case "webp":
+            fileIcon = Jpgicon;
+            break;
+        
+          // Audio
+          case "mp3":
+          case "wav":
+          case "aac":
+          case "ogg":
+          case "flac":
+            fileIcon = Mp3icon;
+            break;
+        
+          // Video
+          case "mp4":
+          case "avi":
+          case "mkv":
+          case "mov":
+          case "wmv":
+          case "flv":
+          case "webm":
+            fileIcon = Mp4icon;
+            break;
+        
+          // Compressed files
           case "zip":
+          case "rar":
+          case "7z":
+          case "tar":
+          case "gz":
             fileIcon = Zipicon;
             break;
+        
+          // Code files
+          case "html":
+          case "css":
+          case "js":
+          case "ts":
+          case "json":
+          case "xml":
+          case "sql":
+          case "php":
+          case "py":
+          case "java":
+          case "c":
+          case "cpp":
+          case "cs":
+          case "swift":
+          case "go":
+          case "rb":
+            fileIcon = Htmlicon;
+            break;
+        
+          // Default
           default:
-            fileIcon = Docicon; 
+            fileIcon = Docicon; // Default fallback icon
             break;
         }
-    
         card.className = "card";
         card.dataset.listId = file.SiteID;
         card.innerHTML = `  
@@ -10478,6 +10716,42 @@ window.toggleFavourite=async (fileId,siteId)=> {
 //       });
   
 //     };
+
+const testProess = async (event:React.MouseEvent<HTMLButtonElement> ) => {
+    const getfilescontainer = document.getElementById('files-container')
+    if(getfilescontainer){
+      getfilescontainer.classList.add('hidemydatacards')
+    }
+    setlistorgriddata('showGridView');
+}
+const testProess2 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
+    const getfilescontainer = document.getElementById('files-container')
+    if(getfilescontainer){
+      getfilescontainer.classList.add('hidemydatacards')
+    }
+    setlistorgriddata('NC');
+}
+const testProess3 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
+    const getfilescontainer = document.getElementById('files-container')
+    if(getfilescontainer){
+      getfilescontainer.classList.add('hidemydatacards')
+    }
+    setlistorgriddata('shownew');
+}
+const testProess4 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
+    const getfilescontainer = document.getElementById('files-container')
+    if(getfilescontainer){
+      getfilescontainer.classList.add('hidemydatacards')
+    }
+    setlistorgriddata('shownew');
+}
+const testProess5 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
+    const getfilescontainer = document.getElementById('files-container')
+    if(getfilescontainer){
+      getfilescontainer.classList.add('hidemydatacards')
+    }
+    setlistorgriddata('shownew');
+}
 const myRequest = async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any=null ) => {
   entityclicktext = ''
   setdisplayuploadfileandcreatefolder(false)
@@ -10638,7 +10912,30 @@ FilesItems.forEach(async (fileItem, index) => {
     // console.log("searchArray",searchArray);
     let fileIcon;
     const fileExtension = file.FileName?.split(".").pop().toLowerCase(); // Get the file extension
-    switch (fileExtension) {
+    // switch (fileExtension) {
+    //   case "doc":
+    //   case "docx":
+    //     fileIcon = Docicon;
+    //     break;
+    //   case "txt":
+    //     fileIcon = Txticon;
+    //     break;
+    //   case "pdf":
+    //     fileIcon = Pdficon;
+    //     break;
+    //   case "xls":
+    //   case "xlsx":
+    //     fileIcon = Xlsicon;
+    //     break;
+    //   case "zip":
+    //     fileIcon = Zipicon;
+    //     break;
+    //   default:
+    //     fileIcon = Docicon; // Default icon if no match
+    //     break;
+    // }
+    switch (fileExtension.toLowerCase()) {
+      // Documents
       case "doc":
       case "docx":
         fileIcon = Docicon;
@@ -10651,16 +10948,81 @@ FilesItems.forEach(async (fileItem, index) => {
         break;
       case "xls":
       case "xlsx":
+      case "csv":
         fileIcon = Xlsicon;
         break;
+      case "ppt":
+      case "pptx":
+        fileIcon = Ppticon;
+        break;
+    
+      // Images
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+      case "bmp":
+      case "tiff":
+      case "svg":
+      case "webp":
+        fileIcon = Jpgicon;
+        break;
+    
+      // Audio
+      case "mp3":
+      case "wav":
+      case "aac":
+      case "ogg":
+      case "flac":
+        fileIcon = Mp3icon;
+        break;
+    
+      // Video
+      case "mp4":
+      case "avi":
+      case "mkv":
+      case "mov":
+      case "wmv":
+      case "flv":
+      case "webm":
+        fileIcon = Mp4icon;
+        break;
+    
+      // Compressed files
       case "zip":
+      case "rar":
+      case "7z":
+      case "tar":
+      case "gz":
         fileIcon = Zipicon;
         break;
+    
+      // Code files
+      case "html":
+      case "css":
+      case "js":
+      case "ts":
+      case "json":
+      case "xml":
+      case "sql":
+      case "php":
+      case "py":
+      case "java":
+      case "c":
+      case "cpp":
+      case "cs":
+      case "swift":
+      case "go":
+      case "rb":
+        fileIcon = Htmlicon;
+        break;
+    
+      // Default
       default:
-        fileIcon = Docicon; // Default icon if no match
+        fileIcon = Docicon; // Default fallback icon
         break;
     }
-
+    
     card.className = "card";
     card.innerHTML = ` 
     <div class="row"> 
@@ -14576,6 +14938,21 @@ librarydiv.appendChild(mainContainer)
       <div className="container-fluid  paddb">
                 {activeComponent === "" ? (
                   <div className=" dmsmaincontainer">
+
+{/* <div className="btn-group dropleft">
+  <button type="button" className="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Dropleft
+  </button>
+  <div className="dropdown-menu">
+  <button   className="dropdown-item" type="button">change request       </button>
+    <button className="dropdown-item" type="button">cancellation request</button>
+    <button className="dropdown-item" type="button">Annual audit program</button>
+    <button className="dropdown-item" type="button">audit plan           </button>
+    <button className="dropdown-item" type="button">NC            /button>
+  </div>
+</div> */}
+
+
                     {showWorkflow && (
       <div id="workflowdiv">
         <ManageWorkFlow
@@ -14606,7 +14983,42 @@ librarydiv.appendChild(mainContainer)
 
                             
                             <div style={{display:'flex', justifyContent:'end', gap:'5px'}} className="col-lg-6 newbutton">
-                        <div id="hidegidvewlistviewbutton" className="view-buttons mt-2">
+                              <div>
+                              <Dropdown as={ButtonGroup} style={{padding: '9.4px' , marginTop: '8px'}}>
+        <Dropdown.Toggle variant="primary" id="dropdown-left">
+        
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu className="dropdown-menu-start">
+          <Dropdown.Item href="#/changerequest" onClick={handleDropdownItemClick}>change request </Dropdown.Item>
+          <Dropdown.Item href="#/cancellationrequest"     
+          onClick={(event) => {
+            testProess2(event as any);
+            handleShowContent(event as any);
+          }}
+          >cancellation request</Dropdown.Item>
+          <Dropdown.Item href="#/annualauditprogram"
+           onClick={(event) => {
+            testProess3(event as any);
+            handleShowContent(event as any);
+          }}
+          >Annual audit program</Dropdown.Item>
+          <Dropdown.Item href="#/auditplan"
+           onClick={(event) => {
+            testProess4(event as any);
+            handleShowContent(event as any);
+          }}
+          >audit plan</Dropdown.Item>
+          <Dropdown.Item href="#/nc"
+           onClick={(event) => {
+            testProess5(event as any);
+            handleShowContent(event as any);
+          }}
+          >NC</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+                              </div>
+                              <div id="hidegidvewlistviewbutton" className="view-buttons mt-2">
                                 <button  type="button" className="btn me-1 btngridview mt-0 grid-view active"    
                                 onClick={(event: any = null, siteIdToUpdate: string = null)=>myRequest(event) }>
                                   <a className="listviewfonticon">          
@@ -14685,6 +15097,26 @@ librarydiv.appendChild(mainContainer)
                       
                       <div className="sidebardms">
                    
+                        <button
+                        id= "Myrequestbutton"
+                          className={`sidebardmsButton ${
+                            activeButton === "MyRequest" ? "active" : ""
+                          }`}
+                          // onClick={() => handleClick('MyRequest')}
+                          onClick={
+                            (event)=>{
+                              
+                              testProess(event);
+                              handleShowContent(event)
+                          }
+                        }
+                        >
+                          <span className="sidebarIcon">
+                            {/* <FontAwesomeIcon icon={faList} /> */}
+                            <img className="sidebariconssmall" src={listicon}></img>
+                          </span>
+                          <span className="sidebarText">Test Process</span>
+                        </button>
                         <button
                         id= "Myrequestbutton"
                           className={`sidebardmsButton ${
@@ -14849,7 +15281,7 @@ librarydiv.appendChild(mainContainer)
                    {/* End Code Update by Amjad */} 
 
                        <div id="files-container"></div>
-                     {
+                     {/* {
                          
 
                           listorgriddata === ''  ? (
@@ -14862,8 +15294,43 @@ librarydiv.appendChild(mainContainer)
                             />
                             )
                           )
-                     }
-                     
+                     } */}
+                     {
+  listorgriddata === '' ? (
+    <div id="files-container"></div>
+  ) : (
+    <>
+      {listorgriddata === 'showListView' && (
+        <Table
+          onReturnToMain={handleReturnToMain}
+          Currentbuttonclick={{ buttonclickis: Myreqormyfav }}
+        />
+      )}
+
+      {listorgriddata === 'showGridView' && (
+         <FormComponent
+         userDisplayName={currentUserEmailRef.current}
+         userid={currentUserIDref.current}
+         context={props.context}
+         item= ''
+        onClose={() => {}}
+       />
+      )}
+
+      {listorgriddata === 'shownew' && (
+        <Shownew 
+        />
+      )}
+      {listorgriddata === 'NC' && (
+        <Listing 
+        userid={currentUserIDref.current}
+         context={props.context}
+        />
+      )}
+    </>
+  )
+}
+
                      
                     </div>
                 
