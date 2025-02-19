@@ -1013,3 +1013,6 @@ text-align: center;
   .mtbalenew tbody{overflow: visible !important;}
   .indexdesign{margin-left: 0px !important;}
 }
+.flexContainer-75, .ms-TooltipHost, .root-53, .root-61 {
+  display: block !important;
+}

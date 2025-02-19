@@ -306,7 +306,14 @@ export class FormComponent extends React.Component<IFormProps, IState> {
       this.setState({ edType, itemId });
       console.log("Extracted edType:", edType);
       console.log("Extracted itemId:", itemId);
-      if(edType==="approve"){
+      if(edType===""){
+        alert("new form");
+        this.getData();
+        this.setState({isDisabled:false})
+        this.setState({showApprove:false});
+        this.setState({showSubmit: true});
+      }
+     else if(edType==="approve"){
         alert("approve");
         this.setState({isDisabled:true})
               this.setState({showApprove:true});
@@ -471,7 +478,7 @@ alert(`this.state.itemId  ${this.state.itemId}` );
         <TextField value={(i+1).toString()} disabled={true}></TextField>
         </td>
         <td>
-        <Select options={this.state.options} />
+        {/* <Select options={this.state.options} /> */}
         <PeoplePicker ensureUser={true} context={peoplePickerContext} personSelectionLimit={5} groupName={""} showtooltip={true}  disabled={this.state.isDisabled} searchTextLimit={5} onChange={(e) =>this._getPeoplePickerItemsApp(e,i)}
            defaultSelectedUsers={this.state.approvers[i].appEx ? this.state.approvers[i].appEx : []}
            
@@ -1168,7 +1175,8 @@ var _self= this;
         Year: _self.state.year,
         MonthName: _self.state.month,
         MemoNumber: this.state.departmentVal+"/"+new Date().toLocaleString('default',{month:'short'})+"_" +this.state.memoSerialNo,
-        memoSerialNo:this.state.memoSerialNo
+        // memoSerialNo:this.state.memoSerialNo
+        MemoSerialNumber:this.state.memoSerialNo
         });
       
       

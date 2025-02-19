@@ -4053,25 +4053,90 @@ const myrequestbuttonclick =()=>{
     }
   });
 }
+
+const createFileExtensionHtml=(FileName:any)=>{
+  let fileIconHtml;
+  const fileExtension = FileName?.split(".").pop().toLowerCase(); // Get the file extension
+
+  const extensionColors:any = {
+    doc: "#1fb0e5", // Blue
+    docx: "#1fb0e5",
+    txt: "#28a745", // Green (Text Files)
+    pdf: "#dc3545", // Red (PDFs)
+    xls: "#ffc107", // Yellow (Excel)
+    xlsx: "#ffc107",
+    zip: "#6c757d", // Gray (Archives)
+    
+    // 🎬 Video Files  
+    mp4: "#ff5733", // Orange-Red  
+    avi: "#ff5733",
+    mkv: "#ff5733",
+    mov: "#ff5733",
+    wmv: "#ff5733",
+    flv: "#ff5733",
+
+    // 🎵 Audio Files  
+    mp3: "#4caf50", // Green  
+    wav: "#4caf50",
+    flac: "#4caf50",
+    aac: "#4caf50",
+    ogg: "#4caf50",
+
+    // 🖼️ Image Files  
+    jpg: "#ff9800", // Orange  
+    jpeg: "#ff9800",
+    png: "#00bcd4", // Cyan  
+    gif: "#9c27b0", // Purple  
+    svg: "#673ab7", // Dark Purple  
+    webp: "#009688", // Teal  
+
+    default: "#17a2b8", // Teal (Unknown Files)
+  };
+
+  // Get the color based on extension or use default
+  const bgColor = extensionColors[fileExtension] || extensionColors.default;
+
+  fileIconHtml = `<div class="file-extension-icon" style="background-color: ${bgColor}; color:      white;">
+      ${fileExtension.toUpperCase()}
+  </div>`;
+  return fileIconHtml;
+}
 const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHardDelete:boolean,docLibName:string,displayPropertyforUnFillFavourite:any,displayPropertyforFillFavourite:any,favouriteText:any,permission:any,FolderPath:any)=>{
   // console.log("permission",permission);
+  const extensionHtml=createFileExtensionHtml(file.Name);
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.fileId = file.UniqueId;
   card.innerHTML = `  
         <div class="row">
           <div class="col-md-2 pe-0">
-        <img class="filextension" src=${fileIcon} alt="File icon"/>
+        ${extensionHtml}
         </div>
          <div class="col-md-10 pe-0">
+         <div class="CardTextContainer">
         <p style="cursor: pointer;" class="p1st"  onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">${file.Name}</p>
           <p class="p3rd">${((file.Length as unknown as number) / (1024 * 1024)).toFixed(2)} MB</p>
+         </div>
          </div>
          </div>
           <div id="three-dots" class="three-dots" onclick="documentLibraryPopUp('${file.UniqueId}', '${siteID}','${FolderPath}','${file.Name}','${permission}')">
           <span>...</span>
           </div>
         `;
+  // card.innerHTML = `  
+  //       <div class="row">
+  //         <div class="col-md-2 pe-0">
+  //       <img class="filextension" src=${fileIcon} alt="File icon"/>
+  //       </div>
+  //        <div class="col-md-10 pe-0">
+  //       <p style="cursor: pointer;" class="p1st"  onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">${file.Name}</p>
+  //         <p class="p3rd">${((file.Length as unknown as number) / (1024 * 1024)).toFixed(2)} MB</p>
+  //        </div>
+  //        </div>
+  //         <div id="three-dots" class="three-dots" onclick="documentLibraryPopUp('${file.UniqueId}', '${siteID}','${FolderPath}','${file.Name}','${permission}')">
+  //         <span>...</span>
+  //         </div>
+  //       `;
  
       const menu = document.createElement("div");
       menu.id = `menu-${file.UniqueId}`;
@@ -5544,32 +5609,55 @@ filteredFileData.forEach((file)=>{
   if (moreUsersCount > 0) {
       sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
   }
-  const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+  // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+  const extensionHtml=createFileExtensionHtml(file.FileName);
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.fileId = file.FileUID; 
   card.dataset.listId = file.SiteID;
       
   card.innerHTML = `  
-<div class="row">
+  <div class="row">
+  
+      <div class="col-md-2 pe-0">
+      ${extensionHtml}
+      </div>
+      <div class="col-md-10 pe-0">
+      <div class="CardTextContainer">
+      <p class="p1st">${file.FileName}</p>
+      <div class="fileSizeAndVersion">
+      <p class="p3rd">${file.FileSize} MB</p>
+      </div>
+      </div>
+      </div>
+  <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+  <span>...</span>
+  </div>
+  </div>
+  <div class="sharedFile">
+        ${sharedUsersHTML}
+  </div>
+    `;
+//   card.innerHTML = `  
+// <div class="row">
 
-    <div class="col-md-2 pe-0">
-    <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-    </div>
-    <div class="col-md-10 pe-0">
-    <p class="p1st">${file.FileName}</p>
-    <div class="fileSizeAndVersion">
-    <p class="p3rd">${file.FileSize} MB</p>
-    </div>
-    </div>
-<div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-<span>...</span>
-</div>
-</div>
-<div class="sharedFile">
-      ${sharedUsersHTML}
-</div>
-  `;
+//     <div class="col-md-2 pe-0">
+//     <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+//     </div>
+//     <div class="col-md-10 pe-0">
+//     <p class="p1st">${file.FileName}</p>
+//     <div class="fileSizeAndVersion">
+//     <p class="p3rd">${file.FileSize} MB</p>
+//     </div>
+//     </div>
+// <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+// <span>...</span>
+// </div>
+// </div>
+// <div class="sharedFile">
+//       ${sharedUsersHTML}
+// </div>
+//   `;
   
   const menu = document.createElement("div");
   menu.id = `menu-${file.FileUID}`;
@@ -6220,7 +6308,8 @@ if(searchText !== null){
   filteredFileData=uniqueItems;
 }
 filteredFileData.forEach(async(file)=>{
-  const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+  // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+  const extensionHtml=createFileExtensionHtml(file.FileName);
   const user = await sp.web.siteUsers.getByEmail(file.CurrentUser)();
   const userName=user.Title;
   // console.log("file-Details",file);
@@ -6247,9 +6336,10 @@ filteredFileData.forEach(async(file)=>{
   card.innerHTML = `   
   <div class="row">
           <div class="col-md-2 pe-0">     
-    <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+    ${extensionHtml}
     </div>
     <div class="col-md-10 pe-0">
+    <div class="CardTextContainer">
     <p class="p1st">${file.FileName}</p>
     <div class="fileSizeAndVersion">
     <p class="p3rd">${file.FileSize} MB</p>
@@ -6257,10 +6347,28 @@ filteredFileData.forEach(async(file)=>{
     <p class="p3rd">${userName}</p>  
     </div>  
   </div>
+  </div>
     <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
     <span>...</span>
     </div>
   `;
+  // card.innerHTML = `   
+  // <div class="row">
+  //         <div class="col-md-2 pe-0">     
+  //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+  //   </div>
+  //   <div class="col-md-10 pe-0">
+  //   <p class="p1st">${file.FileName}</p>
+  //   <div class="fileSizeAndVersion">
+  //   <p class="p3rd">${file.FileSize} MB</p>
+  //   </div>
+  //   <p class="p3rd">${userName}</p>  
+  //   </div>  
+  // </div>
+  //   <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+  //   <span>...</span>
+  //   </div>
+  // `;
   const menu = document.createElement("div");
   menu.id = `menu-${file.FileUID}`;
   menu.className = "popup-menu";
@@ -6897,24 +7005,42 @@ FilesItems.forEach(async (fileItem) => {
             fileIcon = Docicon; // Default fallback icon
             break;
         }
+	const extensionHtml=createFileExtensionHtml(file.FileName);
         card.className = "card";
         card.dataset.listId = file.SiteID;
         card.innerHTML = `  
         <div class="row">
           <div class="col-md-2 pe-0"> 
           <div class="IMGContainer"> 
-          <div class="CardTextContainer">       
-          <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-         </div></div></div>
+                 
+          ${extensionHtml}
+         </div></div>
          <div class="col-md-10 pe-0">
+         <div class="CardTextContainer"> 
           <p class="p1st">${file.FileName}</p>
           <p class="p2nd"></p>
           <p class="p3rd">${file.FileSize}</p>
-          </div></div>
+          </div></div></div>
           <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
               <span>...</span>
           </div>
         `;
+        // card.innerHTML = `  
+        // <div class="row">
+        //   <div class="col-md-2 pe-0"> 
+        //   <div class="IMGContainer"> 
+        //   <div class="CardTextContainer">       
+        //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+        //  </div></div></div>
+        //  <div class="col-md-10 pe-0">
+        //   <p class="p1st">${file.FileName}</p>
+        //   <p class="p2nd"></p>
+        //   <p class="p3rd">${file.FileSize}</p>
+        //   </div></div>
+        //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+        //       <span>...</span>
+        //   </div>
+        // `;
     
         const menu = document.createElement("div");
         menu.id = `menu-${file.FileUID}`;
@@ -9917,6 +10043,8 @@ window.renameColumn=async(siteName:string,documentLibraryName:string)=>{
 
 const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,fileExtension:any,FolderPath:string,fileName:string) => {
   // fileID:string,siteId:string,currentFolderPathForFile:string,fileName:string,flag:string
+  const extensionHtml=createFileExtensionHtml(fileName);
+
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.fileId = file.FileUID; // Store file ID in the card element
@@ -9925,17 +10053,33 @@ const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,file
   card.innerHTML = `   
   <div class="row">
           <div class="col-md-2 pe-0">     
-    <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+      ${extensionHtml}
      </div>
          <div class="col-md-10 pe-0">
+         <div class="CardTextContainer">
     <p class="p1st">${file.FileName}</p>
 
     <p class="p3rd">${file.FileSize} MB</p>
     </div></div>
+    </div>
     <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}', '${siteId}')">
       <span>...</span>
     </div>
   `;
+  // card.innerHTML = `   
+  // <div class="row">
+  //         <div class="col-md-2 pe-0">     
+  //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+  //    </div>
+  //        <div class="col-md-10 pe-0">
+  //   <p class="p1st">${file.FileName}</p>
+
+  //   <p class="p3rd">${file.FileSize} MB</p>
+  //   </div></div>
+  //   <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}', '${siteId}')">
+  //     <span>...</span>
+  //   </div>
+  // `;
 
   const menu = document.createElement("div");
   menu.id = `menu-${file.FileUID}`;
@@ -10736,7 +10880,9 @@ const testProess3 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
     if(getfilescontainer){
       getfilescontainer.classList.add('hidemydatacards')
     }
-    setlistorgriddata('shownew');
+    setlistorgriddata('showGridView');
+    window.location.hash = "/view/90";
+
 }
 const testProess4 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
     const getfilescontainer = document.getElementById('files-container')
@@ -10750,7 +10896,8 @@ const testProess5 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
     if(getfilescontainer){
       getfilescontainer.classList.add('hidemydatacards')
     }
-    setlistorgriddata('shownew');
+    setlistorgriddata('showGridView');
+    window.location.hash = "/edit/90";
 }
 const myRequest = async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any=null ) => {
   entityclicktext = ''
@@ -11022,13 +11169,14 @@ FilesItems.forEach(async (fileItem, index) => {
         fileIcon = Docicon; // Default fallback icon
         break;
     }
+const extensionHtml=createFileExtensionHtml(file.FileName);
     
     card.className = "card";
     card.innerHTML = ` 
     <div class="row"> 
       <div class="col-md-2 pe-0"> 
     <div class="IMGContainer">        
-      <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+      ${extensionHtml}
     </div>
     </div>
         <div class="col-md-10"> 
@@ -11044,6 +11192,26 @@ FilesItems.forEach(async (fileItem, index) => {
       </div>
           </div> </div>
     `;
+    // card.innerHTML = ` 
+    // <div class="row"> 
+    //   <div class="col-md-2 pe-0"> 
+    // <div class="IMGContainer">        
+    //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+    // </div>
+    // </div>
+    //     <div class="col-md-10"> 
+    //      <div class="CardTextContainer">
+    //   <p class="p1st" style="cursor: pointer;" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+    //   <p class="p2nd">${file.DocumentLibraryName}</p>
+    //   <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+    //   <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+    //   </div>
+
+    //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+    //       <span>...</span>
+    //   </div>
+    //       </div> </div>
+    // `;
 
     const menu = document.createElement("div");
     // console.log(menu , "menu is here")
@@ -14990,19 +15158,19 @@ librarydiv.appendChild(mainContainer)
         </Dropdown.Toggle>
 
         <Dropdown.Menu className="dropdown-menu-start">
-          <Dropdown.Item href="#/changerequest" onClick={handleDropdownItemClick}>change request </Dropdown.Item>
+          <Dropdown.Item href="#/changerequest" onClick={handleDropdownItemClick}>change request Form</Dropdown.Item>
           <Dropdown.Item href="#/cancellationrequest"     
           onClick={(event) => {
             testProess2(event as any);
             handleShowContent(event as any);
           }}
-          >cancellation request</Dropdown.Item>
+          >Change Request list view</Dropdown.Item>
           <Dropdown.Item href="#/annualauditprogram"
            onClick={(event) => {
             testProess3(event as any);
             handleShowContent(event as any);
           }}
-          >Annual audit program</Dropdown.Item>
+          >Change Request view</Dropdown.Item>
           <Dropdown.Item href="#/auditplan"
            onClick={(event) => {
             testProess4(event as any);
@@ -15014,7 +15182,7 @@ librarydiv.appendChild(mainContainer)
             testProess5(event as any);
             handleShowContent(event as any);
           }}
-          >NC</Dropdown.Item>
+          >Change Request edit</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
                               </div>
@@ -15096,13 +15264,13 @@ librarydiv.appendChild(mainContainer)
                         
                       
                       <div className="sidebardms">
-                   
+{/*                    
                         <button
                         id= "Myrequestbutton"
                           className={`sidebardmsButton ${
                             activeButton === "MyRequest" ? "active" : ""
                           }`}
-                          // onClick={() => handleClick('MyRequest')}
+                          
                           onClick={
                             (event)=>{
                               
@@ -15112,11 +15280,11 @@ librarydiv.appendChild(mainContainer)
                         }
                         >
                           <span className="sidebarIcon">
-                            {/* <FontAwesomeIcon icon={faList} /> */}
+                       
                             <img className="sidebariconssmall" src={listicon}></img>
                           </span>
                           <span className="sidebarText">Test Process</span>
-                        </button>
+                        </button> */}
                         <button
                         id= "Myrequestbutton"
                           className={`sidebardmsButton ${

@@ -25,6 +25,7 @@ const submitButton=document.createElement('button');
 submitButton.textContent= buttontext
 submitButton.id="submitBtn";
 submitButton.type="submit";
+submitButton.style.display='none';
 
 const UploadFile: React.FC<UploadFileProps> = ({ currentfolderpath , onReturnToMain  }) => {
   const sp: SPFI = getSP();
@@ -32,6 +33,7 @@ const UploadFile: React.FC<UploadFileProps> = ({ currentfolderpath , onReturnToM
   // check whether folder is private or public and save state
 
   const [showBulkUpload, setShowBulkUpload] = useState<boolean | null>(null);
+ const [isFinalUploading,setIsFinalUploading] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const checkfolderprivace = async() =>{
     const folderItems = await sp.web.lists.getByTitle("DMSPreviewFormMaster")
@@ -86,6 +88,7 @@ console.log("documentLibraryName" , documentLibraryName)
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setIsUploading(true);
   const file = event.target.files![0];
 
    // upload file with validation like name and extension type
@@ -169,8 +172,8 @@ console.log("documentLibraryName" , documentLibraryName)
       const previewUrl = await generatePreviewUrl(uploadResult.data.ServerRelativeUrl);
       const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
       submitBtn.disabled = false; // Enable the button
-  
-      previewFile(previewUrl);
+      setIsUploading(false);
+      previewFile(previewUrl,"singleUpload");
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -199,17 +202,17 @@ console.log("documentLibraryName" , documentLibraryName)
   };
 
 
-const previewFile = async (previewUrl: string) => {
+const previewFile = async (previewUrl: string,flag:string) => {
     try {
       console.log("Previewing file at URL:", previewUrl);
       const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
       const spinner = document.getElementById("spinner") as HTMLElement;
-  
+      const submitButton = document.getElementById("submitBtn") as HTMLButtonElement;
       // Show the spinner and hide the iframe initially
       spinner.style.display = "block";
       iframe.style.display = "none";
       iframe.src = previewUrl;
-  
+      submitButton.style.display='none'
       // Add an onload event listener to the iframe
       iframe.onload = () => {
         console.log("Iframe has loaded");
@@ -231,7 +234,11 @@ const previewFile = async (previewUrl: string) => {
                 spinner.style.display = "none";
                 iframe.style.display = "block"; 
 
-
+                // Ensure submit button is shown only once in case of single upload
+                if (flag === "singleUpload" && submitButton && submitButton.style.display !== "block") {
+                    submitButton.style.display = "block";
+                }
+                
               } else {
                 console.log("OneUpCommandBar not found, rechecking...");
               }
@@ -245,7 +252,8 @@ const previewFile = async (previewUrl: string) => {
             console.error("Error accessing iframe content:", error);
           }
   
-
+          // Stop rechecking once the preview is fully loaded
+          if (spinner.style.display === "none") return;
           setTimeout(checkAndHideButton, 100);
         };
   
@@ -377,6 +385,8 @@ const [isUploading, setIsUploading] = useState(false);
 // };
 
 const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setIsUploading(true);
+  
   const files = event.target.files; // Get all selected files
 
   if (!files || files.length === 0) return; // Exit if no files are selected
@@ -410,7 +420,7 @@ const handlebulkFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
 const bulkUploadFile = async (files: FileList) => {
   console.log("Bulk uploading files:", files);
-  setIsUploading(true);
+  
   const uploadedFilesList: { name: string; url: string,file:File }[] = [];
 
   for (let i = 0; i < files.length; i++) {
@@ -435,11 +445,13 @@ const bulkUploadFile = async (files: FileList) => {
   // setUploadedFiles(uploadedFilesList); // Update state with all uploaded files
   setUploadedFiles((prevFiles) => [...prevFiles, ...uploadedFilesList]);
   setIsUploading(false);
+  const submitButton = document.getElementById("submitBtn2") as HTMLButtonElement;
+  if (submitButton) submitButton.style.display = "block";
 };
 
 
 const handlePreview = (previewUrl: string) => {
-  previewFile(previewUrl); // Call your preview function
+  previewFile(previewUrl,"bulkUpload"); // Call your preview function
 };
   
 
@@ -773,7 +785,15 @@ const handleSubmit = async (event: any) => {
       formSelector.reportValidity(); // Show validation errors
       return;
   }
+  const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Submitting...";
 
+  const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
+  const spinner = document.getElementById("spinner") as HTMLElement;
+  spinner.style.display = "none";
+  iframe.style.display = "none";
+  setIsFinalUploading(true);
   // Prepare the payload for SharePoint dynamically
   const inputs = document.querySelectorAll('.dynamic-input');
   const payload: any = {};
@@ -827,9 +847,9 @@ const handleSubmit = async (event: any) => {
       const uploadResult = await documentLibraryInWhichWeUploadTheFile.files.addChunked(uniqueFileName, selectedFile);
       console.log("File uploaded successfully", uploadResult.data.Name);
 
-      const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Submitting..."; // Optional: Change button text to indicate progress
+      // const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+      // submitBtn.disabled = true;
+      // submitBtn.innerText = "Submitting..."; // Optional: Change button text to indicate progress
 
       const listItem = await uploadResult.file.getItem();
       console.log("ListItems ", listItem);
@@ -918,6 +938,7 @@ const handleSubmit = async (event: any) => {
       }
 
       if (newItem) {
+          setIsFinalUploading(false);
           Deletemedia();
           setTimeout(() => {
               location.reload();
@@ -976,7 +997,15 @@ const getUniqueRequestNo = async () => {
 const handleSubmitBulk = async (event: any) => {
   event.preventDefault();
   console.log("Bulk upload button clicked");
+  const submitBtn = document.getElementById("submitBtn2") as HTMLButtonElement;
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Submitting...";
 
+  const iframe = document.getElementById("filePreview") as HTMLIFrameElement;
+  const spinner = document.getElementById("spinner") as HTMLElement;
+  spinner.style.display = "none";
+  iframe.style.display = "none";
+  setIsFinalUploading(true);
   try {
     console.log("SiteID:", currentfolderpath.siteID);
 
@@ -1059,6 +1088,7 @@ const handleSubmitBulk = async (event: any) => {
     }
 
     // Cleanup and refresh UI
+    setIsFinalUploading(false);
     Deletemedia();
     setTimeout(() => {
       location.reload();
@@ -1953,7 +1983,12 @@ const handleToggle = () => {
       (inputContainers[i] as HTMLElement).style.display = newCheckedState ? "none" : "block";
     }
     const getsubmitbutton = document.getElementById("submitBtn") as HTMLButtonElement;
-    getsubmitbutton.style.display = newCheckedState ? "none" : "block";
+    // getsubmitbutton.style.display = newCheckedState ? "none" : "block";
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    const selectedFile = fileInput?.files?.[0];
+    getsubmitbutton.style.display = newCheckedState ? "none" : !selectedFile ? 'none' : 'block';
+
+   
     return newCheckedState; // Update the state
   });
 };
@@ -1963,6 +1998,14 @@ const handleRemove = (fileIndex:any) => {
   setUploadedFiles(updatedFiles); // Update state
   console.log(uploadedFiles , "uploadedFiles in remove")
 };
+
+useEffect(()=>{
+  const getsubmitbuttonbulk = document.getElementById("submitBtn2") as HTMLButtonElement;
+  if(getsubmitbuttonbulk){
+    console.log("isChecked-isChecked",isChecked)
+    getsubmitbuttonbulk.style.display= isChecked ? uploadedFiles.length > 0  ? 'block' :'none' : 'none';
+  }
+},[isChecked]);
 
     return (
       <>
@@ -2005,6 +2048,9 @@ const handleRemove = (fileIndex:any) => {
       {isChecked && (
         <div className="input-container mt-3">
                   {/* <label htmlFor="Uplaod bulk">Bulk upload</label> */}
+                  <label htmlFor="bulkfile" style={{ fontWeight: "bold" }}>
+                      Upload File <span style={{ color: "red" }}>*</span>
+                  </label>
         <input type="file" name="bulkfile" id="bulkfile" multiple onChange={(e)=>handlebulkFileChange(e)}/>
         <ul className="newbulnup">
   {uploadedFiles.map((file, index) => (
@@ -2022,7 +2068,7 @@ const handleRemove = (fileIndex:any) => {
   ))}
 </ul>
 <div style={{display:'flex', justifyContent:'right'}}>
-        <button style={{width:'130px'}} id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
+        <button style={{display:'none',width:'130px'}} id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
         </div>
         </div>
       )}
@@ -2030,8 +2076,45 @@ const handleRemove = (fileIndex:any) => {
                           </form>
                       </div>
                       <div className='column column2 p-3'>
-                          <h1>File Preview</h1>
-                          <div id="spinner" style={{display: "none"}}>Loading...</div>
+                      <h1>File Preview</h1>
+                        {isUploading && (
+                          <>
+                              <div id="spinner" style={{display: "block", textAlign: "center"}}>
+                                  <div>
+                                    <img
+                                      src={require("../../../CustomAsset/argloader.gif")}
+                                      className="alignrightl"
+                                      alt="Loading..."
+                                    />                                                               
+                                </div>
+                                <span>Please wait, we are preparing your files for upload... </span>{" "}
+                          </div>
+                          </>
+                        )}
+                        {isFinalUploading && (
+                          <>
+                              <div id="spinner" style={{display: "block", textAlign: "center"}}>
+                                  <div>
+                                    <img
+                                      src={require("../../../CustomAsset/argloader.gif")}
+                                      className="alignrightl"
+                                      alt="Loading..."
+                                    />                                                               
+                                </div>
+                                <span>Uploading items... This may take a moment. </span>{" "}
+                          </div>
+                          </>
+                        )}
+                          <div id="spinner" style={{display: "none", textAlign: "center"}}>
+                          <div>
+                            <img
+                              src={require("../../../CustomAsset/argloader.gif")}
+                              className="alignrightl"
+                              alt="Loading..."
+                            />                                                                           
+                          </div>
+                          <span>Loading </span>{" "}
+                          </div>
                           <iframe id="filePreview" width="100%" height="400"></iframe>
                       </div>
               </div>
