@@ -25,7 +25,8 @@ const submitButton=document.createElement('button');
 submitButton.textContent= buttontext
 submitButton.id="submitBtn";
 submitButton.type="submit";
-submitButton.style.display='none';
+// submitButton.style.display='none';
+submitButton.disabled=true
 
 const UploadFile: React.FC<UploadFileProps> = ({ currentfolderpath , onReturnToMain  }) => {
   const sp: SPFI = getSP();
@@ -35,6 +36,7 @@ const UploadFile: React.FC<UploadFileProps> = ({ currentfolderpath , onReturnToM
   const [showBulkUpload, setShowBulkUpload] = useState<boolean | null>(null);
  const [isFinalUploading,setIsFinalUploading] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const checkfolderprivace = async() =>{
     const folderItems = await sp.web.lists.getByTitle("DMSPreviewFormMaster")
     .items.filter(`DocumentLibraryName eq '${currentfolderpath.DocumentLibrary}' and SiteName eq '${currentfolderpath.Entity}' and IsDocumentLibrary eq 1`).select("IsApproval","IsPrivate")();
@@ -125,6 +127,12 @@ console.log("documentLibraryName" , documentLibraryName)
   if (file) {
     // Directly upload the file without any validation
     uploadFile(file);
+  }else{
+    console.log("no file selected")
+    const submitButton = document.getElementById("submitBtn") as HTMLButtonElement;
+    if(submitButton){
+      submitButton.disabled=true;
+    }
   }
 };
   // const uploadFile = async (file: File) => {
@@ -212,7 +220,6 @@ const previewFile = async (previewUrl: string,flag:string) => {
       spinner.style.display = "block";
       iframe.style.display = "none";
       iframe.src = previewUrl;
-      submitButton.style.display='none'
       // Add an onload event listener to the iframe
       iframe.onload = () => {
         console.log("Iframe has loaded");
@@ -233,10 +240,17 @@ const previewFile = async (previewUrl: string,flag:string) => {
 
                 spinner.style.display = "none";
                 iframe.style.display = "block"; 
-
+                const mainDiv = iframeDocument.getElementById("ModalFocusTrapZone3") as HTMLElement
+                if(mainDiv){
+                  mainDiv.style.background='white'
+                }
                 // Ensure submit button is shown only once in case of single upload
-                if (flag === "singleUpload" && submitButton && submitButton.style.display !== "block") {
-                    submitButton.style.display = "block";
+                // if (flag === "singleUpload" && submitButton && submitButton.style.display !== "block") {
+                //     submitButton.style.display = "block";
+                // }
+                if(flag === "singleUpload" && submitButton && submitButton.disabled !== false){
+                  console.log("preview for single upload")
+                    submitButton.disabled = false
                 }
                 
               } else {
@@ -1986,8 +2000,8 @@ const handleToggle = () => {
     // getsubmitbutton.style.display = newCheckedState ? "none" : "block";
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     const selectedFile = fileInput?.files?.[0];
-    getsubmitbutton.style.display = newCheckedState ? "none" : !selectedFile ? 'none' : 'block';
-
+    getsubmitbutton.style.display = newCheckedState ? "none" : 'block';
+    getsubmitbutton.disabled= !(!newCheckedState && selectedFile)
    
     return newCheckedState; // Update the state
   });
@@ -2003,9 +2017,10 @@ useEffect(()=>{
   const getsubmitbuttonbulk = document.getElementById("submitBtn2") as HTMLButtonElement;
   if(getsubmitbuttonbulk){
     console.log("isChecked-isChecked",isChecked)
-    getsubmitbuttonbulk.style.display= isChecked ? uploadedFiles.length > 0  ? 'block' :'none' : 'none';
+    getsubmitbuttonbulk.style.display= isChecked ? 'block': 'none';
+    getsubmitbuttonbulk.disabled = !(isChecked && uploadedFiles.length > 0);
   }
-},[isChecked]);
+},[isChecked,uploadedFiles]);
 
     return (
       <>
@@ -2107,15 +2122,28 @@ useEffect(()=>{
         <input type="file" name="bulkfile" id="bulkfile" multiple onChange={(e)=>handlebulkFileChange(e)}/>
         <ul className="newbulnup">
   {uploadedFiles.map((file, index) => (
-    <li key={index}>
-  <div>     {index + 1}.</div> 
-    <div className="font-14" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap', padding:'0px 5px',  fontWeight:'500'}}>  <a style={{color:'#4fc6e1'}} href="#" onClick={() => handlePreview(file.url)}>
-        {file.name}
-      </a>
-      </div> 
-      <div>   <a href="" onClick={() => handleRemove(index)} >
-        <img src={require("../assets/del.png")} className="fas fa-trash"   alt="delete" />
-      </a>
+    <li 
+      key={index}
+      style={{
+        backgroundColor: selectedIndex === index ? "#e0f7fa" : "transparent",
+      }}
+    >
+        <div>     
+          {index + 1}.
+        </div> 
+        <div className="font-14" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap', padding:'0px 5px',  fontWeight:'500'}}>  
+          <a style={{color:'#4fc6e1'}} href="#" onClick={() => {
+              handlePreview(file.url)
+              setSelectedIndex(index);
+            }
+            }>
+            {file.name}
+          </a>
+        </div> 
+        <div>   
+          <a href="" onClick={() => handleRemove(index)} >
+            <img src={require("../assets/del.png")} className="fas fa-trash"   alt="delete" />
+          </a>
       </div> 
     </li>
   ))}
