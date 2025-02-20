@@ -153,13 +153,13 @@ display: none !important;
     padding: 15px;
     /* border: 1px solid #4fc6e1; */
     font-size: 16px;
-    max-height: 750px;
+  
   }
 
   .column1{
     width: 30%;
     overflow-y: scroll;
-    height: 83vh;
+  
   }
 
   .column1::-webkit-scrollbar {
@@ -179,11 +179,11 @@ display: none !important;
   justify-content: space-around;
   align-items: center;}
   .input-container {
-    margin-bottom: 20px; /* Space between each input */
+    margin-bottom: 10px; /* Space between each input */
     display: flex;
     flex-direction: column; /* Ensure label is on top of the input */
   }
-  
+  .column1{padding-left: 0px !important;}
   label {
     font-weight: bold;
     margin-bottom: 5px; font-size:14px; font-weight:700;
@@ -397,13 +397,13 @@ display: none !important;
     padding: 15px;
     /* border: 1px solid #4fc6e1; */
     font-size: 16px;
-    max-height: 750px;
+ 
   }
 
   .column1{
     width: 30%;
     overflow-y: scroll;
-    height: 83vh;
+    
   }
 
   .column1::-webkit-scrollbar {
@@ -414,11 +414,35 @@ display: none !important;
   }
 
   .input-container {
-    margin-bottom: 20px; /* Space between each input */
+    margin-bottom: 10px; /* Space between each input */
     display: flex;
     flex-direction: column; /* Ensure label is on top of the input */
   }
+  .input-container input[type="checkbox"]{
+    width: 26px;
+    height: 26px;
+    float: left;
+    justify-content: start;
+    display: flex
+;
+    text-align: left;
+    -moz-appearance:none;
+	-webkit-appearance:none;
+	-o-appearance:none;
+	outline: none;
+	content: none;	
+  margin-bottom: 10px;
+  }
   
+  .input-container input[type="checkbox"]::before{
+    border: 1px solid #dee2e6 !important;
+  }
+  .column1 .input-container{
+    clear: both;
+  }
+  input[type=password]:focus, input[type=text]:focus, input:not([type]):focus, select:focus, textarea:focus, .sp-peoplepicker-topLevelFocus, .ms-inputBoxActive, .ms-inputBox.ms-inputBoxActive:hover{
+    border-color: #dee2e6 !important; outline: none !important;
+  }
   label {
     font-weight: bold;
     margin-bottom: 5px; font-size:14px; font-weight:700;
@@ -543,4 +567,8 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+#filePreview{height: 481px; border-radius: 20px !important;}
+div[class*=OneUpModalSizing]>div.ms-Dialog-main{
+  background: #fff !important;
 }

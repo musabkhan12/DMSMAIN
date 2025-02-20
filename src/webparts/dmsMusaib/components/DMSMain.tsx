@@ -12181,11 +12181,11 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
   const formContent = document.createElement("div");
   formContent.innerHTML = existingColumns.map((col) => `
     <div class="form-group">
-      <div class="col-md-5">
+      <div class="col-md-6">
         <label>Field Name</label>
         <input type="text" class="form-control" value="${col.IsRename !== null ? col.IsRename : col.ColumnName}" disabled />
       </div>
-      <div class="col-md-5">
+      <div class="col-md-6">
         <label>Field Type</label>
         <input type="text" class="form-control" value="${col.ColumnType}" disabled />
       </div>
@@ -12209,8 +12209,8 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
   // Add event listener for "+" button to add new editable fields
   addFieldButton.addEventListener('click', () => {
     const newFieldHTML = `
-      <div class="form-group row">
-        <div class="col-md-5">
+      <div class="form-group">
+        <div class="col-md-6">
           <label>Field Name</label>
           <input type="text" class="form-control" placeholder="Enter new field name" />
         </div>
@@ -12225,7 +12225,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
             <option value="Number">Number</option>
           </select>
         </div>
-      <div class="col-md-2">
+      <div class="col-md-1">
           <img class="delete-column"  src="${require("../assets/del.png")}" alt="add" style="width: 40px; margin-top:25px; cursor:pointer;" />
         </div>
       </div>
@@ -12236,6 +12236,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
   // Add save button
   const saveButton = document.createElement("button");
   saveButton.innerText = "Save";
+  saveButton.style.marginTop = "10px";
   // popupContainer.appendChild(saveButton);
   wrapper.appendChild(saveButton);
 

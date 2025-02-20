@@ -2015,7 +2015,57 @@ useEffect(()=>{
           </button>
           <div className="container mt-3 UploadFileCont">
               <div className='main-containeruploadfile'>
-                      <div className='column column1 p-3'>
+              <div className='column column2 p-3'>
+                      <h1>File Preview</h1>
+                      <div className="borderprev">
+                        {isUploading && (
+                          <>
+                         
+                              <div id="spinner" style={{display: "block", paddingTop:'170px', textAlign: "center"}}>
+                                  <div>
+                                    <img
+                                      src={require("../../../CustomAsset/argloader.gif")}
+                                      className="alignrightl"
+                                      alt="Loading..."
+                                    />                                                               
+                                </div>
+                                <span>Please wait, we are preparing your files for upload... </span>{" "}
+                          </div>
+                         
+                          </>
+                        )}
+                        {isFinalUploading && (
+                          <>
+                          
+                              <div id="spinner" style={{display: "block", paddingTop:'170px', textAlign: "center"}}>
+                                  <div>
+                                    <img
+                                      src={require("../../../CustomAsset/argloader.gif")}
+                                      className="alignrightl"
+                                      alt="Loading..."
+                                    />                                                               
+                                </div>
+                                <span>Uploading items... This may take a moment. </span>{" "}
+                          </div>
+                         
+                          </>
+                        )}
+                    
+                          <div id="spinner" style={{display: "none",paddingTop:'170px', textAlign: "center"}}>
+                          <div>
+                            <img
+                              src={require("../../../CustomAsset/argloader.gif")}
+                              className="alignrightl"
+                              alt="Loading..."
+                            />                                                                           
+                          </div>
+                          <span>Loading </span>{" "}
+                          </div>
+                          <iframe id="filePreview" style={{background:'transparent'}} width="100%" height="400"></iframe>
+                      </div>
+                      </div>
+                     
+                      <div className='column p-3 column1'>
                           <form id='formSelector'>
                               <h1>Upload file</h1>
                               {/* <label className="switch">
@@ -2028,7 +2078,7 @@ useEffect(()=>{
                              )}
                              <div>
       {showBulkUpload === false && ( // Show only if IsApproval is false
-      <div style={{display:'flex', justifyContent:'space-between',alignItems:'center'}} className="mt-3">
+      <div style={{display:'flex', justifyContent:'space-between',alignItems:'center'}} className="mt-3 mb-3">
         <p className="mb-0 text-dark">Bulk upload:</p>
         <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
           <label className="switch">
@@ -2037,17 +2087,20 @@ useEffect(()=>{
         </label>
          <p className="mb-0 text-dark fw-bold">{isChecked ? "ON" : "OFF"}</p>
          </div>
+
+        
         
       </div>
-      
+     
         
       )}
-     
+      <h3 className="mt-2 mb-2 font-16 text-dark">Meta tag</h3>
     </div>
     <div>
       {isChecked && (
         <div className="input-container mt-3">
                   {/* <label htmlFor="Uplaod bulk">Bulk upload</label> */}
+                  
                   <label htmlFor="bulkfile" style={{ fontWeight: "bold" }}>
                       Upload File <span style={{ color: "red" }}>*</span>
                   </label>
@@ -2075,48 +2128,8 @@ useEffect(()=>{
     </div>
                           </form>
                       </div>
-                      <div className='column column2 p-3'>
-                      <h1>File Preview</h1>
-                        {isUploading && (
-                          <>
-                              <div id="spinner" style={{display: "block", textAlign: "center"}}>
-                                  <div>
-                                    <img
-                                      src={require("../../../CustomAsset/argloader.gif")}
-                                      className="alignrightl"
-                                      alt="Loading..."
-                                    />                                                               
-                                </div>
-                                <span>Please wait, we are preparing your files for upload... </span>{" "}
-                          </div>
-                          </>
-                        )}
-                        {isFinalUploading && (
-                          <>
-                              <div id="spinner" style={{display: "block", textAlign: "center"}}>
-                                  <div>
-                                    <img
-                                      src={require("../../../CustomAsset/argloader.gif")}
-                                      className="alignrightl"
-                                      alt="Loading..."
-                                    />                                                               
-                                </div>
-                                <span>Uploading items... This may take a moment. </span>{" "}
-                          </div>
-                          </>
-                        )}
-                          <div id="spinner" style={{display: "none", textAlign: "center"}}>
-                          <div>
-                            <img
-                              src={require("../../../CustomAsset/argloader.gif")}
-                              className="alignrightl"
-                              alt="Loading..."
-                            />                                                                           
-                          </div>
-                          <span>Loading </span>{" "}
-                          </div>
-                          <iframe id="filePreview" width="100%" height="400"></iframe>
-                      </div>
+
+                     
               </div>
           </div>
       </>
