@@ -235,7 +235,9 @@ a:hover, a:active {
   font-size: 11px !important;
 }
 .sidebar.close .logo_item{
+  // width: 110px;
   width: 66px;
+  // margin-left: -38px;
   margin-left: -16px;
 }
 .loadernewadd{color: #1fb0e5;display: block; text-align:center ; font-size: 18px;gap: 0px;font-weight: 700;justify-content: center;
@@ -429,7 +431,10 @@ a:hover, a:active {
 .item{
   margin:0.8rem 0.8rem 0rem 0.8rem;
 } 
-.logo_item img{margin-left: 5px;}
+.logo_item img{
+  margin-left: 5px;
+  //  width: % !important;
+}
 .sidebar.close .nav_link:hover {
   background: var(--blue-color);
   color: #fff;
@@ -552,7 +557,7 @@ a:hover, a:active {
     -webkit-transition: all .1s ease-in-out;
     transition: all .1s ease-in-out !important;
     padding: 0 11px;
-
+    text-align: center;
 }
 .font-14 {
   font-size: 14px !important;

@@ -19,6 +19,8 @@ import "@pnp/graph/users";
 import "@pnp/graph/photos";
 import { getSP } from '../loc/pnpjsConfig';
 import { FontSizes } from '@fluentui/react';
+let siteID: any;
+let response: any;
 interface NavItem {
   Title: string;
   Url: string;
@@ -74,11 +76,113 @@ const VerticalContext = ({ _context }: any) => {
   const handleWindowResize = () => {
     setIsMobile(window.innerWidth < 768);
   };
+  // previous working
+  // const fetchNavItems = async () => {
+  //   if (localStorage.getItem("NavId") != null && localStorage.getItem("NavId") != undefined && localStorage.getItem("NavId") != "") {
+  //     setuseActive(Number(localStorage.getItem("NavId")))
+  //   }
+  //   setCurrentUser(await getCurrentUserName(_context))
+  //   // if (localStorage.getItem("bigLogo") != null && localStorage.getItem("bigLogo") != undefined && localStorage.getItem("bigLogo") != "" || localStorage.getItem("SmallLogo") != null
+  //   //   && localStorage.getItem("SmallLogo") != undefined && localStorage.getItem("SmallLogo") != "") {
+  //   //   setBigLogo(localStorage.getItem('bigLogo'))
+  //   //   setSmallLogo(localStorage.getItem('SmallLogo'))
+  //   // }
+  //   // else {
+  //   await _context.web.lists.getByTitle("UtilitySettings").items.getAll().then((res: any) => {
+  //     console.log(res, 'res');
+  //     const ImageUrl = res[0].LogoImage == undefined || res[0].LogoImage == null ? "" : JSON.parse(res[0].LogoImage);
+  //     console.log(ImageUrl.serverUrl + ImageUrl.serverRelativeUrl, 'imgBigLogo');
+  //     setBigLogo(ImageUrl.serverUrl + ImageUrl.serverRelativeUrl)
+  //     const ImagesmUrl = res[0].SmallLogo == undefined || res[0].SmallLogo == null ? "" : JSON.parse(res[0].SmallLogo);
+  //     console.log(ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl, 'imgBigLogo');
+  //     setSmallLogo(ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl)
+  //     // localStorage.setItem("bigLogo", ImageUrl.serverUrl + ImageUrl.serverRelativeUrl)
+  //     // localStorage.setItem("SmallLogo", ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl)
+  //   });
+  //   // }
+  //   // if (localStorage.getItem('Navitems') != undefined && localStorage.getItem('Navitems') != null && localStorage.getItem('Navitems') != "") {
+  //   //   const arr = JSON.parse(localStorage.getItem('Navitems'))
+  //   //   setNavItems(arr);
+  //   // }
+  //   // else {
+  //     const currentUser = await _context.web.currentUser();
+
+  //     // Get groups for the current user
+  //     const userGroups = await _context.web.currentUser.groups();
+  
+  //     console.log("userGroups",userGroups);
+  //     let grptitle:String[]=[];
+  //     for(var i=0;i<userGroups.length;i++)
+  //     {
+  //       grptitle.push(userGroups[i].Title.toLowerCase());
+  //     }
+  
+  //     console.log('%c Start',"background-color:red");
+  
+  //   //   await _context.web.lists.getByTitle("ARGSidebarNavigation").items.select("Title,Url,Icon,ParentId,ID,EnableAudienceTargeting,Audience/Title").expand("Audience").orderBy("Order0", true).getAll().then((res: any) => {
+  //   //   console.log('%c res',"background-color:red",res);
+  //   //   const items: NavItem[] = res.map((item: any) => {
+  //   //     return {
+  //   //       Title: item.Title,
+  //   //       Url: item.Url,
+  //   //       Icon: item.Icon,
+  //   //       ParentId: item.ParentId,
+  //   //       ID: item.ID
+  //   //     };
+  //   //   });
+  //   //   // localStorage.setItem('Navitems', JSON.stringify(items))
+  //   //  // setNavItems(res);
+  //   //   let securednavitems= res.filter((nav:any)=>
+  //   //     {
+  //   //        return (!nav.EnableAudienceTargeting || ( nav.EnableAudienceTargeting && nav.Audience && nav.Audience.some((nv1:any)=>{  return grptitle.includes(nv1.Title.toLowerCase()); }  ) )  )
+  //   //     } 
+  //   //   )
+
+  //   //   // setNavItems(res);
+  //   //   setNavItems(securednavitems);
+  //   //   return items;
+  //   // });
+  //   await _context.web.lists.getByTitle("ARGSidebarNavigation").items.select("Title,Url,Icon,ParentId,ID,EnableAudienceTargeting,Audience/Title , IsActive").expand("Audience").filter("IsActive eq 1").orderBy("Order0", true).getAll().then((res: any) => {
+  //     console.log('%c res',"background-color:red",res);
+  //     const items: NavItem[] = res.map((item: any) => {
+  //       return {
+  //         Title: item.Title,
+  //         Url: item.Url,
+  //         Icon: item.Icon,
+  //         ParentId: item.ParentId,
+  //         ID: item.ID
+  //       };
+  //     });
+  //   // localStorage.setItem('Navitems', JSON.stringify(items))
+  //  // setNavItems(res);
+  //   let securednavitems= res.filter((nav:any)=>
+  //     {
+  //        return (!nav.EnableAudienceTargeting || ( nav.EnableAudienceTargeting && nav.Audience && nav.Audience.some((nv1:any)=>{  return grptitle.includes(nv1.Title.toLowerCase()); }  ) )  )
+  //     } 
+  //   )
+
+  //   // setNavItems(res);
+  //   setNavItems(securednavitems);
+  //   return items;
+  // });
+  //   // }
+  // };
   const fetchNavItems = async () => {
     if (localStorage.getItem("NavId") != null && localStorage.getItem("NavId") != undefined && localStorage.getItem("NavId") != "") {
       setuseActive(Number(localStorage.getItem("NavId")))
     }
-    setCurrentUser(await getCurrentUserName(_context))
+    let curretuseris = await _context.web.currentUser().then((res: any) => {
+      setCurrentUser(res.Title)
+      console.log(res, "currentuser");
+    })
+    debugger
+    const siteUrl = "https://alrostamanigroupae.sharepoint.com/sites/Intranet";
+    let listTitle = 'UtilitySettings'
+    let CurrentsiteID = "a505b4c0-aec7-4fef-96d6-b0f11e787e0d";
+    siteID = CurrentsiteID;
+    response = await _context.web.lists.getByTitle(listTitle).select('Id')();
+    console.log("resp",response);
+    //setCurrentUser(await getCurrentUserName(_context))
     // if (localStorage.getItem("bigLogo") != null && localStorage.getItem("bigLogo") != undefined && localStorage.getItem("bigLogo") != "" || localStorage.getItem("SmallLogo") != null
     //   && localStorage.getItem("SmallLogo") != undefined && localStorage.getItem("SmallLogo") != "") {
     //   setBigLogo(localStorage.getItem('bigLogo'))
@@ -89,10 +193,21 @@ const VerticalContext = ({ _context }: any) => {
       console.log(res, 'res');
       const ImageUrl = res[0].LogoImage == undefined || res[0].LogoImage == null ? "" : JSON.parse(res[0].LogoImage);
       console.log(ImageUrl.serverUrl + ImageUrl.serverRelativeUrl, 'imgBigLogo');
-      setBigLogo(ImageUrl.serverUrl + ImageUrl.serverRelativeUrl)
+      const imageData = res[0].LogoImage == undefined || res[0].LogoImage == null ? "" : JSON.parse(res[0].LogoImage);
+      let siteId = siteID;
+      let listID = response && response.Id;
+      let img1 = imageData && imageData.fileName ? `${siteUrl}/_api/v2.1/sites('${siteId}')/lists('${listID}')/items('${res[0].ID}')/attachments('${imageData.fileName}')/thumbnails/0/c400x400/content` : ""
+      let img = imageData && imageData.serverRelativeUrl ? `https://alrostamanigroupae.sharepoint.com${imageData.serverRelativeUrl}` : img1
+      const imageUrl = imageData
+        //? `${siteUrl}/SiteAssets/Lists/ea596702-57db-4833-8023-5dcd2bba46e3/${imageData.fileName}`
+        //? `${imageData.serverUrl}${imageData.serverRelativeUrl}`
+        ? img
+        : require("../assets/useimg.png");
+      setBigLogo(imageUrl)
       const ImagesmUrl = res[0].SmallLogo == undefined || res[0].SmallLogo == null ? "" : JSON.parse(res[0].SmallLogo);
       console.log(ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl, 'imgBigLogo');
-      setSmallLogo(ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl)
+      //setSmallLogo(ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl)
+      setSmallLogo(imgSMLogo);
       // localStorage.setItem("bigLogo", ImageUrl.serverUrl + ImageUrl.serverRelativeUrl)
       // localStorage.setItem("SmallLogo", ImagesmUrl.serverUrl + ImagesmUrl.serverRelativeUrl)
     });
@@ -102,22 +217,32 @@ const VerticalContext = ({ _context }: any) => {
     //   setNavItems(arr);
     // }
     // else {
-      const currentUser = await _context.web.currentUser();
-
-      // Get groups for the current user
-      const userGroups = await _context.web.currentUser.groups();
-  
-      console.log("userGroups",userGroups);
-      let grptitle:String[]=[];
-      for(var i=0;i<userGroups.length;i++)
-      {
-        grptitle.push(userGroups[i].Title.toLowerCase());
-      }
-  
-      console.log('%c Start',"background-color:red");
-  
-      await _context.web.lists.getByTitle("ARGSidebarNavigation").items.select("Title,Url,Icon,ParentId,ID,EnableAudienceTargeting,Audience/Title").expand("Audience").orderBy("Order0", true).getAll().then((res: any) => {
-      console.log('%c res',"background-color:red",res);
+    const currentUser = await _context.web.currentUser();
+ 
+    // Get groups for the current user
+    const userGroups = await _context.web.currentUser.groups();
+ 
+    console.log("userGroups", userGroups);
+    let grptitle: String[] = [];
+    for (var i = 0; i < userGroups.length; i++) {
+      grptitle.push(userGroups[i].Title.toLowerCase());
+    }
+ 
+    console.log('%c Start', "background-color:red");
+ 
+    // await _context.web.lists.getByTitle("ARGSidebarNavigation").items.select("Title,Url,Icon,ParentId,ID,EnableAudienceTargeting,Audience/Title").expand("Audience").orderBy("Order0", true).getAll().then((res: any) => {
+    // console.log('%c res',"background-color:red",res);
+    // const items: NavItem[] = res.map((item: any) => {
+    //   return {
+    //     Title: item.Title,
+    //     Url: item.Url,
+    //     Icon: item.Icon,
+    //     ParentId: item.ParentId,
+    //     ID: item.ID
+    //   };
+    // });
+    await _context.web.lists.getByTitle("ARGSidebarNavigation").items.select("Title,Url,Icon,ParentId,ID,EnableAudienceTargeting,Audience/Title , IsActive").expand("Audience").filter("IsActive eq 1").orderBy("Order0", true).getAll().then((res: any) => {
+      console.log('%c res', "background-color:red", res);
       const items: NavItem[] = res.map((item: any) => {
         return {
           Title: item.Title,
@@ -128,19 +253,19 @@ const VerticalContext = ({ _context }: any) => {
         };
       });
       // localStorage.setItem('Navitems', JSON.stringify(items))
-     // setNavItems(res);
-      let securednavitems= res.filter((nav:any)=>
-        {
-           return (!nav.EnableAudienceTargeting || ( nav.EnableAudienceTargeting && nav.Audience && nav.Audience.some((nv1:any)=>{  return grptitle.includes(nv1.Title.toLowerCase()); }  ) )  )
-        } 
+      // setNavItems(res);
+      let securednavitems = res.filter((nav: any) => {
+        return (!nav.EnableAudienceTargeting || (nav.EnableAudienceTargeting && nav.Audience && nav.Audience.some((nv1: any) => { return grptitle.includes(nv1.Title.toLowerCase()); })))
+      }
       )
-
+ 
       // setNavItems(res);
       setNavItems(securednavitems);
       return items;
     });
     // }
   };
+  
   console.log(currentUser);
 
   React.useEffect(() => {
@@ -429,9 +554,11 @@ const VerticalContext = ({ _context }: any) => {
       approval: Activity,
       gear: Cpu,
       codepen: Codepen,
+      BookOpen:BookOpen,
       knowledgecenter: BookOpen,
       dossier:Folder,
-      command:Command
+      command:Command,
+     
     };
     return iconMap[iconName] || null; // Return null if icon is not found
   };

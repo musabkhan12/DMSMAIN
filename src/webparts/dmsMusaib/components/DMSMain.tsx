@@ -1,7 +1,7 @@
 // Abdullah
 declare global {
   interface Window {
-    managePermission:(DocumentLibraryName:string,SiteTilte:string , SiteID:string, folderName:any ,folderPath:any,externalFolder:any) => void;
+    managePermission:(DocumentLibraryName:string,SiteTilte:string , SiteID:string, folderName:any ,folderPath:any,externalFolder:any,FolderID:any) => void;
     manageWorkflow:(DocumentLibraryName:string,SiteTilte:string , SiteID:string) => void;
     view:(message:string) => void;
     PreviewFile: (path: string, siteID: string, docLibName:any,  filemasterlist:any , filepreview:any) => void;
@@ -32,7 +32,8 @@ DocumentLibraryName:"",
 SiteID:"",
 FolderName: "",
 FolderPath:"",
-externalFolder:""
+externalFolder:"",
+FolderID:""
 }
 interface UploadFileProps {
   currentfolderpath: {
@@ -561,7 +562,9 @@ const myrequestbuttonclick =()=>{
           FolderPath,
           IsRename,
           IsActive,
-          External
+          External,
+          ID,
+          ParentID
         } = folderItem;
         if (SiteTitle) {
           const key = `${SiteTitle.trim()}::${Devision?.trim() || ""}::${
@@ -574,6 +577,8 @@ const myrequestbuttonclick =()=>{
             folderMap
               .get(key)
               .push({
+                ParentID,
+                ID,
                 IsRename,
                 FolderPath,
                 ParentFolderId,
@@ -903,15 +908,15 @@ const myrequestbuttonclick =()=>{
             ) => {
               data.folders.forEach((item: any) => {
                 const folderNamesArray = Array.isArray(item.FolderName)
-                  ? item.FolderName
-                  : [item.FolderName];
+                  ? [{ FolderName: item.FolderName[0], ID: item.ID }]
+                  :  [{ FolderName: item.FolderName, ID: item.ID }]
 
-                folderNamesArray.forEach((folderName: any) => {
-                  if (folderName && item.ParentFolderId === parentFolderId) {
+                folderNamesArray.forEach((ItemDetails: any) => {
+                  if (ItemDetails.FolderName && item.ParentID === parentFolderId) {
                     // Only display non-null folder names
                     const folderElement = document.createElement("li");
                     // New code to check the folder library name is Rename or not start
-                    let folderRenameText=folderName;
+                    let folderRenameText=ItemDetails.FolderName;
                     if(item.IsRename !== null){
                       folderRenameText=item.IsRename
                     }
@@ -939,7 +944,7 @@ const myrequestbuttonclick =()=>{
                       currentsiteID = value.siteID
                       currentEntity = value.entityTitle
                       currentDocumentLibrary = docLibName;
-                      currentFolder  = folderName;
+                      currentFolder  = ItemDetails.FolderName;
                       parentfolder = item.ParentFolderId;
                       currentfolderpath = item.FolderPath;
                       currentDevision = ''
@@ -974,7 +979,7 @@ const myrequestbuttonclick =()=>{
                       subFolderList.innerHTML = "";
 
                       // Recursively build the sub-folder structure
-                      buildFolderStructure(folderName, subFolderList);
+                      buildFolderStructure(ItemDetails.ID, subFolderList);
                     });
                   }
                 });
@@ -1285,17 +1290,18 @@ const myrequestbuttonclick =()=>{
                     data.folders.forEach((item: any) => {
                   
                       const folderNamesArray = Array.isArray(item.FolderName)
-                        ? item.FolderName
-                        : [item.FolderName];
+                      ? [{ FolderName: item.FolderName[0], ID: item.ID }]
+                      :  [{ FolderName: item.FolderName, ID: item.ID }]
 
-                      folderNamesArray.forEach((folderName: any) => {
+                      folderNamesArray.forEach((ItemDetails: any) => {
             
                         if (
-                          folderName &&
-                          item.ParentFolderId === parentFolderId
+                          ItemDetails.FolderName &&
+                          item.ParentID === parentFolderId
                         ) {
                           const folderElement = document.createElement("li");
-                          folderElement.textContent = folderName;
+                          // folderElement.textContent = folderName;
+                          folderElement.textContent = ItemDetails.FolderName;
                           parentElement.appendChild(folderElement);
                           // const entityImage = createImageElement(
                           //   "icons/entity-icon.png",
@@ -1316,7 +1322,8 @@ const myrequestbuttonclick =()=>{
                             currentDevision = devisionTitle;
                             currentDepartment = departmentTitle;
                             currentDocumentLibrary = docLibName;
-                            currentFolder = folderName
+                            // currentFolder = folderName
+                            currentFolder = ItemDetails.FolderName;
                             IsExternal=item.External
                           console.log("currentEntityURL", currentEntityURL);
                           console.log("currentEntity", currentEntity);
@@ -1345,7 +1352,7 @@ const myrequestbuttonclick =()=>{
                             event.stopPropagation();
                             toggleVisibility(subFolderList);
                             subFolderList.innerHTML = "";
-                            buildFolderStructure(folderName, subFolderList);
+                            buildFolderStructure(ItemDetails.ID, subFolderList);
                           });
                         }
                       });
@@ -1474,18 +1481,21 @@ const myrequestbuttonclick =()=>{
                         const folderNamesArray = Array.isArray(
                           libItem.FolderName
                         )
-                          ? libItem.FolderName
-                          : [libItem.FolderName];
+                          // ? libItem.FolderName
+                          // : [libItem.FolderName];
+                          ? [{ FolderName: libItem.FolderName[0], ID: libItem.ID }]
+                          :  [{ FolderName: libItem.FolderName, ID: libItem.ID }]
 
-                        folderNamesArray.forEach((folderName: any) => {
+                        folderNamesArray.forEach((ItemDetails: any) => {
                          
                           if (
-                            folderName &&
-                            libItem.ParentFolderId === parentFolderId
+                            ItemDetails.FolderName  &&
+                            libItem.ParentID === parentFolderId
                           ) {
                             // Only display non-null folder names
                             const folderElement2 = document.createElement("li");
-                            folderElement2.textContent = folderName;
+                            folderElement2.textContent = ItemDetails.FolderName;
+                            // folderElement2.textContent = folderName;
                             parentElement.appendChild(folderElement2);
                             const folderPath = libItem.FolderPath; 
                             // const entityImage = createImageElement(
@@ -1515,7 +1525,8 @@ const myrequestbuttonclick =()=>{
                                 currentDevision = devisionTitle;
                                 currentDepartment = null
                                 currentDocumentLibrary = item.DocumentLibraryName;
-                                currentFolder = folderName
+                                // currentFolder = folderName
+                                currentFolder = ItemDetails.FolderName
                                 currentDepartment=''
                                 currentFolder = folderPath
                                 IsExternal=item.External;
@@ -1556,7 +1567,7 @@ const myrequestbuttonclick =()=>{
 
                                 // Recursively build the sub-folder structure
                                 buildFolderStructure(
-                                  folderName,
+                                  ItemDetails.ID,
                                   subFolderList2
                                 );
                               }
@@ -2636,10 +2647,12 @@ const myrequestbuttonclick =()=>{
     console.log("Devision",currentDevision);
     console.log("Department",currentDepartment);
     // set current entity ,current document library and folder name
+    const folderData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`FolderPath eq '${FolderPath}'`)();
+    console.log("folderData to check folder or library",folderData);
     const folName = segments[segments.length - 1];
     const testidsub = await sp.site.openWebById(siteID);
     let library;
-    if(folName === docLibName){
+    if(folderData[0].IsLibrary === true){
       console.log("its document libray",folName)
       library = testidsub.web.getList(`${FolderPath}`);
     }else{
@@ -9320,7 +9333,7 @@ menu.id =`menu-${files.ID}`;
 menu.className = "popup-menu";
 menu.innerHTML = `
 <ul>
-     <li onclick="managePermission('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}','${files.FolderName}','${files.FolderPath}' , '${externalFolder}')">
+     <li onclick="managePermission('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}','${files.FolderName}','${files.FolderPath}' , '${externalFolder}','${files.ID}')">
       <img src=${ManagePermissionFolder} alt="ManagePermission"/>
       Manage Permission
   </li>
@@ -9475,13 +9488,14 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
           }else{
             const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
             console.log("folderMasterData for folder",folderMasterData);
-             const fetchNestedFolders=async(parentFolderName: string): Promise<any[]> =>{
+             const fetchNestedFolders=async(parentFolderID: string): Promise<any[]> =>{
               // Fetch direct subfolders for the given folder
               const subFolderData = await sp.web.lists.getByTitle("DMSFolderMaster").items
-                  .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentFolderId eq '${parentFolderName}'`)
+                  .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentID eq ${parentFolderID}`)
                   .select("*")();
               
-              console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
+              // console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
+              console.log(`Subfolders for ParentFolderID '${parentFolderID}':`, subFolderData);
               // If no subfolders are found, return an empty array
               if (!subFolderData.length) {
                   return [];
@@ -9490,7 +9504,7 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
               // For each subfolder, recursively fetch its nested subfolders
               const nestedFolders = await Promise.all(
                   subFolderData.map(async (subFolder) => {
-                      const nestedData = await fetchNestedFolders(subFolder.FolderName);
+                      const nestedData = await fetchNestedFolders(subFolder.ID);
                       // Include the subfolder's details along with its children
                       return { ...subFolder, subFolders: nestedData }; 
                   })
@@ -9516,7 +9530,8 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
             };
 
              // Start fetching nested folders recursively
-             const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
+            //  const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
+            const allNestedFolders = await fetchNestedFolders(folderMasterData.ID);
              console.log("All Nested Folders:", allNestedFolders);
  
              // Flatten the nested folder structure
@@ -12101,7 +12116,7 @@ window.manageWorkflow=async(DocumentLibraryName:string,SiteTilte:string, SiteID:
 }
 
  //Manage Folder Permission Action
- window.managePermission=(documentLibraryName:string,SiteTilte:string,SiteID:string, folderName:any ,folderPath:any , externalFolder:any )=>{
+ window.managePermission=(documentLibraryName:string,SiteTilte:string,SiteID:string, folderName:any ,folderPath:any , externalFolder:any ,FolderId:any)=>{
   setShowfolderpermission(true)
   // console.log(message);
   console.log("documentLibraryName",documentLibraryName)
@@ -12116,6 +12131,7 @@ window.manageWorkflow=async(DocumentLibraryName:string,SiteTilte:string, SiteID:
   managePermissionProps.FolderName=folderName;
   managePermissionProps.FolderPath=folderPath;
   managePermissionProps.externalFolder=externalFolder;
+  managePermissionProps.FolderID=FolderId;
   //  handleButtonClickShow("managePermission");
   
   // handleButtonClickShow("managePermission");
@@ -12209,7 +12225,7 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
   // Add event listener for "+" button to add new editable fields
   addFieldButton.addEventListener('click', () => {
     const newFieldHTML = `
-      <div class="form-group">
+      <div class="form-group row">
         <div class="col-md-6">
           <label>Field Name</label>
           <input type="text" class="form-control" placeholder="Enter new field name" />
@@ -12257,7 +12273,9 @@ window.editFile = async (siteName: string, documentLibraryName:string ) => {
 
   console.log("New Fields:", newFields);
     // Validation for forbidden column names
+    let checkFolderAndMetaTagsValidation=documentLibraryName.toLocaleLowerCase().trim();
     const forbiddenNames = ["status", "isdeleted"];
+    forbiddenNames.push(checkFolderAndMetaTagsValidation);
     const invalidFields = newFields.filter((field) => forbiddenNames.includes(field.columnName.toLocaleLowerCase().trim()));
   
     if (invalidFields.length > 0) {
@@ -14964,6 +14982,8 @@ if (input) {
         FileUID:String(uploadResult.data.UniqueId),
         Status: String('Pending'),
         FilePreviewUrl:String(previewUrl),
+        ApproveAction:String('Submitted'),
+        CurrentLevel:1
         
       });
       // await sp.web.lists.getByTitle(`DMSFileApprovalList`).items.getById(fetchDatafromapprovalist[0].ID).delete();
@@ -15102,7 +15122,7 @@ librarydiv.appendChild(mainContainer)
     </div>
     <div className="content-page">
       <HorizontalNavbar _context={sp}  siteUrl={props.siteUrl} context={props.context} />
-      <div className="content" style={{marginLeft: `${!useHide ? '240px' : '80px'}`,marginTop:'0.8rem'}}>
+      <div className="content" style={{marginLeft: `${!useHide ? '240px' : '80px'}`,marginTop:'2.8rem'}}>
        
       <div className="container-fluid  paddb">
                 {activeComponent === "" ? (
@@ -15152,7 +15172,7 @@ librarydiv.appendChild(mainContainer)
 
                             
                             <div style={{display:'flex', justifyContent:'end', gap:'5px'}} className="col-lg-6 newbutton">
-                              <div>
+                              {/* <div>
                               <Dropdown as={ButtonGroup} style={{padding: '9.4px' , marginTop: '8px'}}>
         <Dropdown.Toggle variant="primary" id="dropdown-left">
         
@@ -15186,7 +15206,7 @@ librarydiv.appendChild(mainContainer)
           >Change Request edit</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-                              </div>
+                              </div> */}
                               <div id="hidegidvewlistviewbutton" className="view-buttons mt-2">
                                 <button  type="button" className="btn me-1 btngridview mt-0 grid-view active"    
                                 onClick={(event: any = null, siteIdToUpdate: string = null)=>myRequest(event) }>

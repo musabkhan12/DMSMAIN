@@ -930,7 +930,8 @@ const handleSubmit = async (event: any) => {
           SiteName: String(currentfolderpath.Entity),
           MyRequest: true,
           Processname: 'New File Request',
-          // RequestNo: newRequestNo
+          RequestNo: newRequestNo,
+       
       });
       console.log(newItem, "New item added FileMaster");
 
@@ -948,6 +949,7 @@ const handleSubmit = async (event: any) => {
               ApprovedLevel: 1,
               RequestNo: newRequestNo,
               Processname: 'New File Request',
+              CurrentLevel : 1
           });
       }
 
@@ -2109,16 +2111,14 @@ useEffect(()=>{
      
         
       )}
-      <h3 className="mt-2 mb-2 font-16 text-dark">Meta tag</h3>
-    </div>
-    <div>
+       <div>
       {isChecked && (
         <div className="input-container mt-3">
                   {/* <label htmlFor="Uplaod bulk">Bulk upload</label> */}
                   
-                  <label htmlFor="bulkfile" style={{ fontWeight: "bold" }}>
+                  {/* <label htmlFor="bulkfile" style={{ fontWeight: "bold" }}>
                       Upload File <span style={{ color: "red" }}>*</span>
-                  </label>
+                  </label> */}
         <input type="file" name="bulkfile" id="bulkfile" multiple onChange={(e)=>handlebulkFileChange(e)}/>
         <ul className="newbulnup">
   {uploadedFiles.map((file, index) => (
@@ -2128,10 +2128,10 @@ useEffect(()=>{
         backgroundColor: selectedIndex === index ? "#e0f7fa" : "transparent",
       }}
     >
-        <div>     
+        <div style={{width:'20px', textAlign:'center', fontSize:'14px', float:'left'}}>     
           {index + 1}.
         </div> 
-        <div className="font-14" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap', padding:'0px 5px',  fontWeight:'500'}}>  
+        <div className="font-14" style={{overflow:'hidden', width:'66%', textAlign:'left', textOverflow:'ellipsis',whiteSpace:'nowrap', padding:'0px 5px',  fontWeight:'500'}}>  
           <a style={{color:'#4fc6e1'}} href="#" onClick={() => {
               handlePreview(file.url)
               setSelectedIndex(index);
@@ -2149,11 +2149,15 @@ useEffect(()=>{
   ))}
 </ul>
 <div style={{display:'flex', justifyContent:'right'}}>
-        <button style={{display:'none',width:'130px'}} id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
+        <button style={{display:'none',width:'130px', marginTop:'0px'}} id="submitBtn2" type="submit" onClick={handleSubmitBulk}>Bulk Submit</button> 
         </div>
         </div>
       )}
     </div>
+    {!isChecked ?   <h3 className="mt-2 mb-2 font-16 text-dark">Tags</h3> : null}
+    
+    </div>
+   
                           </form>
                       </div>
 

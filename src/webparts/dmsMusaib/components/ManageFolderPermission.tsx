@@ -48,12 +48,12 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     const [toggelPermission,setTogglePermission]=React.useState<string>();
     console.log("toggelPermission",toggelPermission);
 
-    const [errorsForPermissionSelection, setErrorsForPermissionSelection] = useState<{ [key: number]: { userSelect?: string, permissionSelect?: string } }>({});
+    const [errorsForPermissionSelection, setErrorsForPermissionSelection] = useState<{ [key: number]: { userSelect?: string, permissionSelect?: string; duplicate?: string } }>({});
       const validatePermissionsSelect = () => {
         let isValid = true;
-        const newErrors: { [key: number]: { userSelect?: string, permissionSelect?: string } } = {};
+        const newErrors: { [key: number]: { userSelect?: string, permissionSelect?: string; duplicate?: string } } = {};
       
-        rowsForPermission.forEach((row) => {
+        rowsForPermission.forEach((row:any) => {
           if (!row.selectedUserForPermission || row.selectedUserForPermission.length === 0) {
             newErrors[row.id] = { ...newErrors[row.id], userSelect: 'Please select at least one user.' };
             isValid = false;
@@ -62,11 +62,31 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             newErrors[row.id] = { ...newErrors[row.id], permissionSelect: 'Please select a permission.' };
             isValid = false;
           }
+        // **Collect all duplicate users**
+        let duplicateUsers: string[] = [];
+          row.selectedUserForPermission.forEach((user: any) => {
+            const isDuplicate = tableData.some(
+                (item) => item.userId === user.userId && item.Permission === row.selectedPermission.value
+            );
+            if (isDuplicate) {
+              duplicateUsers.push(user.value);
+          }
+        });
+
+        // If there are duplicates, set a single error message
+        if (duplicateUsers.length > 0) {
+            newErrors[row.id] = {
+              ...newErrors[row.id],
+                duplicate: `${duplicateUsers.join(", ")} already have "${row.selectedPermission.value}" permission.`,
+              };
+                isValid = false;
+        }
         });
       
         setErrorsForPermissionSelection(newErrors);
         return isValid;
       };
+      console.log("newErrors after added error message",errorsForPermissionSelection)
 
     const handlesetTogglePermission=()=>{
         setTogglePermission("Yes");
@@ -393,12 +413,17 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             }
             
             // alert(`here is filter data  sitetitle ${OthProps.SiteTitle} , OthProps.DocumentLibraryName${OthProps.DocumentLibraryName} , folderName ${folderName}`)
-            const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName}`)();
+            // const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName}`)();
+            const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(Number(OthProps.FolderID))();
             console.log("permissionDetails1",permissionDetails);
-            IsUpdate=permissionDetails[0]?.IsPrivate;
-            IsPrivateColumnId=permissionDetails[0].Id;
-            division=permissionDetails[0].Devision;
-            department=permissionDetails[0].Department
+            // IsUpdate=permissionDetails[0]?.IsPrivate;
+            IsUpdate=permissionDetails?.IsPrivate;
+            // IsPrivateColumnId=permissionDetails[0].Id;
+            IsPrivateColumnId=permissionDetails.Id;
+            // division=permissionDetails[0].Devision;
+            division=permissionDetails.Devision;
+            // department=permissionDetails[0].Department
+            department=permissionDetails.Department
             
             // Bread crumb start
             path = OthProps.SiteTitle;
@@ -426,7 +451,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             
             // const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and CurrentUser eq '${currentUserEmailRef.current}' and FolderName eq ${null}`)();
             // alert(`folderName is :${folderName}`)
-            const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName","Id").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and CurrentUser eq '${currentUserEmailRef.current}' and FolderName eq ${folderName}`)();
+            const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName","Id").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName} and FolderID eq ${Number(OthProps.FolderID)}`)();
             console.log("Fetch data",fetchData);    
             
 
@@ -565,6 +590,44 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     if(!validatePermissionsSelect()){
       return
     }
+     
+    // this code will make public folder to private and change all public checks to private
+    // if(!IsUpdate){
+    //   const getDataFromFolderPrivacy=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("*").filter(`FolderID eq ${Number(OthProps.FolderID)} and User eq ${null} and UserID eq ${null}`)();
+    //   console.log("getDataFromFolderPrivacy",getDataFromFolderPrivacy);
+
+    //   if(getDataFromFolderPrivacy.length > 0){
+    //     try {
+    //      await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
+    //         PublicFolderPermission:false,
+    //       })
+    //       console.log("PublicFolderPermission updated successfully");
+    //     } catch (error) {
+    //       console.log("error in PublicFolderPermission updated",error);
+    //     }
+    //   }
+    //     try {
+    //       await sp.web.lists.getByTitle('DMSFolderMaster').items.getById(Number(OthProps.FolderID)).update({
+    //         IsPrivate:true
+    //       })
+    //       console.log("successfully updated the IsPrivate column");
+    //     } catch (error) {
+    //       console.log("error in updating IsPrivate column",error);
+    //     }
+
+    //     if(OthProps.FolderName === "null"){
+          
+    //       try {
+    //         await sp.web.lists.getByTitle('DMSPreviewFormMaster').items.getById(IsPrivateColumnIdForDocumentLibrary).update({
+    //           IsPrivate:true
+    //         })
+    //         console.log("successfully updated the IsPrivate column of the DMSPreviewformmaster list")
+    //       } catch (error) {
+    //         console.log("error in updated the IsPrivate column of the DMSPreviewformmaster list")
+    //       }
+    //     }
+      
+    // }
 
     try {
         
@@ -573,6 +636,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             DocumentLibraryName:OthProps.DocumentLibraryName,
             CurrentUser:currentUserEmailRef.current,
             IsModified:true,
+            FolderID:Number(OthProps.FolderID)
             // UserPermission:selectedPermission[0].value
         }
 
@@ -1031,6 +1095,10 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                       {errorsForPermissionSelection[row.id]?.userSelect && (
                                     <span className="text-danger">{errorsForPermissionSelection[row.id].userSelect}</span>
                                   )}
+                                  
+                                    {errorsForPermissionSelection[row.id]?.duplicate && (
+                                      <span className="text-danger">{errorsForPermissionSelection[row.id].duplicate}</span>
+                                    )}
                                   </div>
                                   <div className="col-12 col-md-4 mb-2" style={{
                                

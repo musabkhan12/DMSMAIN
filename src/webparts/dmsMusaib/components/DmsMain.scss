@@ -928,4 +928,17 @@ text-align: center;}
   .OneUpTextFileContainer{
     width: 100% !important;
   }
-.borderprev{border: 1px solid #1fb0e5; height: 482px; border-radius: 20px; margin-top: 30px; }
+.borderprev{border: 1px solid #1fb0e5; height: 483px; border-radius: 20px; margin-top: 30px; }
+
+
+.ms-fullscreenmode #contentBox{
+     margin-left: 0px !important;
+}
+
+// i added this becuase in file upload checkbox was not working
+.input-container {
+  input[type="checkbox"] {
+    -webkit-appearance: auto !important;
+    appearance: auto;
+  }
+}
