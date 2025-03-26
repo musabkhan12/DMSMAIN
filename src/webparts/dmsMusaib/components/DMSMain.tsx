@@ -1512,7 +1512,8 @@ const myrequestbuttonclick =()=>{
                             // folderElement2.appendChild(entityImage);
                             // subFolderList2.appendChild(entityImage);
                             folderElement2.appendChild(toggleButton)
-                            subFolderList2.appendChild(toggleButton)
+                             // commented below line to show the folder imgage on the left side of the folder name (Line n0 1527)
+                            //  subFolderList2.appendChild(toggleButton)
                             folderElement2.appendChild(subFolderList2);
 
                             folderElement2.addEventListener(
@@ -2655,6 +2656,7 @@ const myrequestbuttonclick =()=>{
     if(folderData[0].IsLibrary === true){
       console.log("its document libray",folName)
       library = testidsub.web.getList(`${FolderPath}`);
+      currentFolder='';
     }else{
       console.log("its folder",folName)
       currentFolder=folName
@@ -11730,10 +11732,14 @@ const fileNotFound=(fileName:any)=>{
   breadcrumbElement.style.display = "block";
 
   const basePath = `${window.location.pathname.match(/\/sites\/[^\/]+/)[0]}/`;
-  if (!fullPath.startsWith(basePath)) return;
-
-  const relativePath = fullPath.replace(basePath, "").replace(/^\/|\/$/g, ""); 
+  
+  if (!fullPath.toLocaleLowerCase().startsWith(basePath.toLocaleLowerCase())) return;
+  
+  // const relativePath = fullPath.replace(basePath, "").replace(/^\/|\/$/g, ""); 
+  const relativePath = fullPath.substring(basePath.length).replace(/^\/|\/$/g, ""); 
   let pathParts = relativePath.split("/");
+
+  
   
    // Insert division and department at correct positions
    if (pathParts.length > 0) {

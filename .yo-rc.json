@@ -8,12 +8,12 @@
       "@microsoft/teams-js": "2.24.0"
     },
     "version": "1.19.0",
-    "libraryName": "dms-musaib",
+    "libraryName": "dmsmain",
     "libraryId": "c6f9236c-850c-4005-a18c-781bb6265970",
     "environment": "spo",
     "packageManager": "npm",
-    "solutionName": "dms-musaib",
-    "solutionShortDescription": "dms-musaib description",
+    "solutionName": "dmsmain",
+    "solutionShortDescription": "dmsmain description",
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
     "componentType": "webpart"
