@@ -595,16 +595,30 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     // if(!IsUpdate){
     //   const getDataFromFolderPrivacy=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("*").filter(`FolderID eq ${Number(OthProps.FolderID)} and User eq ${null} and UserID eq ${null}`)();
     //   console.log("getDataFromFolderPrivacy",getDataFromFolderPrivacy);
-
+    //    // if(getDataFromFolderPrivacy.length > 0){
+    //   //   try {
+    //   //    await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
+    //   //       PublicFolderPermission:false,
+    //   //     })
+    //   //     console.log("PublicFolderPermission updated successfully");
+    //   //   } catch (error) {
+    //   //     console.log("error in PublicFolderPermission updated",error);
+    //   //   }
+    //   // }
     //   if(getDataFromFolderPrivacy.length > 0){
-    //     try {
-    //      await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
-    //         PublicFolderPermission:false,
-    //       })
-    //       console.log("PublicFolderPermission updated successfully");
-    //     } catch (error) {
-    //       console.log("error in PublicFolderPermission updated",error);
+    //     alert("getDataFromFolderPrivacy[0].PublicFolderPermission " + getDataFromFolderPrivacy[0].PublicFolderPermission )
+    //     if(getDataFromFolderPrivacy[0].PublicFolderPermission === true){
+    //       alert("Please update the folder privacy first")
+    //       try {
+    //         await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
+    //            PublicFolderPermission:false,
+    //          })
+    //          console.log("PublicFolderPermission updated successfully");
+    //        } catch (error) {
+    //          console.log("error in PublicFolderPermission updated",error);
+    //        }
     //     }
+      
     //   }
     //     try {
     //       await sp.web.lists.getByTitle('DMSFolderMaster').items.getById(Number(OthProps.FolderID)).update({

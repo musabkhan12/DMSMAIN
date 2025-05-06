@@ -106,12 +106,12 @@ export const SearchResultsWithPagination: React.FC<SearchResultsWithPaginationPr
             </div> */}
             <div className="row p-2 pt-0">
                 {currentItems.map((res, index) => (
-                    <div key={index} className="col-sm-4 mt-0 mb-3 search-result">
-                        <div style={{border:'1px solid #1fb0e5', borderRadius:'30px'}}  className="card h-100">
+                    <div key={index} className="col-sm-12 mt-0 mb-2 search-result">
+                        <div style={{borderRadius:'5px'}}  className="card h-100">
                             <div className="card-body">
-                                <a href={res.Path} target='_blank'><h5 className="card-title">{res.Title}</h5></a>
+                                <a href={res.Path} target='_blank'><h5   className="card-title text-dark hover fw-bold">{res.Title}</h5></a>
                                 {/* <p className="card-text">{res.Summary}</p> */}
-                                <p className="card-text"><span dangerouslySetInnerHTML={{ __html:`${res.Summary.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
+                                <p style={{fontSize:'14px', color:'#666'}} className="card-text font-14"><span dangerouslySetInnerHTML={{ __html:`${res.Summary.replace(/<c0>/g, "<strong>").replace(/<\/c0>/g, "</strong>")}` }} /></p>
                             </div>
                             {/* <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${fieldnamesmapping[key] ? fieldnamesmapping[key] : key}: ${value}`)} /> */}
                             <TagsComponent tags={Object.entries(res.Properties).map(([key, value]) => `${GetFieldName(key)}: ${GetFieldValue(fieldtypemappings,key,value)}`)} />

@@ -452,10 +452,13 @@ a:hover
   line-height: 27px;
   text-align: center;
 }
- #folderContainer2 ul li{font-weight:400; margin-top: 6px; }
+//  #folderContainer2 ul li{font-weight:400; margin-top: 6px; }
+// amjad latest change on fodler hierarchy
+#folderContainer2 ul li{font-weight:400; margin-top: 6px;  width: 325px;}
 /* Popup body: Spacing for the select and textarea */
 .share-popup-body {
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
+  margin-bottom: 20px; position: relative;
 }
  
 /* React select container */
@@ -749,7 +752,7 @@ label{font-size: 0.875rem !important; font-weight: 400 !important; color: #6c757
     
     padding: 7px;
 
-
+    max-height: 671px !important;
    
 }
 #folderContainer2 .toggle-button{width: 17px;
@@ -786,7 +789,8 @@ label{font-size: 0.875rem !important; font-weight: 400 !important; color: #6c757
 .popup-content{    background: #fff;
 width: 32%;
 margin: auto;
-top: 5%;
+// top: 5%;
+top: 40%;
 position: relative;
 padding: 20px;
 border-radius: 5px;}
@@ -934,11 +938,22 @@ text-align: center;}
 .ms-fullscreenmode #contentBox{
      margin-left: 0px !important;
 }
-
+/* i have added this because folder hierarchy was conjusted if name was too large */
+#folderContainer2 ul li{
+  font-size: 12px;
+  font-weight: 300;
+  width: 400px;
+}
 // i added this becuase in file upload checkbox was not working
 .input-container {
   input[type="checkbox"] {
     -webkit-appearance: auto !important;
     appearance: auto;
   }
+}
+
+.sidebardmsButton.active {
+  background-color: #e0f0ff;
+  border-left: 4px solid #0078d4;
+  font-weight: bold;
 }

@@ -48,21 +48,40 @@
 
 
 }
+.search-result span{
+  background: #fff !important;
+  border-color: #ccc !important;  color: #000 !important; font-weight: 400 !important;
+}
 .search-result span+span{
-  background: #008751 !important;
-  border-color: #008751 !important;
+  background: #fff !important;
+  border-color: #ccc !important;font-weight: 400 !important;
 }
 .search-result span+span+span{
   background: #fff !important;
   border-color: #ccc !important;
-  color: #000 !important;
+  color: #000 !important;font-weight: 400 !important;
 }
+.nwsera button{color: #000 !important;}
 .newdesign{margin-left: 10px; display: flex;}
-
+.newbutton span{border: 1px solid #ccc !important; border-radius: 30px !important;}
 .pagination-container {
   float: right;
   margin: 8px 0px 0px 0px;
 }
+.form-check{padding-left: 0px !important;}
+.newcheck{width: 33%;float: left; padding-left: 25px !important;}
+
+.card-text{color: #666 !important;}
 .pagination-container ul{margin-bottom: 0px;}
 .newdesign {display: flex;}
 .newdesign  label{width:240px ; padding: 10px 0px 0px 0px;}
+.neewd{height: 36px;
+  color: #ffffff !important;
+  font-size: 14px !important;}
+.newbuttons{color: #ffffff !important;
+  font-size: 14px !important;
+  position: absolute;
+  right: 0;
+  height: 36px;
+  top: 21px;
+}

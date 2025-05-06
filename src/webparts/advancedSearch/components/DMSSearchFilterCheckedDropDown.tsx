@@ -167,7 +167,7 @@ export const DMSSearchFilterCheckedDropDown: React.FC<IDMSEntitySearchDropDownsP
   
 
   return (
-    <div className="p-3">
+    <div className="p-0 pt-1">
        <div className="mb-2 border-bottom">
         <label className="form-label">Select Entities</label>
         <div className="d-flex">

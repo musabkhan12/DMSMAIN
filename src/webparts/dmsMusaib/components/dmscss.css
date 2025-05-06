@@ -14,17 +14,36 @@
   position: relative; margin-top: 20px;
 }
 .newhe{overflow: auto; max-height: 350px;}
-#folderContainer2{
-    /* width: 17rem; */
+
+/* #folderContainer2{
+
   
     padding: 7px;
     max-height: 325px;
     overflow-y: auto;
     overflow-x: hidden;
     
+} */
+  /* amjad latest chnage on folder container  */
+
+#folderContainer2{
+    /* width: 17rem; */
+  
+    padding: 7px;
+    /* max-height: 325px; */
+    max-height: 671px !important;
+    overflow-y: auto;
+    overflow-x: auto;
+
+    
 }
-#folderContainer2::-webkit-scrollbar {
+
+/* #folderContainer2::-webkit-scrollbar {
   width: 6px;
+} */
+ /* amjad latest chnage on folder container  */
+ #folderContainer2::-webkit-scrollbar {
+  width: 6px; height: 6px;
 }
 
 /* Track */
@@ -490,10 +509,21 @@ a:hover
 #showfolderpermission .modal-dialog h6, #workflowdiv .modal-dialog h6{
   text-align: center;
 }
- #folderContainer2 ul li{font-weight:300; font-size: 12px;}
+ /* #folderContainer2 ul li{font-weight:300; font-size: 12px;} */
+
+ /* amjad latest chnage */
+ #folderContainer2 ul li{font-weight:300; font-size: 12px;
+  /* display:flex;
+      justify-content: left;
+      flex-direction: row-reverse;
+      text-align: left; */
+      width: 325px;
+}
+
 /* Popup body: Spacing for the select and textarea */
 .share-popup-body {
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
+  margin-bottom: 20px; position: relative;
 }
  
 /* React select container */
@@ -1016,4 +1046,12 @@ text-align: center;
 }
 .flexContainer-75, .ms-TooltipHost, .root-53, .root-61 {
   display: block !important;
+}
+
+
+/* i have added this because folder hierarchy was conjusted if name was too large */
+#folderContainer2 ul li{
+  font-size: 12px;
+  font-weight: 300;
+  width: 400px;
 }

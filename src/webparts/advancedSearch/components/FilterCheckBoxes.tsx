@@ -13,7 +13,7 @@ export const FilterCheckBox = (props:IFilterCheckProps) => {
     return (
         <div>
         { props.refiner.buckets.map(value => (
-                <div className="form-check" key={value.key}>
+                <div className="form-check newcheck" key={value.key}>
                     
                     <input
                         type="checkbox"

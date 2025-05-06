@@ -24,10 +24,10 @@ const TagsComponent = (props:ITagsProps) => {
 //   };
 
   return (
-    <div className="container my-3">
+    <div className="container my-0 newbutton">
       <div className="d-flex flex-wrap gap-2 mb-3">
         {props.tags.map((tag, index) => (
-          <span style={{fontSize:'11px'}}
+          <span style={{fontSize:'12px'}}
             key={index}
             className="badge bg-primary d-flex align-items-center"
           >

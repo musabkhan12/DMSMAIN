@@ -568,7 +568,7 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
-#filePreview{height: 481px; border-radius: 20px !important;}
+#filePreview{height: 850px !important; border-radius: 20px !important;}
 div[class*=OneUpModalSizing]>div.ms-Dialog-main{
   background: #fff !important;
 }

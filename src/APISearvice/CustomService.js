@@ -220,39 +220,39 @@ export const getCurrentUserNameId = async (_sp) => {
 
 }
 
-export async function getUserProfilePicture(authorId, sp) {
+// export async function getUserProfilePicture(authorId, sp) {
 
-  try {
+//   try {
 
-    // Get user information by ID
+//     // Get user information by ID
 
-    const user = await sp.web.getUserById(authorId)();
+//     const user = await sp.web.getUserById(authorId)();
+// console.log("userrrrrrr",user);
+
+//     if (user) {
+
+//       // The 'Picture' field holds the profile picture URL
+
+//       const profilePictureUrl = `${user.PictureUrl}`;
+
+//       console.log(profilePictureUrl, 'profilePictureUrluuu');
 
 
-    if (user) {
+//       return profilePictureUrl;
 
-      // The 'Picture' field holds the profile picture URL
+//     }
 
-      const profilePictureUrl = `${user.PictureUrl}`;
+//     return null;
 
-      console.log(profilePictureUrl, 'profilePictureUrl');
+//   } catch (error) {
 
+//     console.log("Error fetching profile picture:", error);
 
-      return profilePictureUrl;
+//     return null;
 
-    }
+//   }
 
-    return null;
-
-  } catch (error) {
-
-    console.log("Error fetching profile picture:", error);
-
-    return null;
-
-  }
-
-}
+// }
 
 
 export const getCurrentUserProfileEmail = async (sp) => {
@@ -668,7 +668,7 @@ export const getLeaderTop = async (sp) => {
 
     .getByTitle("ARGLeaderboard")
 
-    .items.select("*,Author/ID,Author/Title,Author/EMail,Author/Department,Created")
+    .items.select("*,Author/ID,Author/Title,Author/EMail,Author/Department,Author/SPSPicturePlaceholderState,Created")
 
     .expand("Author")
 
@@ -1089,7 +1089,7 @@ export const getTodayARGNotificationHistory = async (sp) => {
 
           .items
 
-          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail")
+          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail,NotifiedUser/SPSPicturePlaceholderState")
 
           .expand("NotifiedUser,ActionUser")
 
@@ -1151,7 +1151,7 @@ export const getlastSevenDaysARGNotificationHistory = async (sp) => {
 
           .items
 
-          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail")
+          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail,ActionUser/SPSPicturePlaceholderState")
 
           .expand("NotifiedUser,ActionUser")
 
@@ -1208,7 +1208,7 @@ export const getOlderARGNotificationHistory = async (sp) => {
 
           .items
 
-          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail")
+          .select("*,NotifiedUser/Id,NotifiedUser/Title,ActionUser/Id,ActionUser/Title,ActionUser/EMail,ActionUser/SPSPicturePlaceholderState")
 
           .expand("NotifiedUser,ActionUser")
 
@@ -1351,5 +1351,103 @@ export const validate = (str) => {
   }
 
   return isValidName;
+
+}
+export async function getUserProfilePicture(authorId, sp) {
+
+  try {
+
+    // Get user information by ID
+
+    const user = await sp.web.getUserById(authorId)();
+
+
+    if (user) {
+
+      // The 'Picture' field holds the profile picture URL
+
+      const profilePictureUrl = `${user.PictureUrl}`;
+
+      console.log(profilePictureUrl, 'profilePictureUrl');
+
+
+      return profilePictureUrl;
+
+    }
+
+    return null;
+
+  } catch (error) {
+
+    console.log("Error fetching profile picture:", error);
+
+    return null;
+
+  }
+
+}
+export async function getUserSPSPicturePlaceholderState(authorId, sp) {
+
+  try {
+
+    // Get user information by ID
+
+    const user = await sp.web.getUserById(authorId)();
+    console.log("userrrplaceholderstaterrrr", user);
+
+    if (user) {
+
+      // The 'Picture' field holds the profile picture URL
+
+      const profilePictureUrl = `${user.SPSPicturePlaceholderState}`;
+
+      console.log(profilePictureUrl, 'SPSPicturePlaceholderState');
+
+
+      return profilePictureUrl;
+
+    }
+
+    return null;
+
+  } catch (error) {
+
+    console.log("Error fetching profile picture:", error);
+
+    return null;
+
+  }
+
+}
+export const getuserprofilepic = async(sp,userEmail) =>{
+ 
+  try {
+    // Fetch user profile properties using PnPjs
+    //const profile1 = await pnp.sp.profiles.getPropertiesFor(userEmail);
+    debugger
+    let IsProfilepic = false;
+    // const profile = await sp.web.getUserById(userID);
+    // console.log("profile1profile1", profile,)
+    const profile = await sp.profiles.getPropertiesFor(`i:0#.f|membership|${userEmail}`);
+    console.log("profile1profibn", profile)
+    // const profile2 = await sp.profiles.getUserProfilePropertyFor(`i:0#.f|membership|${userEmail},'Picture'`)
+    // console.log("profile1profilebnbn",  profile2)
+    // Check if the profile contains the PictureUrl
+    const profilePictureUrl = profile['PictureUrl'];
+    if (profilePictureUrl == null){
+      IsProfilepic = false
+    } else {
+      IsProfilepic = true
+    }
+    console.log("profilePictureUrlprofilePictureUrl", profilePictureUrl, IsProfilepic)
+    // profile.UserProfileProperties.results.find(
+    //   (prop) => prop.Key === "PictureUrl"
+    // );
+    // return profile.UserProfileProperties[75].SPS-PicturePlaceholderState;
+   return profile.UserProfileProperties[profile.UserProfileProperties.findIndex(obj=>obj.Key === "SPS-PicturePlaceholderState")].Value;
+  } catch (error) {
+    console.error("Error retrieving user profile:", error);
+  }
+
 
 }

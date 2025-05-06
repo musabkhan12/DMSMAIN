@@ -213,6 +213,8 @@ const ArgPoc = ({ props }: any) => {
   const [showFirstDiv, setShowFirstDiv] = useState(true);
   const [showworkflowdiv, setshowworkflowdiv] = useState('');
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
+
   const [showfolderpermission, setShowfolderpermission] = useState(false);
   let cleanUrlInMyRequest=false;
   // const handleButtonClickShow = () => {
@@ -323,7 +325,7 @@ const ArgPoc = ({ props }: any) => {
     console.log("parameters",parameters);
     //  alert(dropdownClicked)
      if(extractedPart  === '#/changerequest'){
-       alert("Change Request")
+      //  alert("Change Request")
 
       const get = document.getElementById('files-container')
       get.innerHTML = null
@@ -334,7 +336,7 @@ const ArgPoc = ({ props }: any) => {
      
      }
     if(parameters[1] === "MyRequest"){
-      alert("MyRequest")
+      // alert("MyRequest")
     }
   }, [dropdownClicked]);
   // Function to handle dropdown toggle click
@@ -359,7 +361,7 @@ useEffect(() => {
   console.log("parameters",parameters);
 
   if(parameters[1] === "MyRequest"){
-    alert("MyRequest")
+    // alert("MyRequest")
   }
   let path="";
   let siteId="";
@@ -499,6 +501,8 @@ const myrequestbuttonclick =()=>{
     event.stopImmediatePropagation()
     event.stopPropagation()
     try {
+      const loader = document.getElementById("loader");
+      if (loader) loader.style.display = "block";
       //Old working code
     //  Fetch data from EntityDivisionDepartmentMappingMasterList
       const entityItems = await sp.web.lists
@@ -541,17 +545,44 @@ const myrequestbuttonclick =()=>{
 
 
       // Fetch data from DMSFolderMaster
-      const folderItems = await sp.web.lists
-        .getByTitle("DMSFolderMaster").items.filter("IsActive eq 1").select("*").getAll();
-       console.log("folderItems", folderItems);
+      // previously we use this and it was wroking fine but it was not getting more than 5k data
+      // const folderItems = await sp.web.lists
+      //   .getByTitle("DMSFolderMaster").items.filter("IsActive eq 1").select("*").getAll();
+      //  console.log("folderItems", folderItems);
 
       // const myButton = document.getElementById("mybutton");
       //      const createFileButton=document.getElementById("createFileButton");
       //      const createFileButton2=document.getElementById("createFileButton2");
       //            const createFolderButton=document.getElementById("createFolderButton");
       // Create a map to hold folder data by SiteTitle, Devision, Department
+
+      const pageSize = 500;
+      let allItems: any[] = [];
+      
+      let paged = await sp.web.lists
+        .getByTitle("DMSFolderMaster")
+        .items
+        .select(
+          "SiteTitle", "Devision", "Department", "DocumentLibraryName",
+          "FolderName", "ParentFolderId", "FolderPath", "IsRename",
+          "IsActive", "External", "ID", "ParentID"
+        )
+        .top(pageSize)
+        .getPaged();
+      
+      // ✅ Add first page before loop
+      allItems.push(...paged.results);
+      
+      while (paged.hasNext) {
+        paged = await paged.getNext();
+        allItems.push(...paged.results);
+      }
+      
+      const activeItems = allItems.filter(item => item.IsActive === true);
+      console.log("Total Items Fetched:", allItems.length); // should now show 5663
+
       const folderMap = new Map();
-      folderItems.forEach((folderItem) => {
+      activeItems.forEach((folderItem) => {
         const {
           SiteTitle,
           Devision,
@@ -760,6 +791,8 @@ const myrequestbuttonclick =()=>{
         titleElement.appendChild(document.createTextNode(entityTitle));
 
         if (container) {
+          const loader = document.getElementById("loader");
+          if (loader) loader.style.display = "none";
           container.appendChild(titleElement);
         } else {
           console.error("Container element not found");
@@ -2650,6 +2683,8 @@ const myrequestbuttonclick =()=>{
     // set current entity ,current document library and folder name
     const folderData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`FolderPath eq '${FolderPath}'`)();
     console.log("folderData to check folder or library",folderData);
+   // here we add this becuase if entity is external then is should for External use
+   IsExternal=folderData[0].External
     const folName = segments[segments.length - 1];
     const testidsub = await sp.site.openWebById(siteID);
     let library;
@@ -4074,13 +4109,13 @@ const createFileExtensionHtml=(FileName:any)=>{
   const fileExtension = FileName?.split(".").pop().toLowerCase(); // Get the file extension
 
   const extensionColors:any = {
-    doc: "#1fb0e5", // Blue
-    docx: "#1fb0e5",
-    txt: "#28a745", // Green (Text Files)
-    pdf: "#dc3545", // Red (PDFs)
-    xls: "#ffc107", // Yellow (Excel)
-    xlsx: "#ffc107",
-    zip: "#6c757d", // Gray (Archives)
+    doc: "#105abe", // Blue
+    docx: "#105abe",
+    txt: "#bebfc1", // Green (Text Files)
+    pdf: "#fe0100", // Red (PDFs)
+    xls: "#257952", // Yellow (Excel)
+    xlsx: "#257952",
+    zip: "#fcc41e", // Gray (Archives)
     
     // 🎬 Video Files  
     mp4: "#ff5733", // Orange-Red  
@@ -4129,7 +4164,7 @@ const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHa
         </div>
          <div class="col-md-10 pe-0">
          <div class="CardTextContainer">
-        <p style="cursor: pointer;" class="p1st"  onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">${file.Name}</p>
+        <p style="cursor: pointer;" class="p1st" title="${file.Name}" onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">${file.Name}</p>
           <p class="p3rd">${((file.Length as unknown as number) / (1024 * 1024)).toFixed(2)} MB</p>
          </div>
          </div>
@@ -4203,6 +4238,170 @@ const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHa
 
 // This function will call onclick of version history popup
 // @ts-ignore
+// this was version history popup before blur and background light dark
+// window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag:string,fileId:any)=>{
+//   // main code i shere
+//   console.log("fileName",fileName)
+//   console.log("folderPath",folderPath)
+//   console.log("siteId",siteId)
+//   let filePath=""
+//   if(flag === "DocumentLibrary"){
+//     filePath=folderPath
+//   }else{
+//     filePath=`${folderPath}/${fileName}`
+//   }
+ 
+//   try {
+//     // Get the file object
+//     // let filePath = '/sites/AlRostmani/TestHub/DL1/PermissonTest1.doc'
+//     // const siteid = "3f7babac-3bce-478c-aa2b-1f7df7ed177f"
+//     const testidsub2 = await sp.site.openWebById(siteId);
+
+//       const file = testidsub2.web.getFileByServerRelativePath(filePath);
+//       const item = await file.getItem();  
+//       const itemDetails = await item.select("Editor/ID", "Editor/Title", "Editor/Id" ,"*").expand("Editor")()
+
+//       console.log("itemDetails",itemDetails)
+//       console.log("file detail is",file)
+//       // Fetch historical versions
+//       const historicalVersions = await file.versions
+//         .select(
+//           "ID",
+//           "CheckInComment",
+//           "Created",
+//           "CreatedBy/Title",
+//           "CreatedBy/Id",
+//           "CreatedBy/Name",
+//           "IsCurrentVersion",
+//           "Size",
+//           "Url",
+//           "VersionLabel",
+//           "FileRef"
+//         )
+//         .expand("CreatedBy")();
+//         console.log("historicalVersions[0] url",`${historicalVersions[0]["odata.id"].split('/_api/')[0]}/${historicalVersions[0].Url}`);
+//       // Fetch current version details
+//       const currentFileDetails = await file
+//         .select(
+//           "Name",
+//           "Length",
+
+//         )
+//         .expand("Author"  )();
+//         let currentVersionofitem:any = currentFileDetails;
+//        console.log("currentFileDetails",currentFileDetails)
+//       // Map current file details into the same structure as versions
+//       const currentVersion = {
+//         ID: historicalVersions.length + 1, // Current version appears last
+//         VersionLabel: `${historicalVersions.length + 1}.0`, // Example label
+//         CheckInComment: "N/A", // No check-in comment for current version
+//         Created: itemDetails.Modified,
+//         CreatedBy: {
+//           Title: itemDetails?.Editor?.Title,
+//           Id:  itemDetails?.Editor?.ID,
+//         },
+//         IsCurrentVersion: true,
+//         Size: currentFileDetails.Length,
+//         Url: filePath,
+//       };
+ 
+//       // Combine current version with historical versions
+//       const allVersions = [...historicalVersions, currentVersion];
+ 
+//       console.log("All File Versions (Including Current):", allVersions);
+
+//   // Create the popup dynamically
+//   const popupContainer = document.createElement("div");
+//   popupContainer.style.cssText = `
+//     position: fixed;
+//     top: 50%;
+//     left: 50%;
+//     transform: translate(-50%, -50%);
+//     z-index: 1000;
+//     width: 60%;
+//      z-index:9999;
+//     background-color: white;
+//     border: 1px solid #ccc;
+//     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+//     border-radius: 8px;
+//     padding: 20px;
+//     overflow-y: auto;
+//   `;
+
+//   const popupHeader = document.createElement("div");
+//   popupHeader.style.cssText = `
+//     display: flex;
+//     justify-content: space-between;
+//     align-items: center;
+//     font-size: 1.5rem;
+//     font-weight: bold;
+//     margin-bottom: 20px;
+//   `;
+//   popupHeader.innerHTML = `
+//     <span>Version History</span>
+//     <span style="cursor: pointer; font-size: 1.2rem;" id="closePopup">x</span>
+//   `;
+
+//   const table = document.createElement("table");
+//   table.style.cssText = `
+//     width: 100%;
+//     border-collapse: collapse;
+//   `;
+//   table.innerHTML = `
+//     <thead>
+//       <tr>
+//         <th style="border-bottom: 2px solid #ccc; text-align: left; padding: 8px;">Version No</th>
+//         <th style="border-bottom: 2px solid #ccc; text-align: left; padding: 8px;">Modified</th>
+//         <th style="border-bottom: 2px solid #ccc; text-align: left; padding: 8px;">Modified By</th>
+//         <th style="border-bottom: 2px solid #ccc; text-align: left; padding: 8px;">Size</th>
+//       </tr>
+//     </thead>
+//     <tbody>
+//       ${allVersions
+//         .map(
+//           (version) => `
+//         <tr>
+//         ${version.IsCurrentVersion ? `<td style="padding: 8px; border-bottom: 1px solid #eee;">
+//             <a href="javascript:void(0);"
+//               style="text-decoration: none; color: blue; cursor: pointer;"
+//               onclick="Download('${fileId}','${siteId}')"
+//               >
+//               ${version?.VersionLabel}
+//             </a>
+//           </td>` : `<td style="padding: 8px; border-bottom: 1px solid #eee;">
+//             <a href="${version["odata.id"]?.split('/_api/')[0]}/${version?.Url}"
+//               style="text-decoration: none; color: blue; cursor: pointer;">
+//               ${version?.VersionLabel}
+//             </a>
+//           </td>`}
+//           <td style="padding: 8px; border-bottom: 1px solid #eee;">${new Date(
+//             version.Created
+//           ).toLocaleString()}</td>
+//           <td style="padding: 8px; border-bottom: 1px solid #eee;">${version.CreatedBy.Title}</td>
+//           <td style="padding: 8px; border-bottom: 1px solid #eee;">${((version.Size as unknown as number) / (1024 * 1024)).toFixed(2)} MB</td>
+//         </tr>
+//       `
+//         )
+//         .join("")}
+//     </tbody>
+//   `;
+
+//   popupContainer.appendChild(popupHeader);
+//   popupContainer.appendChild(table);
+
+//   document.body.appendChild(popupContainer);
+
+//   // Close popup event
+//   document.getElementById("closePopup")?.addEventListener("click", () => {
+//     popupContainer.remove();
+//   });
+
+
+//     } catch (error) {
+//       console.error("Error fetching file versions:", error);
+//       throw error;
+//     }
+// }
 window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag:string,fileId:any)=>{
   // main code i shere
   console.log("fileName",fileName)
@@ -4273,7 +4472,19 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
       const allVersions = [...historicalVersions, currentVersion];
  
       console.log("All File Versions (Including Current):", allVersions);
-
+// Create the blurred overlay
+const blurOverlay = document.createElement("div");
+blurOverlay.id = "blurOverlay";
+blurOverlay.style.cssText = `
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 9998;
+`;
+document.body.appendChild(blurOverlay);
   // Create the popup dynamically
   const popupContainer = document.createElement("div");
   popupContainer.style.cssText = `
@@ -4283,6 +4494,7 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
     transform: translate(-50%, -50%);
     z-index: 1000;
     width: 60%;
+     z-index:9999;
     background-color: white;
     border: 1px solid #ccc;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
@@ -4357,6 +4569,7 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
   // Close popup event
   document.getElementById("closePopup")?.addEventListener("click", () => {
     popupContainer.remove();
+    blurOverlay.remove(); // Remove the blur background
   });
 
 
@@ -5007,7 +5220,7 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
   console.log(siteUrl, "siteUrl");
    
   console.log(path , ".....path")
-  if( ismyrequordoclibforfilepreview === "myRequest" || ismyrequordoclibforfilepreview  === "sharewithme" || ismyrequordoclibforfilepreview  === "sharewithothers"){
+  if( ismyrequordoclibforfilepreview === "myRequest" || ismyrequordoclibforfilepreview === "myFavourite" || ismyrequordoclibforfilepreview  === "sharewithme" || ismyrequordoclibforfilepreview  === "sharewithothers"){
     const previewUrl = filepreviewurl
    
     console.log(previewUrl, "Generated preview URL");
@@ -5069,6 +5282,9 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
         if(ismyrequordoclibforfilepreview === "myRequest"){
           myRequest();
         }
+        if(ismyrequordoclibforfilepreview === "myFavourite"){
+          myFavorite();
+        }
         if(ismyrequordoclibforfilepreview === "sharewithme"){
           ShareWithMe();
         }
@@ -5086,12 +5302,28 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
     }
   }
   if(ismyrequordoclibforfilepreview === "getdoclibdata"){
+  
+    // i have added this when there was issue in file preview at path there was & in the path
+    // so i encode the path and then append in preview url 
+    let encodepath:any
+
+
+    const hasAmpersand = path.includes('&');
+    if (hasAmpersand) {
+      console.log("Path contains '&'");  
+       encodepath = encodeURIComponent(path); // Properly declare the variable
+      // alert("getdoclibdata encodepath: " + encodepath);
+    } else {
+      console.log("Path does not contain '&'");
+      encodepath = path;
+    }
+  
   // Generate the correct preview URL
-  // const previewUrl = `${siteUrl}/sites/IntranetUAT/${currentEntity}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
-  //  const previewUrl = `${siteUrl}/sites/AlRostmanispfx2/${currentEntity}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
-    const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
+
+    const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${encodepath}&parent=${encodedParentFolder}`;
+    // const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
    
-  // const previewUrl = `${siteUrl}/sites/SPFXDemo/${currentEntity}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
+
    
   console.log(previewUrl, "Generated preview URL");
    
@@ -5639,7 +5871,7 @@ filteredFileData.forEach((file)=>{
       </div>
       <div class="col-md-10 pe-0">
       <div class="CardTextContainer">
-      <p class="p1st">${file.FileName}</p>
+      <p class="p1st" title="${file.FileName}">${file.FileName}</p>
       <div class="fileSizeAndVersion">
       <p class="p3rd">${file.FileSize} MB</p>
       </div>
@@ -6355,7 +6587,7 @@ filteredFileData.forEach(async(file)=>{
     </div>
     <div class="col-md-10 pe-0">
     <div class="CardTextContainer">
-    <p class="p1st">${file.FileName}</p>
+    <p class="p1st" title="${file.FileName}">${file.FileName}</p>
     <div class="fileSizeAndVersion">
     <p class="p3rd">${file.FileSize} MB</p>
     </div>
@@ -7032,7 +7264,7 @@ FilesItems.forEach(async (fileItem) => {
          </div></div>
          <div class="col-md-10 pe-0">
          <div class="CardTextContainer"> 
-          <p class="p1st">${file.FileName}</p>
+          <p class="p1st" title="${file.FileName}">${file.FileName}</p>
           <p class="p2nd"></p>
           <p class="p3rd">${file.FileSize}</p>
           </div></div></div>
@@ -7190,8 +7422,31 @@ popupContent.appendChild(message);
 
 // Create Yes button
 const yesButton = document.createElement("button");
+// const yesButton = document.createElement("button");
 yesButton.textContent = "Yes";
-yesButton.style.marginRight = "10px";
+yesButton.setAttribute(
+  "style",
+  `
+    margin-right: 10px;
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  `
+);
+
+// Add a style element to enforce no hover color change
+const styleTag = document.createElement("style");
+styleTag.textContent = `
+  #confirm-yes:hover {
+    background-color: green !important;
+  }
+`;
+document.head.appendChild(styleTag);
+
+yesButton.id = "confirm-yes";
 yesButton.onclick = function () {
   window.undo(fileId, siteId, FileMasterList, documentLibraryName, ID,folderPath,fileName);
   closePopup(); // Close the popup after confirming
@@ -7201,6 +7456,28 @@ popupContent.appendChild(yesButton);
 // Create No button
 const noButton = document.createElement("button");
 noButton.textContent = "No";
+noButton.setAttribute(
+  "style",
+  `
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  `
+);
+
+// Add a style element to enforce no hover color change for "No" button
+const styleTagNo = document.createElement("style");
+styleTagNo.textContent = `
+  #confirm-no:hover {
+    background-color: red !important;
+  }
+`;
+document.head.appendChild(styleTagNo);
+
+noButton.id = "confirm-no";
 noButton.onclick = closePopup; // Just close the popup if canceled
 popupContent.appendChild(noButton);
 
@@ -8118,8 +8395,8 @@ function closePopup() {
                         <div class="popup-content">
                           <p id="confirmation-text">${popItems.PopupText}</p>
                           <div class="popup-actions">
-                              <button id="confirm-yes">Yes</button>
-                              <button id="confirm-no">No</button>
+                              <button style="background-color: green !important;" id="confirm-yes">Yes</button>
+                              <button style="background-color: red !important;" id="confirm-no">No</button>
                           </div>
                         </div>
                     `;
@@ -8178,8 +8455,8 @@ function closePopup() {
                         <div class="popup-content">
                           <p id="confirmation-text">${popItems.PopupText}</p>
                           <div class="popup-actions">
-                              <button id="confirm-yes">Yes</button>
-                              <button id="confirm-no">No</button>
+                              <button style="background-color: green !important;" id="confirm-yes">Yes</button>
+                              <button style="background-color: red !important;" id="confirm-no">No</button>
                           </div>
                         </div>
                     `;
@@ -9168,23 +9445,85 @@ if (hidegidvewlistviewbutton2) {
 
 // Check if the user is super Admin start
 let superAdmin=false;
+// let folderItems:any[]=[]
 let folderItems:any[]=[]
   const currentUser = await sp.web.currentUser();
   const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
   const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
   if(isMemberOfSuperAdmin){
 
+    // superAdmin=true;
+    // folderItems = await sp.web.lists
+    // .getByTitle("DMSFolderMaster")
+    // .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External").filter(`IsActive eq 1`)
+    // .orderBy("Created", false).getAll();
+  
+    let pageSize = 5000; // Set the desired page size
     superAdmin=true;
-    folderItems = await sp.web.lists
-    .getByTitle("DMSFolderMaster")
-    .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External").filter(`IsActive eq 1`)
-    .orderBy("Created", false).getAll();
-  }else{
+     
+    let filterfolderItems: any[] = [];
+    let AllfolderItems = await sp.web.lists
+      .getByTitle("DMSFolderMaster")
+      .items
+      .select(
+        "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+        "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+        "IsRename", "External", "IsActive", "Created"
+      )
+      .top(pageSize)
+      .getPaged();
+    
+    // First page
+    filterfolderItems.push(...AllfolderItems.results);
+    
+    // Remaining pages
+    while (AllfolderItems.hasNext) {
+      AllfolderItems = await AllfolderItems.getNext();
+      filterfolderItems.push(...AllfolderItems.results);
+    }
+    
+    // ✅ THEN filter and sort in JS
+     folderItems = filterfolderItems
+      .filter(item => item.IsActive === true)
+      .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+    
+    console.log("SuperAdmin All folder items in mycreatedfolders", folderItems);
 
-    folderItems = await sp.web.lists
-    .getByTitle("DMSFolderMaster")
-    .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External")
-    .filter(`CurrentUser eq '${currentUserEmailRef.current}' and IsActive eq 1`).orderBy("Created", false).getAll();
+  }else{
+  
+    const pageSize = 5000;
+
+    let allPagedItems: any[] = []; // Temporarily stores all paginated items
+    
+    let paged = await sp.web.lists
+      .getByTitle("DMSFolderMaster")
+      .items
+      .select(
+        "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+        "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+        "IsRename", "External", "IsActive", "Created"
+      )
+      .top(pageSize)
+      .getPaged();
+    
+    // First page
+    allPagedItems.push(...paged.results);
+    
+    // Remaining pages
+    while (paged.hasNext) {
+      paged = await paged.getNext();
+      allPagedItems.push(...paged.results);
+    }
+    
+    // ✅ Filter and sort AFTER getting all data
+    folderItems = allPagedItems
+      .filter(item => 
+        item.IsActive === true && 
+        item.CurrentUser?.toLowerCase() === currentUserEmailRef.current.toLowerCase()
+      )
+      .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+    
+    console.log("All folder items in mycreatedfolders", folderItems);
   }
 // end
 
@@ -10074,7 +10413,7 @@ const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,file
      </div>
          <div class="col-md-10 pe-0">
          <div class="CardTextContainer">
-    <p class="p1st">${file.FileName}</p>
+    <p class="p1st" title="${file.FileName}">${file.FileName}</p>
 
     <p class="p3rd">${file.FileSize} MB</p>
     </div></div>
@@ -10917,6 +11256,13 @@ const testProess5 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
     window.location.hash = "/edit/90";
 }
 const myRequest = async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any=null ) => {
+  //  this code is for loader
+  const loader = document.getElementById('loader2');
+ 
+
+  if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
+
+
   entityclicktext = ''
   setdisplayuploadfileandcreatefolder(false)
   ismyrequordoclibforfilepreview = "myRequest"
@@ -11010,7 +11356,8 @@ if(siteIdToUpdate ===  null){
 
 // console.log("beforeFetchItems");
 // Fetch the list of active entity
-const FilesItems = await sp.web.lists
+try {
+  const FilesItems = await sp.web.lists
   .getByTitle("MasterSiteURL")
   .items.select("Title", "SiteID", "FileMasterList", "Active")
   .filter(`Active eq 'Yes'`)();
@@ -11198,8 +11545,8 @@ const extensionHtml=createFileExtensionHtml(file.FileName);
     </div>
         <div class="col-md-10"> 
          <div class="CardTextContainer">
-      <p class="p1st" style="cursor: pointer;" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
-      <p class="p2nd">${file.DocumentLibraryName}</p>
+      <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+      <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
       <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
       <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
       </div>
@@ -11451,6 +11798,15 @@ const extensionHtml=createFileExtensionHtml(file.FileName);
     });
   }
 });
+  
+} catch (error) {
+
+  console.error("Error loading files:", error);
+} finally {
+  // Hide the loader after the operation is complete
+  if (loader) loader.style.display = 'none'; // 🔥 Hide loader after completion
+}
+
 
 };
     // Show Error Message on file not Found start
@@ -11783,8 +12139,14 @@ const fileNotFound=(fileName:any)=>{
       const breadcrumbLink = document.createElement("a");
       breadcrumbLink.href = "#";
       breadcrumbLink.textContent = part;
+      if (index === pathParts.length - 1) {
+        // Highlight the last breadcrumb part
+        breadcrumbLink.style.fontWeight = "bold";
+        breadcrumbLink.style.color = "black"; // Bootstrap red or any color you want
+        breadcrumbLink.style.textDecoration = "underline";
+    }
       breadcrumbLink.style.marginRight = "5px";
-      breadcrumbLink.style.color = "blue";
+      breadcrumbLink.style.color = "black"; // Bootstrap red or any color you want
       breadcrumbLink.style.cursor = "pointer";
 
       // Fix closure issue by using an IIFE
@@ -12063,6 +12425,21 @@ const fileNotFound=(fileName:any)=>{
     const spanElement = button.querySelector('.sidebarText');
     const text = spanElement?.textContent;
     
+        // Reset all button colors first
+        const allButtons = [
+          'Myrequestbutton',
+          'Myfavouritebutton',
+          'Mycreatedfolderbutton',
+          'sharedwithotherbutton',
+          'sharedwithmebutton',
+          'recyclebinbutton'
+      ];
+      
+      allButtons.forEach(btnId => {
+          const btn = document.getElementById(btnId);
+          if (btn) btn.style.backgroundColor = ""; // Reset to default
+          btn.style.color = "";
+      });
     if (text) {
       setSelectedText(text);
  
@@ -12070,26 +12447,47 @@ const fileNotFound=(fileName:any)=>{
       switch (text) {
         case 'My Request':
           setDynamicContent('Mentioned below are the documents submitted by logged in user.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('Myrequestbutton').style.backgroundColor = "#959b95";
           break;
         case 'My Favourite':
           setDynamicContent('All the files and folder which is marked as Favourite.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('Myfavouritebutton').style.backgroundColor = "#959b95";
           break;
         case 'My Folder':
           setDynamicContent('Manage All Folder Created By Me.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('Mycreatedfolderbutton').style.backgroundColor = "#959b95";
           break;
         case 'Shared with Others':
           setDynamicContent('My files shared with other users.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('sharedwithotherbutton').style.backgroundColor = "#959b95";
           break;
         case 'Shared with me':
           setDynamicContent('File upload by other team members and shared with me.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('sharedwithmebutton').style.backgroundColor = "#959b95";
           break;
         case 'Recycle Bin':
           setDynamicContent('below are the documents Deleted by logged in use.');
+          button.style.backgroundColor = "#959b95";
+          button.style.color = "white";
+          // document.getElementById('recyclebinbutton').style.backgroundColor = "#959b95";
           break;
         default:
           setDynamicContent(null);
       }
     }
+    // alert(`You clicked on ${button.id}`);
+    // setActiveButtonId(button.id);  // ⭐ This line will now track which button clicked
+
 };
 
 const search = document.getElementById('searchinput')
@@ -12922,7 +13320,7 @@ popup.innerHTML = `
     <div id="userDropdown" class="user-dropdown" style="
       display: none;
       position: absolute;
-      width: 29.8%;
+      width: 100%;
       max-height: 150px;
       overflow-y: auto;
       background-color: white;
@@ -15334,6 +15732,7 @@ librarydiv.appendChild(mainContainer)
                         </button>
 
                         <button
+                         id="Myfavouritebutton"
                           className={`sidebardmsButton ${
                             activeButton === "MyFavourite" ? "active" : ""
                           }`}
@@ -15348,6 +15747,7 @@ librarydiv.appendChild(mainContainer)
                         </button>
 
                         <button
+                          id="Mycreatedfolderbutton"
                           className={`sidebardmsButton ${
                             activeButton === "MyFolder" ? "active" : ""
                           }`}
@@ -15364,6 +15764,7 @@ librarydiv.appendChild(mainContainer)
                         </button>
 
                         <button
+                        id="sharedwithotherbutton"
                           className={`sidebardmsButton ${
                             activeButton === "ShareWithOther" ? "active" : ""
                           }`}
@@ -15380,6 +15781,7 @@ librarydiv.appendChild(mainContainer)
                         </button>
 
                         <button
+                         id="sharedwithmebutton"
                            onClick={(e)=>{ShareWithMe(e);handleShowContent(e)}}
                           className={`sidebardmsButton ${
                             activeButton === "ShareWithMe" ? "active" : ""
@@ -15393,6 +15795,7 @@ librarydiv.appendChild(mainContainer)
                         </button>
 
                         <button
+                        id="recyclebinbutton"
                            onClick={(e)=>{Recyclebin(e);handleShowContent(e)}}
                           className={`sidebardmsButton ${
                             activeButton === "ShareWithMe" ? "active" : ""
@@ -15405,7 +15808,13 @@ librarydiv.appendChild(mainContainer)
                           <span className="sidebarText">Recycle Bin</span>
                         </button>
                       </div>
-                      <div  style={{position:'sticky', top:'100px'}} className="is-sticky">  <div   id="folderContainer2"></div></div>
+                      <div  style={{position:'sticky', top:'100px'}} className="is-sticky"> 
+                      <div id="loader" style={{display: "none"  }}>
+                            <img style={{width :'116px'  ,margin: '31px'}} src={require("../../../CustomAsset/arground.gif")} alt="Loading..." />
+                      </div>
+                         <div   id="folderContainer2"></div>
+                      
+                      </div>
                     </div>
                     <div className="librarydata">
                       {showDeletepopup && (
@@ -15476,6 +15885,12 @@ librarydiv.appendChild(mainContainer)
                    {/* End Code Update by Amjad */} 
 
                        <div id="files-container"></div>
+                       <div id="loader2" style={{
+                            display: "none",
+                            textAlign: "center",
+                            padding: "20px"}}>
+                         <img src={require("../../../CustomAsset/arground.gif")} alt="Loading..."/>
+                       </div>
                      {/* {
                          
 

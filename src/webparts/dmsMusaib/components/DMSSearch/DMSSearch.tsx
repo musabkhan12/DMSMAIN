@@ -3329,7 +3329,7 @@ const ArgPoc = ({ props }: any) => {
   <div id="userDropdown" class="user-dropdown" style="
     display: none;
     position: absolute;
-    width: 29.8%;
+    width: 100%;
     max-height: 150px;
     overflow-y: auto;
     background-color: white;
@@ -5725,7 +5725,7 @@ const ArgPoc = ({ props }: any) => {
   <div id="userDropdown" class="user-dropdown" style="
     display: none;
     position: absolute;
-    width: 29.8%;
+    width: 100%;
     max-height: 150px;
     overflow-y: auto;
     background-color: white;
