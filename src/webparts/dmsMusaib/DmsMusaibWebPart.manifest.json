@@ -3,7 +3,7 @@
   "id": "691145bd-f62c-4a54-ae4f-37c2107d748c",
   "alias": "DmsMusaibWebPart",
   "componentType": "WebPart",
-
+  // "supportsFullBleed": true,
   // The "*" signifies that the version should be taken from the package.json
   "version": "*",
   "manifestVersion": 2,

@@ -443,13 +443,42 @@ const [RootsiteUrl, setRootsiteUrl] = useState(location.origin); // Initially hi
   // console.log("This is current side ID",currentsiteID)
   const currentUserEmailRef = useRef('');
   const currentUserIDref = useRef<number>(0);
+  const currentUserTitleRef = useRef('');
   useEffect(() => {
      getcurrentuseremail()
 getdata()
      
 }, []);
-const getdata = async () => {
 
+const getdata = async () => {
+  // this code is also fro createing SPA page
+//   const page = await sp.web.loadClientsidePage("SitePages/SPA.aspx");
+// const pages = await sp.web.lists.getByTitle("Site Pages").items.getAll();
+// // alert("pages" + JSON.stringify(pages));
+// console.log("pages", pages);
+//   if(page){ 
+//     // alert("Page" + JSON.stringify(page));
+// // Add full-width section
+// const fullWidthSection = page.addSection(); // 1 = Full-width section
+// const column = fullWidthSection.columns[0];
+//   if(fullWidthSection){
+//     // alert("fullWidthSection" + JSON.stringify(fullWidthSection));
+//   }
+// if (column) {
+//   //  alert("column" + JSON.stringify(column));
+//  column.addControl({
+//   webPartId: "691145bd-f62c-4a54-ae4f-37c2107d748c", // GUID
+//   title: "Full Bleed Web Part",
+//   data: {
+//     description: "This is added programmatically"
+//   }
+// } as any);
+
+// await page.save();
+// }
+
+//   }
+  // this code is also fro createing SPA page
  const ids = window.location.search;
 
  const originalString = ids;
@@ -491,6 +520,7 @@ const myrequestbuttonclick =()=>{
   console.log(userdata.Id , "user data edc")
   currentUserIDref.current = userdata.Id;
   currentUserEmailRef.current = userdata.Email;
+  currentUserTitleRef.current = userdata.Title;
   myrequestbuttonclick()
   // console.log(currentUserEmailRef.current, "currentuser")
  }
@@ -6104,7 +6134,7 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
        <td style="border: 1px solid #ddd; padding: 6px 8px;">
         <button
            style="background-color: #6c757d; margin-top:0px; color: white; border: none; font-size:14px; padding: 3px 8px; border-radius: 4px; cursor: pointer;"
-           onclick="deleteUser(${user.itemID},${index},'${user.UserID}','${user.PermissionType}')">
+           onclick="deleteUser(${user.itemID},${index},'${user.UserID}','${user.PermissionType}' , '${FileName}')">
            Delete
          </button>
        </td>
@@ -6115,7 +6145,7 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
  
    // Add event listener for deleting users
   //  @ts-ignore
-  window.deleteUser =async(itemId,index,userId,permission) => {
+  window.deleteUser =async(itemId,index,userId,permission,FileName) => {
     // console.log("itemId",itemId)
     // console.log("index",index)
     // Remove the user from the DMSShareWithOtherMaster list
@@ -6168,6 +6198,8 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
         const item = await fileServerRelativePath.getItem();
         // Remove permissions for the user
         const id=Number(userId);
+         const user = await sp.web.getUserById(userId).select("Id","Title","Email")();
+      
         await item.roleAssignments.remove(id,roleType);
         await sp.web.lists.getByTitle('DMSShareWithOtherMaster').items.getById(itemId).delete();
        
@@ -6178,13 +6210,40 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
                   text: "User remove successfully.",
                   icon: "success"
         });
+ try {
+              const subject = `File Access Revoked - DMS`;
+              // const body = `File shared with you: ${fileName}`;
+             const body = `
+    <p>Please be informed that access for the file <strong>${FileName}</strong> has been revoked.</p>
+
+    <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+
+    <p>With regards,<br>${currentUserTitleRef.current}</p>
+`;
+
+              const emailProps:any = {
+                To: [user.Email],
+                Subject: subject,
+                Body: body,
+                AdditionalHeaders: {
+                  "content-type": "text/html",
+                }
+              };
+          
+              // Send the email
+              await sp.utility.sendEmail(emailProps);
+              console.log("Email sent successfully to", user.Email);
+          
+            } catch (error) {
+              console.error("Error sending email:", error);
+            }         
         ShareWithOther();
         // Remove the user from the array
         //  users.splice(index, 1);
         // Reopen with updated data
         // window.revokeAccess(encodeURIComponent(JSON.stringify(users)), FileName);
     } catch (error) {
-        console.log("Error in removing he user",error)
+        console.log("Error in removing the user",error)
     }
      
      
@@ -12445,19 +12504,19 @@ const fileNotFound=(fileName:any)=>{
  
       // Update dynamic content based on the button clicked
       switch (text) {
-        case 'My Request':
+        case 'My Requests':
           setDynamicContent('Mentioned below are the documents submitted by logged in user.');
           button.style.backgroundColor = "#959b95";
           button.style.color = "white";
           // document.getElementById('Myrequestbutton').style.backgroundColor = "#959b95";
           break;
-        case 'My Favourite':
+        case 'My Favourites':
           setDynamicContent('All the files and folder which is marked as Favourite.');
           button.style.backgroundColor = "#959b95";
           button.style.color = "white";
           // document.getElementById('Myfavouritebutton').style.backgroundColor = "#959b95";
           break;
-        case 'My Folder':
+        case 'My Folders':
           setDynamicContent('Manage All Folder Created By Me.');
           button.style.backgroundColor = "#959b95";
           button.style.color = "white";
@@ -13524,6 +13583,7 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
             
             //Add permission to the user in the file 
             const id=Number(user.id)
+                   const userdata = await sp.web.getUserById(id).select("Id","Title","Email")();
             console.log("User Id",id,"type",typeof id);
             // const roleDefinitions = await sp.web.roleDefinitions();     
             // const roleDefinition = roleDefinitions.find(rd => rd.RoleTypeKind === roleType); 
@@ -13592,9 +13652,18 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
             // console.log(`User ${user.email} added with role type ${selectedPermission},${roleType}---${SharingRole.Edit}.`);
             // console.log("Data added successfully in the",newItem);
             try {
-              const subject = `File shared with you: ${fileName}`;
+              const subject = `File Shared for Access - DMS`;
               // const body = `File shared with you: ${fileName}`;
-              const body = `File shared with you: <a href="${preURL}" target="_blank">${fileName}</a>`;
+              const body = `
+             
+              <p>Dear ${userdata.Title},</p >
+              
+              <p>Please be informed that a file has been shared with you. Kindly <a href="${preURL}" target="_blank">${fileName}</a> here to access the file.</p>
+
+              <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+
+              <p>With regards,<br>${currentUserTitleRef.current}</p>
+              `;
               const emailProps:any = {
                 To: [user.email],
                 Subject: subject,
@@ -13611,6 +13680,7 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
             } catch (error) {
               console.error("Error sending email:", error);
             }
+            
             
       })
   
@@ -13796,169 +13866,360 @@ try {
 }
 // show the audit history popup
 // @ts-ignore
-window.auditHistory=async(fileId:string, siteId:string,DocumentLibraryName:string,SiteName:String)=>{
-  console.log("Audit History called",fileId,siteId);
-  console.log("Audit History called",SiteName);
-  console.log("Audit History called",DocumentLibraryName);
+// window.auditHistory=async(fileId:string, siteId:string,DocumentLibraryName:string,SiteName:String)=>{
+//   console.log("Audit History called",fileId,siteId);
+//   console.log("Audit History called",SiteName);
+//   console.log("Audit History called",DocumentLibraryName);
 
 
-  const {web}=await sp.site.openWebById(siteId)
+//   const {web}=await sp.site.openWebById(siteId)
 
-   // Get the list item  corresponding to the file
-   const fileItem:any = await web.getFileById(fileId).expand("ListItemAllFields")();
-   console.log("fileItem",fileItem.ListItemAllFields.Status);
+//    // Get the list item  corresponding to the file
+//    const fileItem:any = await web.getFileById(fileId).expand("ListItemAllFields")();
+//    console.log("fileItem",fileItem.ListItemAllFields.Status);
   
+//   // fetched the columns details corresponding to the file 
+//   const fileColumns =await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.select("ColumnName","SiteName","DocumentLibraryName","IsRename").filter(`SiteName eq '${SiteName}' and DocumentLibraryName eq '${DocumentLibraryName}' and IsDocumentLibrary ne 1`)();
+//   console.log("fileColumns",fileColumns);
+
+//   // Create an array of objects to store the columnName with there corresponding value
+//   const resultArrayThatContainstheColumnDetails = fileColumns.map((column) => {
+    
+//   let columnName = column.ColumnName;
+//   const columnValue = fileItem.ListItemAllFields[columnName];
+//     if(column.IsRename !== null){
+//       columnName=column.IsRename
+//     }
+
+//     return {
+//       label: columnName,
+//       value: columnValue !== undefined ? columnValue : null // Handle missing fields
+//     };
+//   });
+
+//   const objectForStatus={
+//     label:"Status",
+//     value:fileItem.ListItemAllFields.Status || ""
+//   }
+
+//   resultArrayThatContainstheColumnDetails.push(objectForStatus);
+//   console.log("result",resultArrayThatContainstheColumnDetails);
+
+//   // get the details of approver
+//   const itemsFromTaskList = await sp.web.lists.getByTitle('DMSFileApprovalTaskList').items.select(
+//     "Log","CurrentUser","Remark"	 	
+//          ,"LogHistory","ID"	                 
+//          ,"FileUID/FileUID"	         
+//          ,"FileUID/SiteName"	            
+//          ,"FileUID/DocumentLibraryName" 
+//          ,"FileUID/FileName"	              
+//          ,"FileUID/Status"		 
+//          ,"FileUID/RequestedBy"	 
+//          ,"FileUID/Created"	 
+//          ,"FileUID/ApproveAction"
+//          ,"MasterApproval/ApprovalType" 
+//          ,"MasterApproval/Level"	 
+//          ,"MasterApproval/DocumentLibraryName"
+//          ,"Modified"
+//       )
+//       .expand("FileUID", "MasterApproval")
+//       .filter(`FileUID/FileUID eq '${fileId}'`)
+//       .orderBy("Modified", false)();
+
+//       console.log("itemsFromTaskList",itemsFromTaskList);
+
+
+//   // Mapping to the desired format
+//   const approverDetailsArray = itemsFromTaskList.map(task => ({
+//     level: `Level ${task.MasterApproval.Level}`,
+//     approver: task.CurrentUser,
+//     actionDateTime:task.Modified,
+//     status: task.Log || "",
+//     remark: task.Remark || ""
+//   }));
+
+//   console.log("approverDetailsArray",approverDetailsArray);
+
+// // Generate the dynamic HTML for the detail rows
+// let detailRowsHTML = "";
+// resultArrayThatContainstheColumnDetails.forEach((item, index) => {
+//     // Start a new row every 3rd item (when index is 0, 3, 6, ...)
+//     if (index % 3 === 0) {
+//       detailRowsHTML += '<div class="detail-row">';
+//     }
+
+//     // Add each detail column
+//     detailRowsHTML += `
+//       <div class="detail-column">
+//         <div class="detail-label">${item.label}:</div>
+//         <div class="detail-value">${item.value}</div>
+//       </div>
+//     `;
+
+//     // Close the row after 3 items (when index is 2, 5, 8, ...)
+//     if ((index + 1) % 3 === 0) {
+//       detailRowsHTML += '</div>'; 
+//     }
+// });
+
+// // If there are leftover columns (less than 3 in the last row), close the row
+// if (resultArrayThatContainstheColumnDetails.length % 3 !== 0) {
+//   detailRowsHTML += '</div>';
+// }
+
+//  // Generate the dynamic HTML for the approver details
+//  let approverRowsHTML = "";
+//  approverDetailsArray.forEach((approver) => {
+//   //  approverRowsHTML += `
+//   //    <div class="detail-row-value-approver">
+//   //      <div class="detail-value-approver">${approver.level}</div>
+//   //      <div class="detail-value-approver">${approver.approver}</div>
+//   //      <div class="detail-value-approver">${approver.actionDateTime}</div>
+//   //      <div class="detail-value-approver">${approver.status}</div>
+//   //      <div class="detail-value-approver">${approver.remark}</div>
+//   //    </div>
+//   //  `;
+//    approverRowsHTML += `
+//       <tbody class="">
+//        <td class="">${approver.level}</td>
+//        <td class="">${approver.approver}</td>
+//        <td class="">${approver.actionDateTime}</td>
+//        <td class="">${approver.status}</td>
+//        <td class="">${approver.remark}</td>
+//      </tbody>
+//    `;
+//  });
+
+//     // Create the popup
+//   const popup = document.createElement("div");
+//   popup.className = "audit-history-popup";
+//   popup.innerHTML = `
+//   <div class="popup-content-auditHistory">
+//     <div class="popup-header mb-0">
+//       <h5>Audit History</h5>
+//       <span class="close-btn" onclick="hideAuditHistoryPopup()">&times;</span>
+//     </div>
+//     <div class="popup-details">
+//       ${detailRowsHTML}
+//       <table class="mtbalenew">
+//       ${ fileItem.ListItemAllFields.Status !== "Auto Approved" ?
+//        `
+//         <thead>
+//         <th class="">Approval Level</th>
+//         <th class="">Approver</th>
+//         <th class="">Action DateTime</th>
+//         <th class="">Status</th>
+//         <th >Remark</th>
+//       </thead>
+//       ${approverRowsHTML}
+//     </table>
+//        `
+//         :
+//         `Audit History is not available as the file does not have approval`
+//       }
+     
+//   </div>
+//   `;
+
+
+// // Append to body
+  
+//     document.body.appendChild(popup);
+   
+ 
+// }
+window.auditHistory = async (fileId: string, siteId: string, DocumentLibraryName: string, SiteName: String) => {
+  console.log("Audit History called", fileId, siteId);
+  console.log("Audit History called", SiteName);
+  console.log("Audit History called", DocumentLibraryName);
+
+  // ====== NEW DATE FORMATTING FUNCTION ADDED ======
+  const formatDate = (dateValue: any): string => {
+    if (!dateValue) return "";
+    
+    // Handle SharePoint date strings (e.g., "2024-05-01T14:30:00Z")
+    const date = new Date(dateValue);
+    
+    // Format as dd/mm/yyyy hh:mm AM/PM
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' }).toLowerCase();
+    const year = date.getFullYear();
+    
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12
+    
+    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+  };
+  const formatDate2 = (dateValue: any): string => {
+    if (!dateValue) return "";
+    
+    // Handle SharePoint date strings (e.g., "2024-05-01T14:30:00Z")
+    const date = new Date(dateValue);
+    
+    // Format as dd/mm/yyyy hh:mm AM/PM
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' }).toLowerCase();
+    const year = date.getFullYear();
+    
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12
+    
+    return `${day}/${month}/${year}`;
+  };
+  // ====== END OF NEW FUNCTION ======
+
+  const { web } = await sp.site.openWebById(siteId)
+
+  // Get the list item corresponding to the file
+  const fileItem: any = await web.getFileById(fileId).expand("ListItemAllFields")();
+  console.log("fileItem", fileItem.ListItemAllFields.Status);
+
   // fetched the columns details corresponding to the file 
-  const fileColumns =await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.select("ColumnName","SiteName","DocumentLibraryName","IsRename").filter(`SiteName eq '${SiteName}' and DocumentLibraryName eq '${DocumentLibraryName}' and IsDocumentLibrary ne 1`)();
-  console.log("fileColumns",fileColumns);
+  const fileColumns = await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.select("ColumnName", "SiteName", "DocumentLibraryName", "IsRename").filter(`SiteName eq '${SiteName}' and DocumentLibraryName eq '${DocumentLibraryName}' and IsDocumentLibrary ne 1`)();
+  console.log("fileColumns", fileColumns);
 
   // Create an array of objects to store the columnName with there corresponding value
   const resultArrayThatContainstheColumnDetails = fileColumns.map((column) => {
+    let columnName = column.ColumnName;
+    let columnValue = fileItem.ListItemAllFields[columnName];
     
-  let columnName = column.ColumnName;
-  const columnValue = fileItem.ListItemAllFields[columnName];
-    if(column.IsRename !== null){
-      columnName=column.IsRename
+    // ====== MODIFIED DATE HANDLING ======
+    if (columnValue && typeof columnValue === 'string' && 
+        columnValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+      columnValue = formatDate2(columnValue);
+    }
+    // ====== END OF MODIFICATION ======
+    
+    if (column.IsRename !== null) {
+      columnName = column.IsRename
     }
 
     return {
       label: columnName,
-      value: columnValue !== undefined ? columnValue : null // Handle missing fields
+      // value: columnValue !== undefined ? columnValue : null
+      value: columnValue !== undefined && columnValue !== null ? columnValue : ""
+
     };
   });
 
-  const objectForStatus={
-    label:"Status",
-    value:fileItem.ListItemAllFields.Status || ""
+  const objectForStatus = {
+    label: "Status",
+    value: fileItem.ListItemAllFields.Status || ""
   }
 
   resultArrayThatContainstheColumnDetails.push(objectForStatus);
-  console.log("result",resultArrayThatContainstheColumnDetails);
+  console.log("result", resultArrayThatContainstheColumnDetails);
 
   // get the details of approver
   const itemsFromTaskList = await sp.web.lists.getByTitle('DMSFileApprovalTaskList').items.select(
-    "Log","CurrentUser","Remark"	 	
-         ,"LogHistory","ID"	                 
-         ,"FileUID/FileUID"	         
-         ,"FileUID/SiteName"	            
-         ,"FileUID/DocumentLibraryName" 
-         ,"FileUID/FileName"	              
-         ,"FileUID/Status"		 
-         ,"FileUID/RequestedBy"	 
-         ,"FileUID/Created"	 
-         ,"FileUID/ApproveAction"
-         ,"MasterApproval/ApprovalType" 
-         ,"MasterApproval/Level"	 
-         ,"MasterApproval/DocumentLibraryName"
-         ,"Modified"
-      )
-      .expand("FileUID", "MasterApproval")
-      .filter(`FileUID/FileUID eq '${fileId}'`)
-      .orderBy("Modified", false)();
+    "Log", "CurrentUser", "Remark"
+    , "LogHistory", "ID"
+    , "FileUID/FileUID"
+    , "FileUID/SiteName"
+    , "FileUID/DocumentLibraryName"
+    , "FileUID/FileName"
+    , "FileUID/Status"
+    , "FileUID/RequestedBy"
+    , "FileUID/Created"
+    , "FileUID/ApproveAction"
+    , "MasterApproval/ApprovalType"
+    , "MasterApproval/Level"
+    , "MasterApproval/DocumentLibraryName"
+    , "Modified"
+  )
+    .expand("FileUID", "MasterApproval")
+    .filter(`FileUID/FileUID eq '${fileId}'`)
+    .orderBy("Modified", false)();
 
-      console.log("itemsFromTaskList",itemsFromTaskList);
-
+  console.log("itemsFromTaskList", itemsFromTaskList);
 
   // Mapping to the desired format
   const approverDetailsArray = itemsFromTaskList.map(task => ({
     level: `Level ${task.MasterApproval.Level}`,
     approver: task.CurrentUser,
-    actionDateTime:task.Modified,
+    actionDateTime: formatDate(task.Modified), // ====== ADDED DATE FORMATTING HERE ======
     status: task.Log || "",
     remark: task.Remark || ""
   }));
 
-  console.log("approverDetailsArray",approverDetailsArray);
+  console.log("approverDetailsArray", approverDetailsArray);
 
-// Generate the dynamic HTML for the detail rows
-let detailRowsHTML = "";
-resultArrayThatContainstheColumnDetails.forEach((item, index) => {
-    // Start a new row every 3rd item (when index is 0, 3, 6, ...)
+  // Generate the dynamic HTML for the detail rows
+  let detailRowsHTML = "";
+  resultArrayThatContainstheColumnDetails.forEach((item, index) => {
     if (index % 3 === 0) {
       detailRowsHTML += '<div class="detail-row">';
     }
 
-    // Add each detail column
     detailRowsHTML += `
-      <div class="detail-column">
-        <div class="detail-label">${item.label}:</div>
-        <div class="detail-value">${item.value}</div>
-      </div>
-    `;
+    <div class="detail-column">
+      <div class="detail-label">${item.label}:</div>
+      <div class="detail-value">${item.value}</div>
+    </div>
+  `;
 
-    // Close the row after 3 items (when index is 2, 5, 8, ...)
     if ((index + 1) % 3 === 0) {
-      detailRowsHTML += '</div>'; 
+      detailRowsHTML += '</div>';
     }
-});
+  });
 
-// If there are leftover columns (less than 3 in the last row), close the row
-if (resultArrayThatContainstheColumnDetails.length % 3 !== 0) {
-  detailRowsHTML += '</div>';
-}
+  if (resultArrayThatContainstheColumnDetails.length % 3 !== 0) {
+    detailRowsHTML += '</div>';
+  }
 
- // Generate the dynamic HTML for the approver details
- let approverRowsHTML = "";
- approverDetailsArray.forEach((approver) => {
-  //  approverRowsHTML += `
-  //    <div class="detail-row-value-approver">
-  //      <div class="detail-value-approver">${approver.level}</div>
-  //      <div class="detail-value-approver">${approver.approver}</div>
-  //      <div class="detail-value-approver">${approver.actionDateTime}</div>
-  //      <div class="detail-value-approver">${approver.status}</div>
-  //      <div class="detail-value-approver">${approver.remark}</div>
-  //    </div>
-  //  `;
-   approverRowsHTML += `
-      <tbody class="">
-       <td class="">${approver.level}</td>
-       <td class="">${approver.approver}</td>
-       <td class="">${approver.actionDateTime}</td>
-       <td class="">${approver.status}</td>
-       <td class="">${approver.remark}</td>
-     </tbody>
-   `;
- });
+  // Generate the dynamic HTML for the approver details
+  let approverRowsHTML = "";
+  approverDetailsArray.forEach((approver) => {
+    approverRowsHTML += `
+    <tbody class="">
+     <td class="">${approver.level}</td>
+     <td class="">${approver.approver}</td>
+     <td class="">${approver.actionDateTime}</td>
+     <td class="">${approver.status}</td>
+     <td class="">${approver.remark}</td>
+   </tbody>
+ `;
+  });
 
-    // Create the popup
+  // Create the popup
   const popup = document.createElement("div");
   popup.className = "audit-history-popup";
   popup.innerHTML = `
-  <div class="popup-content-auditHistory">
-    <div class="popup-header mb-0">
-      <h5>Audit History</h5>
-      <span class="close-btn" onclick="hideAuditHistoryPopup()">&times;</span>
-    </div>
-    <div class="popup-details">
-      ${detailRowsHTML}
-      <table class="mtbalenew">
-      ${ fileItem.ListItemAllFields.Status !== "Auto Approved" ?
-       `
-        <thead>
-        <th class="">Approval Level</th>
-        <th class="">Approver</th>
-        <th class="">Action DateTime</th>
-        <th class="">Status</th>
-        <th >Remark</th>
-      </thead>
-      ${approverRowsHTML}
-    </table>
-       `
-        :
-        `Audit History is not available as the file does not have approval`
-      }
-     
+<div class="popup-content-auditHistory">
+  <div class="popup-header mb-0">
+    <h5>Audit History</h5>
+    <span class="close-btn" onclick="hideAuditHistoryPopup()">&times;</span>
   </div>
-  `;
-
-
-// Append to body
-  
-    document.body.appendChild(popup);
+  <div class="popup-details">
+    ${detailRowsHTML}
+    <table class="mtbalenew">
+    ${fileItem.ListItemAllFields.Status !== "Auto Approved" ?
+      `
+      <thead>
+      <th class="">Approval Level</th>
+      <th class="">Approver</th>
+      <th class="">Action DateTime</th>
+      <th class="">Status</th>
+      <th >Remark</th>
+    </thead>
+    ${approverRowsHTML}
+  </table>
+     `
+      :
+      `Audit History is not available as the file does not have approval`
+    }
    
- 
-}
+</div>
+`;
 
+  document.body.appendChild(popup);
+}
 // function to hide audit history pop
 // @ts-ignore
 window.hideAuditHistoryPopup=()=> {
@@ -15728,7 +15989,7 @@ librarydiv.appendChild(mainContainer)
                             {/* <FontAwesomeIcon icon={faList} /> */}
                             <img className="sidebariconssmall" src={listicon}></img>
                           </span>
-                          <span className="sidebarText">My Request</span>
+                          <span className="sidebarText">My Requests</span>
                         </button>
 
                         <button
@@ -15743,7 +16004,7 @@ librarydiv.appendChild(mainContainer)
                           <img className="sidebariconssmall" src={starticon}></img>
                             {/* <FontAwesomeIcon icon={faStarRegular} /> */}
                           </span>
-                          <span className="sidebarText">My Favourite</span>
+                          <span className="sidebarText">My Favourites</span>
                         </button>
 
                         <button
@@ -15760,7 +16021,7 @@ librarydiv.appendChild(mainContainer)
                           <img className="sidebariconssmall" src={foldericon}></img>
                             {/* <FontAwesomeIcon icon={faFolderRegular} /> */}
                           </span>
-                          <span className="sidebarText">My Folder</span>
+                          <span className="sidebarText">My Folders</span>
                         </button>
 
                         <button

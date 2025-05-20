@@ -1,5 +1,14 @@
 
 
+/* this was added to hide navbar from modern sharepoint page */
+/* #SuiteNavWrapper {
+  display: none !important; 
+}
+.ms-compositeHeader {
+  display: none !important; 
+} */
+
+/*  */
 .greater{
   padding-right: 10px;
 }
