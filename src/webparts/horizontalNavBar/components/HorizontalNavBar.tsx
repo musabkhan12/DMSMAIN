@@ -201,6 +201,22 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
     document.querySelector("body")?.classList.toggle("dark");
   };
   // const imgLogo = require("../assets/useimg.png");
+//  document.querySelectorAll("searchInput").forEach(function (input) {
+//     input.addEventListener("keydown", function (event) {
+//       if (event.key === "Enter") {
+//         event.preventDefault();
+//         return false;
+//       }
+//     });
+//   });
+
+  document.getElementById("searchInput")?.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+
+      event.preventDefault();
+      return false;
+    }
+  });
 
 
   const ApiCall = async () => {
@@ -409,6 +425,7 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
           <div className="search_bar">
 
             <input
+              id='searchInput'
               type="text"
               value={query} className='searchcss desktoView'
               onChange={(e) => searchKeyPress(e)}

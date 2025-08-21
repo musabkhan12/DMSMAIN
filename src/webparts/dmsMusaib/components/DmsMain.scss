@@ -576,7 +576,10 @@ top: 0;
  #files-container button{    position: absolute;
   right: 28px;
   font-size: 14px; background: #1fb0e5;
-  margin-top: 0px;}
+  margin-top: 0px;
+    right: 40px;
+    top: 27%;
+}
   #files-container button:hover{
     background: #008751;
   }
@@ -819,7 +822,7 @@ border-radius: 5px;}
 
 
 .myrequestp3rd{
-  width: 96px;
+  width: 100px !important;
  
 }
  
@@ -888,7 +891,9 @@ border-radius: 5px;}
 #files-container .card{margin: 5px 0px !important; height: 115px !important;}
 #files-container .col-md-2{    width: 15% !important;
 float: left;}
-.main-containeruploadfile{display: block !important;}
+.main-containeruploadfile{display: block !important;
+height: 100% !important;
+}
 .column1{height: auto !important;}
 .main-containeruploadfile .column{max-height: max-content !important;}
 .popup-content-auditHistory,.share-popup-content{width: 95% !important;}
@@ -946,7 +951,15 @@ text-align: center;}
   .OneUpTextFileContainer{
     width: 100% !important;
   }
-.borderprev{border: 1px solid #1fb0e5; height: 483px; border-radius: 20px; margin-top: 30px; }
+.borderprev{border: 1px solid #1fb0e5;
+  //  height: 483px; 
+   height: 98% !important;  
+  
+  border-radius: 20px; 
+  
+  // margin-top: 30px;
+  margin-top: 0px !important;
+}
 
 
 .ms-fullscreenmode #contentBox{
@@ -970,4 +983,57 @@ text-align: center;}
   background-color: #e0f0ff;
   border-left: 4px solid #0078d4;
   font-weight: bold;
+}
+#OneUpCommandBar{
+  display: none !important;
+}
+#closeCommand{
+  display: none !important;
+}
+
+#files-container2{
+  width: 100% !important;
+
+}
+
+.sidebardmsButton.active {
+  background-color: #e0f0ff;
+  border-left: 4px solid #0078d4;
+  font-weight: bold;
+}
+#OneUpCommandBar{
+  display: none !important;
+}
+#closeCommand{
+  display: none !important;
+}
+
+#files-container2{
+  width: 100% !important;
+
+}
+.pagination-container{
+      left: 89% !important;
+    position: sticky !important;
+    top: 52% !important;
+    width: 327px !important;
+}
+.pagination-container-buttons{
+  display: flex !important;
+    width: 159px !important;
+    flex-direction: row !important;
+        gap: 16px !important;
+            right: 9px !important;
+             padding-top: 89px !important;
+}
+  
+// next button
+.pagination-container-buttons2{
+     background-color: #1fb0e5 !important;
+     color: #ffffff !important;
+}
+.pagination-container-buttons1{
+     background-color: #1fb0e5 !important;
+     color: #ffffff !important;
+     margin-right: 64px !important;
 }

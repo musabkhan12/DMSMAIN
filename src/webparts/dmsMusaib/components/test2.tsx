@@ -21,39 +21,26 @@ const Testfile = () => {
     }
     , []);
     const getdoclib = async () => {
-const getdoclib = async () => {
-  try {
-    const pageSize = 500;
-    let allItems: any[] = [];
-    
-    let paged = await sp.web.lists
-      .getByTitle("DMSFolderMaster")
-      .items
-      .select("SiteTitle", "DocumentLibraryName")
-      .top(pageSize)
-      .getPaged();  // Note: This should be getPaged() - make sure the spelling is correct
-    
-    // Add first page before loop
-    allItems.push(...paged.results);
-    
-    while (paged.hasNext) {
-      paged = await paged.getNext();
-      allItems.push(...paged.results);
-    }
-    
-    console.log("All Items:", allItems);
-    const activeItems = allItems.filter(item => 
-      item.SiteTitle === 'Group Information Technology Department' && 
-      item.DocumentLibraryName === 'NT PG 5'
-    );
-    console.log("Filtered Items:", activeItems);
-    
-    alert("getdoclib completed successfully");
-  } catch (error) {
-    console.error("Error in getdoclib:", error);
-    alert("Error in getdoclib: " + error.message);
-  }
-};
+      alert("getdoclib called");
+     const list = sp.web.lists.getByTitle("DMSFolderMaster");
+
+let allItems: any[] = [];
+let batchSize = 1000;
+
+let paged = await list.items
+  .select("ID", "FolderPath") // Add other fields if needed
+  .top(batchSize)
+  .filter(`SiteTitle eq 'Group Information Technology Department' and DocumentLibraryName eq 'NT PG 5'`)
+  .getPaged();
+
+allItems.push(...paged.results);
+
+while (paged.hasNext) {
+  paged = await paged.getNext();
+  allItems.push(...paged.results);
+}
+
+console.log("libraryNestedData", allItems);
     };
      
     

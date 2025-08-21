@@ -58,7 +58,7 @@ import * as React from "react";
 import { getSP } from "../loc/pnpjsConfig";
 import { SPFI } from "@pnp/sp";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import { PublicClientApplication } from "@azure/msal-browser";
 // import "bootstrap//dist/"
 
 import {SharingRole} from "@pnp/sp/sharing";
@@ -85,6 +85,9 @@ import {
 import Provider from "../../../GlobalContext/provider";
 import { useMediaQuery } from "react-responsive";
 import "@pnp/sp/webs";
+import "@pnp/sp/lists";
+import "@pnp/sp/items/get-all";
+import "@pnp/sp/items";
 import "@pnp/sp/folders";
 import "@pnp/sp/files";
 import "@pnp/sp/sites"
@@ -94,7 +97,7 @@ import "@pnp/sp/sites";
 import "@pnp/sp/site-users/web";
 import { PermissionKind } from "@pnp/sp/security";
 import { Dropdown, ButtonGroup } from "react-bootstrap";
-
+import "./Root.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../../CustomCss/mainCustom.scss";
 import "../../verticalSideBar/components/VerticalSidebar2.scss";
@@ -121,12 +124,18 @@ import { BaseWebPartContext } from "@microsoft/sp-webpart-base";
 import { GraphSearchHelper } from "../../../Shared/SearchHelper1";
 import { IDocumentDisplayFields } from "./DMSSearch/Interfaces";
 import { ISearchHitResource } from "../../../Shared/SearchHelperInterfaces";
-import Testfile from "../processcomponents/test";
+// import Testfile from "../processcomponents/test";
+import Testfile from "./testfile"
 import Shownew from "../processcomponents/new";
 import NC from "../processcomponents/NC";
 import { FormComponent } from "../EDCprocessComponent/FormComponent/Form";
 import { Listing } from "../EDCprocessComponent/ListingComponent/Listing";
+import { GraphFI, graphfi, SPFx as graphSPFx } from "@pnp/graph";
+import { blue, brown } from "@mui/material/colors";
 
+
+let isprocessfolder :any;
+let folderpathbacktodmsfrompreviewisprocessfolder :any
 let Undo = require('../assets/Undo.svg');
 let sharewithmeicon = require('../assets/nodes.png')
 let recyclebin = require('../assets/recycle-bin.png')
@@ -157,6 +166,8 @@ let ManageWorkflowFolder = require("../assets/Manage-Workflow.svg");
 let RenameFolder = require("../assets/Rename-Folder.svg");
 let RenameMetaData = require("../assets/Rename-Meta-Data.svg");
 let RevokeAccess= require("../assets/Rvoke-Access.svg");
+let routefrommail = false;
+let mailsharefilewithpreview :any
 let MainRounteVariable = 'MyRequest'
 let entityclicktext = ''
 let managePermissionIcon =  require('../assets/ManagePermission.svg') 
@@ -199,7 +210,7 @@ const folderDetailsMap: Record<string, any> = {};
 // let searchArray:any=[];
 let routeToDiffSideBar="";
 // end
-
+  let graph: GraphFI;
 
 
 const ArgPoc = ({ props }: any) => {
@@ -214,7 +225,8 @@ const ArgPoc = ({ props }: any) => {
   const [showworkflowdiv, setshowworkflowdiv] = useState('');
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
-
+  const [routeFromMail2, setRouteFromMail2] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showfolderpermission, setShowfolderpermission] = useState(false);
   let cleanUrlInMyRequest=false;
   // const handleButtonClickShow = () => {
@@ -224,7 +236,7 @@ const ArgPoc = ({ props }: any) => {
 
   React.useEffect(() => {
     // console.log("This function is called only once", useHide);
-
+   graph = graphfi().using(graphSPFx(props.context));
     const showNavbar = (
       toggleId: string,
       navId: string,
@@ -326,9 +338,6 @@ const ArgPoc = ({ props }: any) => {
     //  alert(dropdownClicked)
      if(extractedPart  === '#/changerequest'){
       //  alert("Change Request")
-
-      const get = document.getElementById('files-container')
-      get.innerHTML = null
       setlistorgriddata('showGridView') // === 'showGridView'
       setSelectedText('Change Request')
 
@@ -353,6 +362,7 @@ const ArgPoc = ({ props }: any) => {
 useEffect(() => {
   // const params = new URLSearchParams(window.location.search);
   const url = window.location.href;
+
   // const matches = url.match(/\/([^\/]+)\.aspx/);
   let extractedPart = url.split('.aspx')[1]; 
   let parameters = extractedPart.split('?')
@@ -360,14 +370,129 @@ useEffect(() => {
   console.log("extractedPart",extractedPart);
   console.log("parameters",parameters);
 
-  if(parameters[1] === "MyRequest"){
-    // alert("MyRequest")
-  }
+  // if(parameters[1] === "MyRequest"){
+  //    alert("MyRequest")
+  // }
   let path="";
   let siteId="";
   let folderName="";
   let devision="";
   let department="";
+//   alert("before sett routefrommail" + routefrommail)
+//   const fullUrl = new URL(window.location.href);
+//   alert("fullUrl" + fullUrl)
+// const shareWithMeValue = fullUrl.searchParams.get("Sharewithme");
+// alert("shareWithMeValue" + shareWithMeValue)
+// if (shareWithMeValue) {
+//     const myurlis = decodeURIComponent(shareWithMeValue);
+//     console.log("Full URL:", myurlis);
+//     navigator.clipboard.writeText(myurlis).then(() => {
+//         console.log("Copied to clipboard:", myurlis);
+//     });
+// }
+  const fullUrl2 =window.location.href;
+
+const shareWithMeIndex = fullUrl2.indexOf("Sharewithme/");
+
+if (shareWithMeIndex !== -1) {
+  routefrommail = true;
+  setRouteFromMail2(true);
+    const myurlis = fullUrl2.substring(shareWithMeIndex + "Sharewithme/".length);
+    console.log("Full URL:", myurlis);
+
+    mailsharefilewithpreview = myurlis
+      PreviewFileFromMail(null,null,null,null,mailsharefilewithpreview)
+      const get = document.getElementById('files-container')
+      if( get){
+       PreviewFileFromMail(null,null,null,null,mailsharefilewithpreview)
+      }
+   setTimeout(() => {
+  const get = document.getElementById('files-container');
+  if (get) {
+    PreviewFileFromMail(null, null, null, null, mailsharefilewithpreview);
+  } else {
+    console.error("#files-container not found!");
+  }
+}, 1000);
+ 
+    navigator.clipboard.writeText(myurlis).then(() => {
+        console.log("Copied to clipboard:", myurlis);
+    });
+      
+      const createpreviewdiv = document.createElement('div')
+      if( createpreviewdiv){
+
+         createpreviewdiv.style.display = 'block';
+         const previewfileframe = document.createElement('iframe')
+         if( previewfileframe){
+
+           previewfileframe.id = 'filePreview2'
+  previewfileframe.style.width = '930px'
+  previewfileframe.style.height = '500px'
+       const previewUrl = mailsharefilewithpreview
+         if(previewUrl){
+          previewfileframe.src = mailsharefilewithpreview;
+          previewfileframe.onload = () => {
+             const checkAndHideButton = () => {
+
+          try {
+
+            const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+            if (iframeDocument) {
+              console.log("iframeDocument 4", iframeDocument);
+              const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+              const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+              // const openInAppButton=iframeDocument.getElementById('openCommandGroup') as HTMLButtonElement;
+              // console.log("openInAppButton",openInAppButton);
+              if(excelToolbar){
+      
+                excelToolbar.style.display= "none"
+              }
+              if (button) {
+
+                console.log("Hiding the OneUpCommandBar element");
+                button.style.display = "none";
+   
+   
+                // spinner.style.display = "none";
+                previewfileframe.style.display = "block";
+   
+   
+              } else {
+                console.log("OneUpCommandBar not found, rechecking...");
+              }
+             
+              const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+              if(helpbutton){
+                helpbutton.style.display = "none"
+              }
+            }
+          } catch (error) {
+            console.error("Error accessing iframe content:", error);
+          }
+   
+   
+          setTimeout(checkAndHideButton, 100);
+        };
+         
+        checkAndHideButton();
+          }
+           createpreviewdiv.appendChild(previewfileframe);
+         }
+    
+         }
+      }
+
+
+} 
+// else {
+//     console.log("'Sharewithme/' not found in URL");
+// }
+//   if(parameters[1]?.startsWith("Sharewithme")) {        /// from here 
+//     routefrommail = true
+    
+//   }
+  else                                       ///     to her i have added code form mail redirection   
   if(parameters.length>1){
   parameters.forEach((items,index)=>{
     console.log(`items[${index}]`,items)
@@ -421,8 +546,10 @@ useEffect(() => {
   console.log("devision",devision)
   currentDepartment=department;
   currentDevision=devision;
-  cleanUrlInMyRequest=true;
-  getdoclibdata(path,siteId,folderName);
+  routefrommail = false
+  setRouteFromMail2(false);
+  // cleanUrlInMyRequest=true;
+  getdoclibdata(path,siteId,folderName , "");
   }
   
 }, []);
@@ -431,6 +558,7 @@ useEffect(() => {
 const buttonDivRef = useRef<HTMLDivElement>(null); 
 const [showMyrequButtons, setShowMyrequButtons] = useState(true); // Initially hidden
 const [showMyfavButtons, setShowMyfavButtons] = useState(false); // Initially hidden
+const [showFolderListviewgridviewbutton, setshowFolderListviewgridviewbutton] = useState(false); // Initially hidden
 const [displayuploadfileandcreatefolder, setdisplayuploadfileandcreatefolder] = useState(false); // Initially hidden
 const [Myreqormyfav, setMyreqormyfav] = useState(''); // Initially hidden
 const [showEntitySearch, setshowEntitySearch] = useState(false); // Initially hidden
@@ -449,7 +577,21 @@ const [RootsiteUrl, setRootsiteUrl] = useState(location.origin); // Initially hi
 getdata()
      
 }, []);
-
+const setfilepreviewcontainerblank = () => {
+  // alert("back to dms")
+  routefrommail = false
+   setRouteFromMail2(false);
+  const filePreviewContainer = document.getElementById('files-container2');
+  if (filePreviewContainer) {
+    filePreviewContainer.innerHTML = ''; // Clear the container
+    filePreviewContainer.style.display = 'none'; // Hide the container
+  } 
+  // just uncomment it
+  // setSelectedText('My Uploaded Files');
+  //     setDynamicContent('Mentioned below are the documents submitted by logged in user.');
+  myRequest()
+  // alert("routefrommail" + routeFromMail2)
+}
 const getdata = async () => {
   // this code is also fro createing SPA page
 //   const page = await sp.web.loadClientsidePage("SitePages/SPA.aspx");
@@ -501,6 +643,16 @@ const getdata = async () => {
 }
 
 const myrequestbuttonclick =()=>{
+  if(routeFromMail2 === true ){
+
+ const musa2 = document.getElementById('sharedwithmebutton')
+    if(musa2){
+
+      musa2.click();
+ 
+    }
+    return
+  }
   const musa = document.getElementById('Myrequestbutton')
     if(musa){
 
@@ -569,8 +721,32 @@ const myrequestbuttonclick =()=>{
             console.error(`Error while checking access for site: ${entityTitle}`, error);
           }
         }
-  console.log(uniqueEntityMap , "uniqueEntityMap ......")
-  console.log(uniqueEntitiesWithAccess , "uniqueEntitiesWithAccess");
+
+        // With this parallel version:
+// const accessCheckPromises = entityItems.map(async (item) => {
+//   const entityTitle = item.Entitylookup.Title;
+//   try {
+//     const subsiteWeb = await sp.site.openWebById(item.Entitylookup.SiteID);
+//     const hasAccess = await subsiteWeb.web.currentUserHasPermissions(PermissionKind.ViewListItems);
+//     return { item, hasAccess };
+//   } catch(error) {
+//     console.error(`Error while checking access for site: ${entityTitle}`, error);
+//     return { item, hasAccess: false };
+//   }
+// });
+
+// const accessCheckResults = await Promise.all(accessCheckPromises);
+// accessCheckResults.forEach(({item, hasAccess}) => {
+//   if (hasAccess) {
+//     const entityTitle = item.Entitylookup.Title;
+//     uniqueEntityMap.set(entityTitle, item);
+//     uniqueEntitiesWithAccess.push(item);
+//   }
+// });
+  // console.log(uniqueEntityMap , "uniqueEntityMap ......")
+  // console.log(uniqueEntitiesWithAccess , "uniqueEntitiesWithAccess");
+
+  
       /// New Code 
 
 
@@ -595,7 +771,7 @@ const myrequestbuttonclick =()=>{
         .select(
           "SiteTitle", "Devision", "Department", "DocumentLibraryName",
           "FolderName", "ParentFolderId", "FolderPath", "IsRename",
-          "IsActive", "External", "ID", "ParentID"
+          "IsActive", "External", "ID", "ParentID" , "IsProcessRelated"
         )
         .top(pageSize)
         .getPaged();
@@ -625,7 +801,8 @@ const myrequestbuttonclick =()=>{
           IsActive,
           External,
           ID,
-          ParentID
+          ParentID,
+          IsProcessRelated
         } = folderItem;
         if (SiteTitle) {
           const key = `${SiteTitle.trim()}::${Devision?.trim() || ""}::${
@@ -646,6 +823,7 @@ const myrequestbuttonclick =()=>{
                 DocumentLibraryName,
                 IsActive,
                 External,
+                IsProcessRelated,
                 FolderName: Array.isArray(FolderName)
                   ? FolderName
                   : [FolderName],
@@ -848,7 +1026,8 @@ const myrequestbuttonclick =()=>{
                 folders: [],
                 folderPath: item.FolderPath, // Store FolderPath with other details
                 isActive: item.IsActive,
-                External: item.External
+                External: item.External,
+                isProcessRelated: item.IsProcessRelated,
               });
             }
             uniqueDocLibs.get(item.DocumentLibraryName).folders.push(item);
@@ -896,7 +1075,79 @@ const myrequestbuttonclick =()=>{
 
             // Handle click to toggle the visibility of the folder list
             docLibElement.addEventListener("click", (event:any) => {
-              const createFileButton =document.getElementById("createFileButton");
+              
+             if (data.isProcessRelated === 'Yes') {
+              // alert("This is Process Related Folder, Please Click on + to see the folders");
+               isprocessfolder = true;
+  event.preventDefault();
+  event.stopPropagation();
+
+  // ✅ Check if list already exists
+  let IOCfolderList = docLibElement.querySelector(".ioc-folder-list") as HTMLElement;
+
+  if (!IOCfolderList) {
+    IOCfolderList = document.createElement("ul");
+    IOCfolderList.className = "ioc-folder-list";
+    IOCfolderList.style.display = "none";
+    docLibElement.appendChild(IOCfolderList); // Append once
+
+    const test = async () => {
+      try {
+        const testidsub = await sp.site.openWebById(value.siteID);
+        const IOCfolders = await testidsub.web.lists.getByTitle(docLibName).rootFolder.folders();
+        console.log(IOCfolders , "IOCfolders")
+
+        IOCfolders.forEach(folder => {
+          if (folder.Name !== "Forms") {
+            const folderElement = document.createElement("li");
+            folderElement.textContent = folder.Name;
+
+            const toggleButton = createToggleButton();
+            folderElement.appendChild(toggleButton);
+
+            IOCfolderList.appendChild(folderElement);
+
+            folderElement.addEventListener("click", (event) => {
+              updateBreadcrumb(folder.ServerRelativeUrl);
+           
+              isprocessfolder = true;
+              
+              event.preventDefault();
+              event.stopPropagation();
+              if (toggleButton.textContent === "+") {
+                toggleButton.textContent = "-";
+                getdoclibdata(folder.ServerRelativeUrl, value.siteID, docLibName , "");
+              } else {
+                toggleButton.textContent = "+";
+                 getdoclibdata(folder.ServerRelativeUrl, value.siteID, docLibName , "");
+              }
+            });
+          }
+        });
+
+      } catch (error) {
+        console.error("Error fetching IOC folders:", error);
+      }
+    };
+
+    test(); // Run fetch once
+  }
+
+  // ✅ Toggle visibility
+  if (toggleButton.textContent === "+") {
+    toggleButton.textContent = "-";
+    IOCfolderList.style.display = 'block';
+  } else {
+    toggleButton.textContent = "+";
+    IOCfolderList.style.display = 'none';
+  }
+}
+
+              
+              else{
+                  // alert("This is not Process Related Folder, Please Click on + to see the folders");
+                isprocessfolder = false;
+                     const createFileButton =document.getElementById("createFileButton");
               event.preventDefault()
               event.stopPropagation();
               if(toggleButton.textContent === "+") {
@@ -919,7 +1170,7 @@ const myrequestbuttonclick =()=>{
               // handleNavigation(value.entityTitle, null , null , docLibName , null )
               updateBreadcrumb(data.folderPath);
               toggleVisibility(folderList);
-              getdoclibdata(data.folderPath , value.siteID , docLibName);
+              getdoclibdata(data.folderPath , value.siteID , docLibName , "");
               IsExternal=data.External;
               currentfolderpath = data.folderPath
               currentDocumentLibrary = docLibName;
@@ -955,10 +1206,20 @@ const myrequestbuttonclick =()=>{
               // } else {
               //   console.error();
               // }
+              }
+        
+         
             });
 
             // Handle double-click to hide the folder list
             docLibElement.addEventListener("dblclick", (event) => {
+              // Find the IOCfolderList inside this specific docLibElement
+  const iocFolderList = docLibElement.querySelector(".ioc-folder-list") as HTMLElement;
+
+  if (iocFolderList && iocFolderList.style.display === "block") {
+    iocFolderList.style.display = "none";
+  }
+
               IsExternal=data.External;
               event.stopPropagation();
               toggleVisibility(folderList, false);
@@ -1000,6 +1261,10 @@ const myrequestbuttonclick =()=>{
                     folderElement.appendChild(subFolderList);
 
                     folderElement.addEventListener("click", (event:any) => {
+                         
+                           isprocessfolder = false
+
+                         
                        event.preventDefault();  // Prevent default action
                        event.stopPropagation();  // Stop event bubbling
                        console.log("Event listener triggered");
@@ -1024,7 +1289,7 @@ const myrequestbuttonclick =()=>{
                       // handleNavigation(value.entityTitle, null , null , docLibName , folderName )
                       updateBreadcrumb(item.FolderPath);
                       event.stopPropagation();
-                      getdoclibdata(item.FolderPath,currentsiteID ,docLibName )
+                      getdoclibdata(item.FolderPath,currentsiteID ,docLibName , "" )
                       // if (myButton) {
                       //   myButton.textContent = `Create Folder under ${folderName}`;
                       // } else {
@@ -1100,7 +1365,7 @@ const myrequestbuttonclick =()=>{
             });
 
             docLibElement.addEventListener("click", (event) => {
-
+              isprocessfolder = false;
               console.log(devisionValue, "devisionValue");
               event.stopPropagation();
               currentDocumentLibrary = docLibName;
@@ -1130,6 +1395,7 @@ const myrequestbuttonclick =()=>{
             });
 
             docLibElement.addEventListener("dblclick", (event) => {
+            isprocessfolder = false;
               event.stopPropagation();
               toggleVisibility(folderList, false);
             });
@@ -1160,6 +1426,7 @@ const myrequestbuttonclick =()=>{
             departmentElement.appendChild(documentList);
 
             departmentElement.addEventListener("click", (event) => {
+              isprocessfolder = false;
               currentEntityURL = value.siteURL;
                     currentsiteID = value.siteID
                     currentEntity = value.entityTitle;
@@ -1297,6 +1564,8 @@ const myrequestbuttonclick =()=>{
                   docLibElement.appendChild(folderList);
 
                   docLibElement.addEventListener("click", (event) => {
+              
+                    isprocessfolder = false;
                     event.stopPropagation();
                     currentEntityURL = value.siteURL;
                     currentsiteID = value.siteID
@@ -1317,7 +1586,7 @@ const myrequestbuttonclick =()=>{
                   console.log("currentDocumentLibrary", currentDocumentLibrary);
                   console.log("currentfolderpath", currentfolderpath);
                   console.log("parentfolder", parentfolder);
-                  getdoclibdata(data.folderPath , value.siteID , docLibName)
+                  getdoclibdata(data.folderPath , value.siteID , docLibName , "")
                   // handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , null )
                   updateBreadcrumb(currentfolderpath);
                     console.log(
@@ -1342,6 +1611,7 @@ const myrequestbuttonclick =()=>{
                   });
 
                   docLibElement.addEventListener("dblclick", (event) => {
+                    isprocessfolder = false;
                     IsExternal=data.IsExternal
                     event.stopPropagation();
                     toggleVisibility(folderList, false);
@@ -1378,7 +1648,7 @@ const myrequestbuttonclick =()=>{
                           folderElement.appendChild(subFolderList);
 
                           folderElement.addEventListener("click", (event) => {
-                            
+                            isprocessfolder = false;
                             currentEntityURL = value.siteURL;
                             currentEntity = value.entityTitle;
                             currentsiteID = value.siteID
@@ -1395,7 +1665,7 @@ const myrequestbuttonclick =()=>{
                           console.log("currentDepartment", currentDepartment);
                           console.log("currentDocumentLibrary", currentDocumentLibrary);
                           console.log("currentfolderpath", item.FolderPath);
-                          getdoclibdata(item.FolderPath,currentsiteID , docLibName)
+                          getdoclibdata(item.FolderPath,currentsiteID , docLibName , "")
                           // handleNavigation(value.entityTitle, devisionTitle , departmentTitle , docLibName , folderName )
                           updateBreadcrumb(item.FolderPath);
                           //      const createFileButton=document.getElementById("createFileButton")
@@ -1429,6 +1699,7 @@ const myrequestbuttonclick =()=>{
             });
 
             departmentElement.addEventListener("dblclick", (event) => {
+              isprocessfolder = false;
               if(value.isExternal === "Yes"){
                 IsExternal=true;
               }else{
@@ -1483,7 +1754,7 @@ const myrequestbuttonclick =()=>{
                 docLibElement.appendChild(folderList);
 
                 docLibElement.addEventListener("click", (event) => {
-                
+                 isprocessfolder = false;
                   event.stopPropagation();
                   currentEntityURL = value.siteURL; // Use the SiteURL from entitiesMap
                   currentsiteID = value.siteID
@@ -1502,7 +1773,7 @@ const myrequestbuttonclick =()=>{
                   console.log("currentDepartment", currentDepartment);
                   console.log("currentDocumentLibrary", currentDocumentLibrary);
                   console.log("currentfolderpath", currentfolderpath);
-                  getdoclibdata(item.FolderPath , value.siteID , item.DocumentLibraryName)
+                  getdoclibdata(item.FolderPath , value.siteID , item.DocumentLibraryName , "")
                   // handleNavigation(value.entityTitle , devisionTitle, null , item.DocumentLibraryName )
                   updateBreadcrumb(item.FolderPath );
                   // const createFileButton=document.getElementById("createFileButton")
@@ -1583,6 +1854,7 @@ const myrequestbuttonclick =()=>{
                               
                               "click",
                               (event) => {
+                             isprocessfolder = false;
                                 currentEntityURL = value.siteURL; // Use the SiteURL from entitiesMap
                                 currentsiteID = value.siteID
                                 currentEntity = value.entityTitle
@@ -1611,7 +1883,7 @@ const myrequestbuttonclick =()=>{
                                 event.stopPropagation();
                                 toggleVisibility(subFolderList2);
                                 console.log("enter ee");
-                                getdoclibdata(folderPath,currentsiteID, item.DocumentLibraryName)
+                                getdoclibdata(folderPath,currentsiteID, item.DocumentLibraryName,"")
                                 //   const createFileButton=document.getElementById("createFileButton")
                                 // createFileButton.style.display="block";
                                 //   const createFileButton2=document.getElementById("createFileButton")
@@ -1655,7 +1927,7 @@ const myrequestbuttonclick =()=>{
           ///End: display all Document libraries under Devision directly if Department null with nested folder //////
 
           devisionElement.addEventListener("click", (event) => {
-
+ isprocessfolder = false;
             const breadcrumbElement=document.getElementById("breadcrumb");
             if(breadcrumbElement){
               breadcrumbElement.style.display="none";
@@ -1759,6 +2031,7 @@ const myrequestbuttonclick =()=>{
           });
 
           devisionElement.addEventListener("dblclick", (event) => {
+             isprocessfolder = false;
             if(value.isExternal === "Yes"){
               IsExternal=true
             }else{
@@ -1833,21 +2106,39 @@ const myrequestbuttonclick =()=>{
         let clickTimer:any;
         titleElement.addEventListener("click" , async (event)=>{
         
-          if(entityclicktext !== ''){
-     
-            const breadcrumbElement=document.getElementById("breadcrumb");
-            if(breadcrumbElement){
-              breadcrumbElement.style.display="block";
-              breadcrumbElement.textContent = entityclicktext;
-            }
-          }else{
-  
-            const breadcrumbElement=document.getElementById("breadcrumb");
-            if(breadcrumbElement){
-              breadcrumbElement.style.display="none";
-            }
-           
+          // this i updated when new requirement came , they said when click on entity my request should hide and entity higlight in breadcrumb
+          const getselectedText = document.getElementById("selectedText");
+          if(getselectedText){
+            getselectedText.style.display="none";
           }
+            const getcontainer = document.getElementById("files-container");
+            if(getcontainer){ 
+                    getcontainer.innerHTML = "";
+            }
+     
+          const breadcrumbElement=document.getElementById("breadcrumb");
+           breadcrumbElement.style.display="block";
+           breadcrumbElement.textContent = value.entityTitle;
+         
+          //  this is code where user whn click on entity entity will not update in breadcrumb and only show my request start from here
+          // if(entityclicktext !== ''){
+     
+          //   const breadcrumbElement=document.getElementById("breadcrumb");
+          //   if(breadcrumbElement){
+          //     breadcrumbElement.style.display="block";
+          //     breadcrumbElement.textContent = entityclicktext;
+          //   }
+          // }else{
+  
+          //   const breadcrumbElement=document.getElementById("breadcrumb");
+          //   if(breadcrumbElement){
+          //     breadcrumbElement.style.display="none";
+          //   }
+           
+          // }
+          // till here
+
+
           // setdisplayuploadfileandcreatefolder(true)
 
           // new code added.
@@ -1900,21 +2191,21 @@ const myrequestbuttonclick =()=>{
                 // }
         })
         titleElement.addEventListener("click", async(event) => {
-          if(entityclicktext !== ''){
+          // if(entityclicktext !== ''){
        
-            const breadcrumbElement=document.getElementById("breadcrumb");
-            if(breadcrumbElement){
-              breadcrumbElement.style.display="block";
-              breadcrumbElement.textContent = entityclicktext;
-            }
-          }else{
+          //   const breadcrumbElement=document.getElementById("breadcrumb");
+          //   if(breadcrumbElement){
+          //     breadcrumbElement.style.display="block";
+          //     breadcrumbElement.textContent = entityclicktext;
+          //   }
+          // }else{
       
-            const breadcrumbElement=document.getElementById("breadcrumb");
-            if(breadcrumbElement){
-              breadcrumbElement.style.display="none";
-            }
+          //   const breadcrumbElement=document.getElementById("breadcrumb");
+          //   if(breadcrumbElement){
+          //     breadcrumbElement.style.display="none";
+          //   }
            
-          }
+          // }
        
          
           setdisplayuploadfileandcreatefolder(true)
@@ -2677,438 +2968,1363 @@ const myrequestbuttonclick =()=>{
 //   }
 // }, []);
 // end
-  const getdoclibdata = async (FolderPath: any , siteID:any , docLibName:any) => {
-    setlistorgriddata('');
-    
-    const noFileMessage = document.createElement("p");
-    
-    //  ismyrequordoclibforfilepreview = "getdoclibdata"
-    //  ismyrequordoclibforfilepreview = "getdoclibdata"
-    console.log('path   inside getdoclib', FolderPath)
-    console.log('SiteID :    ', siteID)
-    console.log('docLibName :    ', docLibName);
-    console.log('currentEntity :    ', currentEntity);
 
-    // // Hide the list and grid view start
-    // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-    // if (hidegidvewlistviewbutton2) {
-    //   console.log("enter here .....................")
-    //   hidegidvewlistviewbutton2.style.display = 'none'
-    
-    // }
-    // if (hidegidvewlistviewbutton) {
-    // console.log("enter here .....................")
-    // hidegidvewlistviewbutton.style.display = 'none'
 
-    // }
-    // // End
-    // Extract the current entity from url
-    const segments = FolderPath?.split('/');
-    const currentSubsite = segments[3]; 
-    console.log("segments",segments);
-    console.log("Inside get doclib current entity",currentSubsite);
-    console.log("Devision",currentDevision);
-    console.log("Department",currentDepartment);
-    // set current entity ,current document library and folder name
-    const folderData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`FolderPath eq '${FolderPath}'`)();
-    console.log("folderData to check folder or library",folderData);
-   // here we add this becuase if entity is external then is should for External use
-   IsExternal=folderData[0].External
-    const folName = segments[segments.length - 1];
-    const testidsub = await sp.site.openWebById(siteID);
-    let library;
-    if(folderData[0].IsLibrary === true){
-      console.log("its document libray",folName)
-      library = testidsub.web.getList(`${FolderPath}`);
-      currentFolder='';
-    }else{
-      console.log("its folder",folName)
-      currentFolder=folName
-      const library1 = testidsub.web.getFolderByServerRelativePath(`${FolderPath}`);
-      library=await library1.getItem()
-    }
-    currentEntity=currentSubsite;
-    currentDocumentLibrary=docLibName;
-    // Update the url  start
-    if(currentDevision !== ""){
-      console.log("Devision present",currentDevision);
-      if(currentDepartment !== ""){
-        console.log("Department present",currentDepartment);
-        const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}?${currentDepartment}`;
-        window.history.pushState(null, '', newUrl);
-      }else{
-        const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}`;
-        window.history.pushState(null, '', newUrl);
-      }
-    }else{
-      const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}`;
-      window.history.pushState(null, '', newUrl);
-    }
-    
-    // end
-    routeToDiffSideBar="";
+// working code without pagination
+//   const getdoclibdata = async (FolderPath: any , siteID:any , docLibName:any , searchText: any = null ) => {
+//     // alert("Please select a folder from the left side tree to view files." + isprocessfolder);
+//     // alert(currentEntity + "currentEntity")
 
-    // const testidsub = await sp.site.openWebById(siteID);
-    let files:any = [];
-    let batchSize = 5000;
-    let nextLink = null;
-    let hasMoreItems = true;
-    currentsiteID=siteID;
-    currentfolderpath=FolderPath;
-    const container = document.getElementById("files-container");
+//     console.log(searchText.value + "searchText text")
+//     routeToDiffSideBar="documentLibrary";
+//     const site = await sp.site.select("Url")();
+//      const fullUrl = site.Url; // "https://officeindia.sharepoint.com/sites/Intranetdemos"
+
+// // Extract server-relative URL
+// const relativeUrl = new URL(fullUrl).pathname;
+// console.log(relativeUrl + "relativeUrl"); // "/sites/Intranetdemos"
+
+//     setlistorgriddata('');
+//     if(isprocessfolder === true){
+//         //  alert(FolderPath + "FolderPath in isprocess true"  )
+//           const testidsub = await sp.site.openWebById(siteID);
+//               const noFileMessage = document.createElement("p");
+//          console.log('path   inside getdoclib', FolderPath)
+//             let files:any = [];
+//     let batchSize = 5000;
+//     let nextLink = null;
+//     let hasMoreItems = true;
+//     currentsiteID=siteID;
+//     // currentfolderpath=`${relativeUrl}/${currentEntity}/${docLibName}/${FolderPath}`;
+//     currentfolderpath=FolderPath;
+//     folderpathbacktodmsfrompreviewisprocessfolder = ""
+//     const container = document.getElementById("files-container");
  
-    container.classList.remove('hidemydatacards')
-    container.innerHTML = "";
-    console.log("folderpath:", FolderPath);
-    try {
-      while (hasMoreItems) {
-        let response;
-        if (nextLink) {
-          response = await sp.web(nextLink);
-        } else {
-          try {
-            response = await testidsub.web
-              .getFolderByServerRelativePath(FolderPath)
-              .files.select(
-                "Name",
-                "Length",
-                "ServerRelativeUrl",
-                "UniqueId",
-                "MajorVersion",
-                "ListItemAllFields/Status",
-                "ListItemAllFields/IsDeleted"
-              )
-              .expand("ListItemAllFields")
-              .orderBy("ListItemAllFields/Modified", false)
-              .filter(`ListItemAllFields/IsDeleted eq ${null} and ListItemAllFields/Status ne 'Pending'`)
-              .top(batchSize)();
-            myfolderdata = response
-            console.log(response , "response")
-          } catch (error) {
-            const container = document.getElementById("files-container");
-            noFileMessage.textContent = "No files found.";
-            noFileMessage.style.color = "gray"; 
-            noFileMessage.style.fontSize = "16px"; 
-            noFileMessage.style.textAlign = "center";
-            const CreateFolder=document.getElementById("CreateFolder")
-            const createFileButton=document.getElementById("createFileButton")
-            if(createFileButton){
-              createFileButton.style.display=  "none";
-            }
-            if(CreateFolder){
-              CreateFolder.style.display="none";
-            }
-            // Append the message to the container
-            container.appendChild(noFileMessage);
-            console.error("Error fetching files:", error);
-          }
+//     container.classList.remove('hidemydatacards')
+//     container.innerHTML = "";
+//     console.log("folderpath:", FolderPath);
+//     try {
+//       while (hasMoreItems) {
+//         let response;
+//         if (nextLink) {
+//           response = await sp.web(nextLink);
+//         } else {
+//           try {
+//             response = await testidsub.web
+//               .getFolderByServerRelativePath(FolderPath)
+//               .files.select(
+//                 "Name",
+//                 "Length",
+//                 "ServerRelativeUrl",
+//                 "UniqueId",
+//                 "MajorVersion",
+//                 "ListItemAllFields/Status",
+//                 "ListItemAllFields/IsDeleted"
+//               )
+//               .expand("ListItemAllFields")
+//               .orderBy("ListItemAllFields/Modified", false)
+//               .filter(`ListItemAllFields/IsDeleted eq ${null} and ListItemAllFields/Status ne 'Pending'`)
+//               .top(batchSize)();
+//             myfolderdata = response
+//             console.log(response , "response")
+//           } catch (error) {
+//             const container = document.getElementById("files-container");
+//             noFileMessage.textContent = "No files found.";
+//             noFileMessage.style.color = "gray"; 
+//             noFileMessage.style.fontSize = "16px"; 
+//             noFileMessage.style.textAlign = "center";
+//             const CreateFolder=document.getElementById("CreateFolder")
+//             const createFileButton=document.getElementById("createFileButton")
+//             if(createFileButton){
+//               createFileButton.style.display=  "none";
+//             }
+//             if(CreateFolder){
+//               CreateFolder.style.display="none";
+//             }
+//             // Append the message to the container
+//             container.appendChild(noFileMessage);
+//             console.error("Error fetching files:", error);
+//           }
          
-        }
-        // Add the current batch of files to the files array
-        files = [...files, ...response as IFileInfo[]];
-        // Check if there is a nextLink for more items
-        if ("@odata.nextLink" in response) {
-          nextLink = response["@odata.nextLink"];
-        } else {
-          hasMoreItems = false; // No more items, exit loop
-        }
-      }
-      console.log("All files fetched:", files);
+//         }
+//         // Add the current batch of files to the files array
+//         files = [...files, ...response as IFileInfo[]];
+//         // Check if there is a nextLink for more items
+//         if ("@odata.nextLink" in response) {
+//           nextLink = response["@odata.nextLink"];
+//         } else {
+//           hasMoreItems = false; // No more items, exit loop
+//         }
+//       }
+//       console.log("All files fetched:", files);
 
-      // Get the details of the users permission.
-      // start
-      // const library = testidsub.web.lists.getByTitle(docLibName);
-      // const library = testidsub.web.getList(`${FolderPath}`);
-      const permissions = await library.getCurrentUserEffectivePermissions();
-      // console.log("permissions",permissions);
+//       // Get the details of the users permission.
+//       // start
+//       // const library = testidsub.web.lists.getByTitle(docLibName);
+//       // const library = testidsub.web.getList(`${FolderPath}`);
+
+//         let library
+//         // alert(`${relativeUrl}/${currentEntity}/${docLibName}/${FolderPath}` + "${relativeUrl}/${currentEntity}/${docLibName}/${FolderPath}")
+//         const library1 = testidsub.web.getFolderByServerRelativePath(FolderPath);
+//          debugger;
+//         library=await library1.getItem()
+//       const permissions = await library.getCurrentUserEffectivePermissions();
+//       // console.log("permissions",permissions);
        
-      // Check for all permissions
-    //   const userPermissions = {
-    //     canViewPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages),
-    //     canView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
-    //     canEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
-    //     canAdd: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems),          
-    //     canFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask),
-    //     canFullControl1: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
-    //     canDelete: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
-    //     canApprove: testidsub.web.hasPermissions(permissions, PermissionKind.ApproveItems),
-    //     canOpen: testidsub.web.hasPermissions(permissions, PermissionKind.OpenItems),
-    //     canViewVersions: testidsub.web.hasPermissions(permissions, PermissionKind.ViewVersions),
-    //     canDeleteVersions: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteVersions),
-    //     canManagePermissions: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
-    //     canViewFormPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewFormPages),
-    //     canEditMyUserInfo: testidsub.web.hasPermissions(permissions, PermissionKind.EditMyUserInfo)
-    // };
-    const userPermissions = {
-      hasFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask) || testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
-      hasContribute: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems) &&
-                     testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems) &&
-                     testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
-      hasEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
-      // hasEdit1: testidsub.web.hasPermissions(permissions, PermissionKind.),
-      hasRead: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
-      hasView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages)
-    };
-    console.log("userPermissions",userPermissions);
-    // End
+//       // Check for all permissions
+//     //   const userPermissions = {
+//     //     canViewPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages),
+//     //     canView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+//     //     canEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+//     //     canAdd: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems),          
+//     //     canFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask),
+//     //     canFullControl1: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//     //     canDelete: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+//     //     canApprove: testidsub.web.hasPermissions(permissions, PermissionKind.ApproveItems),
+//     //     canOpen: testidsub.web.hasPermissions(permissions, PermissionKind.OpenItems),
+//     //     canViewVersions: testidsub.web.hasPermissions(permissions, PermissionKind.ViewVersions),
+//     //     canDeleteVersions: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteVersions),
+//     //     canManagePermissions: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//     //     canViewFormPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewFormPages),
+//     //     canEditMyUserInfo: testidsub.web.hasPermissions(permissions, PermissionKind.EditMyUserInfo)
+//     // };
+//     const userPermissions = {
+//       hasFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask) || testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//       hasContribute: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems) &&
+//                      testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems) &&
+//                      testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+//       hasEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+//       // hasEdit1: testidsub.web.hasPermissions(permissions, PermissionKind.),
+//       hasRead: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+//       hasView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages)
+//     };
+//     console.log("userPermissions",userPermissions);
+//     // End
 
-    // Belong to admin or not start
-    // Toggle the createFile and createFolder button based on the permission
-    // let permission:string;
-    // const CreateFolder=document.getElementById("CreateFolder")
-    // const createFileButton=document.getElementById("createFileButton")
-    // if(userPermissions.hasFullControl){
-    //   console.log(`Current User has full control on the library/Folder`);
-    //   if(createFileButton){
-    //     createFileButton.style.display=  "block";
-    //   }
-    //   if(CreateFolder){
-    //     CreateFolder.style.display="block";
-    //   }
-    // }else if(userPermissions.hasContribute || userPermissions.hasEdit){
-    //   console.log(`Current User has Contribute/Edit permission on the library/Folder`);
-    //   if(createFileButton){
-    //     createFileButton.style.display=  "block";
-    //   }
-    //   if(CreateFolder){
-    //     CreateFolder.style.display="none";
-    //   }
-    // }else{
-    //   console.log(`Current User has no permission on the library/Folder`);
-    //   if(createFileButton){
-    //     createFileButton.style.display=  "none";
-    //   }
-    //   if(CreateFolder){
-    //     CreateFolder.style.display="none";
-    //   }
-    // }
-    // Below code check the user belong to which group
-    // try {
-    //   const currentUser = await sp.web.currentUser();
-    //   const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
-    //   const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
-    //   const isMemberOfContribute = userGroups.some(group => group.Title === `${currentEntity}_Contribute`);
-    //   const isMemberOfInitiator = userGroups.some(group => group.Title === `${currentEntity}_Initiator`);
-    //   const isMemberOfRead = userGroups.some(group => group.Title === `${currentEntity}_Read`);
-    //   const isMemberOfView = userGroups.some(group => group.Title === `${currentEntity}_View`);
-    //   const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
-    //   console.log("isMemberOfSuperAdmin",isMemberOfSuperAdmin);
-    //   console.log("isMemberOfContribute",isMemberOfContribute);
-    //   console.log("isMemberOfInitiator",isMemberOfInitiator);
-    //   console.log("isMemberOfRead",isMemberOfRead);
-    //   console.log("isMemberOfView",isMemberOfView);
-    //   console.log(`Is member of ${currentEntity}_Admin:`, isMemberOfGroup);
-    //   // console.log(`User is a member of the group: ${currentEntity}_Admin`);
-    //   if (isMemberOfGroup || isMemberOfSuperAdmin) {
-    //     console.log(`User is a member of the group: ${currentEntity}_Admin`);
-    //     if(createFileButton){
-    //       createFileButton.style.display=  "block";
-    //     }
-    //     if(createFileButton2){
-    //     createFileButton2.style.display="block";
-    //     }
-    //  }else if(isMemberOfContribute || isMemberOfInitiator || isMemberOfRead){
-    //       if(createFileButton){
-    //         createFileButton.style.display=  "block";
-    //       }
-    //       if(createFileButton2){
-    //         createFileButton2.style.display="none";
-    //         }
-    //  }else {
-    //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
-    //   if(createFileButton){
-    //     createFileButton.style.display="none";
-    //   }
-    //   if(createFileButton2){
-    //     createFileButton2.style.display="none";
-    //   }
-    //  }
-    // } catch (error) {
-    //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
-    //   if(createFileButton){
-    //     createFileButton.style.display="none";
-    //   }
-    //   if(createFileButton2){
-    //     createFileButton2.style.display="none";
-    //   }
+//     // Belong to admin or not start
+//     // Toggle the createFile and createFolder button based on the permission
+//     // let permission:string;
+//     // const CreateFolder=document.getElementById("CreateFolder")
+//     // const createFileButton=document.getElementById("createFileButton")
+//     // if(userPermissions.hasFullControl){
+//     //   console.log(`Current User has full control on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "block";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="block";
+//     //   }
+//     // }else if(userPermissions.hasContribute || userPermissions.hasEdit){
+//     //   console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "block";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="none";
+//     //   }
+//     // }else{
+//     //   console.log(`Current User has no permission on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "none";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="none";
+//     //   }
+//     // }
+//     // Below code check the user belong to which group
+//     // try {
+//     //   const currentUser = await sp.web.currentUser();
+//     //   const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+//     //   const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+//     //   const isMemberOfContribute = userGroups.some(group => group.Title === `${currentEntity}_Contribute`);
+//     //   const isMemberOfInitiator = userGroups.some(group => group.Title === `${currentEntity}_Initiator`);
+//     //   const isMemberOfRead = userGroups.some(group => group.Title === `${currentEntity}_Read`);
+//     //   const isMemberOfView = userGroups.some(group => group.Title === `${currentEntity}_View`);
+//     //   const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+//     //   console.log("isMemberOfSuperAdmin",isMemberOfSuperAdmin);
+//     //   console.log("isMemberOfContribute",isMemberOfContribute);
+//     //   console.log("isMemberOfInitiator",isMemberOfInitiator);
+//     //   console.log("isMemberOfRead",isMemberOfRead);
+//     //   console.log("isMemberOfView",isMemberOfView);
+//     //   console.log(`Is member of ${currentEntity}_Admin:`, isMemberOfGroup);
+//     //   // console.log(`User is a member of the group: ${currentEntity}_Admin`);
+//     //   if (isMemberOfGroup || isMemberOfSuperAdmin) {
+//     //     console.log(`User is a member of the group: ${currentEntity}_Admin`);
+//     //     if(createFileButton){
+//     //       createFileButton.style.display=  "block";
+//     //     }
+//     //     if(createFileButton2){
+//     //     createFileButton2.style.display="block";
+//     //     }
+//     //  }else if(isMemberOfContribute || isMemberOfInitiator || isMemberOfRead){
+//     //       if(createFileButton){
+//     //         createFileButton.style.display=  "block";
+//     //       }
+//     //       if(createFileButton2){
+//     //         createFileButton2.style.display="none";
+//     //         }
+//     //  }else {
+//     //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display="none";
+//     //   }
+//     //   if(createFileButton2){
+//     //     createFileButton2.style.display="none";
+//     //   }
+//     //  }
+//     // } catch (error) {
+//     //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display="none";
+//     //   }
+//     //   if(createFileButton2){
+//     //     createFileButton2.style.display="none";
+//     //   }
  
      
-    // }
-    // End
-      const DMSEntityFileMasterList=`DMS${currentEntity}FileMaster`;
-      console.log(DMSEntityFileMasterList);
+//     // }
+//     // End
+//       const DMSEntityFileMasterList=`DMS${currentEntity}FileMaster`;
+//       console.log(DMSEntityFileMasterList);
       
-      const filesData = await sp.web.lists
-      .getByTitle(`${DMSEntityFileMasterList}`)
-      .items.select("FileUID","IsFavourite")
-      .filter(
-        `IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`
-      )();
+//       const filesData = await sp.web.lists
+//       .getByTitle(`${DMSEntityFileMasterList}`)
+//       .items.select("FileUID","IsFavourite")
+//       .filter(
+//         `IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`
+//       )();
    
-      // Create a map for quick lookup of IsFavourite status by FileUID
-      const favouriteMap = new Map(
-        filesData.map((item: any) => [item.FileUID, item.IsFavourite])
-      );
+//       // Create a map for quick lookup of IsFavourite status by FileUID
+//       const favouriteMap = new Map(
+//         filesData.map((item: any) => [item.FileUID, item.IsFavourite])
+//       );
     
 
-      // console.log("FavouriteMap",favouriteMap)
-      console.log("Files", filesData);
-      // Add breadCrumb start
-      // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
-      // End
-      // const container = document.getElementById("files-container");
-      // container.innerHTML = "";
-      setdisplayuploadfileandcreatefolder(true)
-      // Hide the list and grid view start
-    // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-    // if (hidegidvewlistviewbutton2) {
-    //   console.log("enter here .....................")
-    //   hidegidvewlistviewbutton2.style.display = 'none'
+//       // console.log("FavouriteMap",favouriteMap)
+//       console.log("Files", filesData);
+//       // Add breadCrumb start
+//       // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+//       // End
+//       // const container = document.getElementById("files-container");
+//       // container.innerHTML = "";
+//       setdisplayuploadfileandcreatefolder(true)
+//       // Hide the list and grid view start
+//     // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//     // if (hidegidvewlistviewbutton2) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton2.style.display = 'none'
     
-    // }
-    // if (hidegidvewlistviewbutton) {
-    // console.log("enter here .....................")
-    // hidegidvewlistviewbutton.style.display = 'none'
+//     // }
+//     // if (hidegidvewlistviewbutton) {
+//     // console.log("enter here .....................")
+//     // hidegidvewlistviewbutton.style.display = 'none'
 
-    // }
-    // End
-    const currentUser = await sp.web.currentUser();
-    const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
-    const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
-    const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
-    const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
-    console.log(`User is a member of ${currentEntity}_Deligation group`,isMemberOfDeligation);
-    console.log(`User is a member of ${currentEntity}_Admin group`,isMemberOfGroup);
-    console.log(`User is a member of ${currentEntity}_DMSSuperAdmin group`,isMemberOfSuperAdmin);
+//     // }
+//     // End
+//     const currentUser = await sp.web.currentUser();
+//     const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+//     const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+//     const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+//     const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+//     console.log(`User is a member of ${currentEntity}_Deligation group`,isMemberOfDeligation);
+//     console.log(`User is a member of ${currentEntity}_Admin group`,isMemberOfGroup);
+//     console.log(`User is a member of ${currentEntity}_DMSSuperAdmin group`,isMemberOfSuperAdmin);
 
-    const CreateFolder=document.getElementById("CreateFolder")
-    const createFileButton=document.getElementById("createFileButton")
-    if(isMemberOfSuperAdmin || isMemberOfGroup){
-      console.log(`Current User is  admin or super admin`);
-      IsFolderDeligationUser=false;
-      if(createFileButton){
-        createFileButton.style.display=  "block";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="block";
-      }
-    }
-    else if(userPermissions.hasFullControl){
-      console.log(`Current User has full control on the library/Folder and user does not belong to admin or super admin group`);
-      if(createFileButton){
-        createFileButton.style.display=  "block";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="block";
-      }
+//     const CreateFolder=document.getElementById("CreateFolder")
+//     const createFileButton=document.getElementById("createFileButton")
+//     if(isMemberOfSuperAdmin || isMemberOfGroup){
+//       console.log(`Current User is  admin or super admin`);
+//       IsFolderDeligationUser=false;
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
+//     }
+//     else if(userPermissions.hasFullControl){
+//       console.log(`Current User has full control on the library/Folder and user does not belong to admin or super admin group`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
 
-      if(isMemberOfDeligation){
-        IsFolderDeligationUser=true;
-      }else{
-        IsFolderDeligationUser=false;
-      }
-    }else if(userPermissions.hasContribute || userPermissions.hasEdit){
-      console.log(`Current User has Contribute/Edit permission on the library/Folder`);
-      if(createFileButton){
-        createFileButton.style.display=  "block";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="none";
-      }
+//       if(isMemberOfDeligation){
+//         IsFolderDeligationUser=true;
+//       }else{
+//         IsFolderDeligationUser=false;
+//       }
+//     }else if(userPermissions.hasContribute || userPermissions.hasEdit){
+//       console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }
 
-      if(isMemberOfDeligation){
-        IsFolderDeligationUser=true;
-        CreateFolder.style.display="block";
-      }else{
-        IsFolderDeligationUser=false;
-        CreateFolder.style.display="none";
-      }
-    }else if(isMemberOfDeligation){
-      IsFolderDeligationUser=true;
-      console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
-      if(createFileButton){
-        createFileButton.style.display=  "block";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="block";
-      }
-    }
-    else{
-      console.log(`Current User has no permission on the library/Folder`);
-      if(createFileButton){
-        createFileButton.style.display=  "none";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="none";
-      }
-    }
-    ismyrequordoclibforfilepreview = "getdoclibdata"
-    // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
-    updateBreadcrumb(FolderPath);
-      const container = document.getElementById("files-container");
-      container.innerHTML = "";
-      const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-      const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-      if (hidegidvewlistviewbutton2) {
-        console.log("enter here .....................")
-        hidegidvewlistviewbutton2.style.display = 'none'
+//       if(isMemberOfDeligation){
+//         IsFolderDeligationUser=true;
+//         CreateFolder.style.display="block";
+//       }else{
+//         IsFolderDeligationUser=false;
+//         CreateFolder.style.display="none";
+//       }
+//     }else if(isMemberOfDeligation){
+//       IsFolderDeligationUser=true;
+//       console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
+//     }
+//     else{
+//       console.log(`Current User has no permission on the library/Folder`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "none";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }
+//     }
+//     ismyrequordoclibforfilepreview = "getdoclibdata"
+//     // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+//     updateBreadcrumb(FolderPath);
+//       const container = document.getElementById("files-container");
+//       container.innerHTML = "";
+//       const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//       const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//       if (hidegidvewlistviewbutton2) {
+//         console.log("enter here .....................")
+//         hidegidvewlistviewbutton2.style.display = 'none'
       
-      }
-      if (hidegidvewlistviewbutton) {
-      console.log("enter here .....................")
-      hidegidvewlistviewbutton.style.display = 'none'
+//       }
+//       if (hidegidvewlistviewbutton) {
+//       console.log("enter here .....................")
+//       hidegidvewlistviewbutton.style.display = 'none'
   
-      }
-      if(files.length === 0){
-        // console.log("no file found");
+//       }
+//       if(files.length === 0){
+//         // console.log("no file found");
+//         const container = document.getElementById("files-container");
+//         container.innerHTML = "";
+        
+//         // Create a message element
+//         const noFileMessage = document.createElement("p");
+//         noFileMessage.textContent = "No files found.";
+//         noFileMessage.style.color = "gray"; 
+//         noFileMessage.style.fontSize = "16px"; 
+//         noFileMessage.style.textAlign = "center";
+
+//         // Append the message to the container
+//         container.appendChild(noFileMessage);
+
+//       }
+//        // this is search result when user search in document library or folder 
+// if (searchText?.value && typeof searchText.value === "string" && searchText.value.trim() !== "") {
+//   files = files.filter((file: any) =>
+//     file.Name?.toLowerCase().includes(searchText.value.toLowerCase())
+//   );
+// }
+
+
+//       files.forEach(async(file:any) => {
+//             const isFavourite = favouriteMap.get(file.UniqueId) || 0;
+//             const favouriteText = isFavourite ? "Unmark as Favourite" : "Mark as Favourite";
+       
+//             // Set display properties based on favorite status
+//             const displayPropertyforFillFavourite = isFavourite ? "block" : "none";
+//             const displayPropertyforUnFillFavourite = isFavourite ? "none" : "block";
+            
+//             if(file.ListItemAllFields.IsDeleted === null){
+//                 if(file.ListItemAllFields.Status !== "Pending"){
+//                   if(file.ListItemAllFields.Status !== "Rejected"){
+//                   let permission=file.ListItemAllFields.Status; 
+//                   const {fileIcon} = getFileIcon(file.Name);
+//                   const card=createFileCardForDocumentLibrary(file,fileIcon,siteID,false,docLibName,displayPropertyforUnFillFavourite,displayPropertyforFillFavourite,favouriteText,permission,FolderPath,);
+//                   container.appendChild(card);
+//                 }
+//               }
+//               }
+//       });
+//     } catch (error) {
+//       const CreateFolder=document.getElementById("CreateFolder")
+//       const createFileButton=document.getElementById("createFileButton")
+//       if(createFileButton){
+//         createFileButton.style.display=  "none";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }  
+//       console.error("Error fetching Doclib data:", error);
+//     }
+//     }else{
+      
+//     const noFileMessage = document.createElement("p");
+  
+//     console.log('path   inside getdoclib', FolderPath)
+//     console.log('SiteID :    ', siteID)
+//     console.log('docLibName :    ', docLibName);
+//     console.log('currentEntity :    ', currentEntity);
+
+//     // // Hide the list and grid view start
+//     // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//     // if (hidegidvewlistviewbutton2) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton2.style.display = 'none'
+    
+//     // }
+//     // if (hidegidvewlistviewbutton) {
+//     // console.log("enter here .....................")
+//     // hidegidvewlistviewbutton.style.display = 'none'
+
+//     // }
+//     // // End
+//     // Extract the current entity from url
+//     const segments = FolderPath?.split('/');
+//     const currentSubsite = segments[3]; 
+//     console.log("segments",segments);
+//     console.log("Inside get doclib current entity",currentSubsite);
+//     console.log("Devision",currentDevision);
+//     console.log("Department",currentDepartment);
+//     // set current entity ,current document library and folder name
+//     const folderData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`FolderPath eq '${FolderPath}'`)();
+//     console.log("folderData to check folder or library",folderData);
+//    // here we add this becuase if entity is external then is should for External use
+//    IsExternal=folderData[0].External
+//     const folName = segments[segments.length - 1];
+//     const testidsub = await sp.site.openWebById(siteID);
+//     let library;
+//     if(folderData[0].IsLibrary === true){
+//       console.log("its document libray",folName)
+//       library = testidsub.web.getList(`${FolderPath}`);
+//       currentFolder='';
+//     }else{
+//       console.log("its folder",folName)
+//       currentFolder=folName
+//       // alert( FolderPath + "FolderPath in nonprocess")
+//       const library1 = testidsub.web.getFolderByServerRelativePath(`${FolderPath}`);
+//       library=await library1.getItem()
+//     }
+//     currentEntity=currentSubsite;
+//     currentDocumentLibrary=docLibName;
+//     // Update the url  start
+//     if(currentDevision !== ""){
+//       console.log("Devision present",currentDevision);
+//       if(currentDepartment !== ""){
+//         console.log("Department present",currentDepartment);
+//         const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}?${currentDepartment}`;
+//         window.history.pushState(null, '', newUrl);
+//       }else{
+//         const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}`;
+//         window.history.pushState(null, '', newUrl);
+//       }
+//     }else{
+//       const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}`;
+//       window.history.pushState(null, '', newUrl);
+//     }
+    
+//     // end
+
+
+//     // const testidsub = await sp.site.openWebById(siteID);
+//     let files:any = [];
+//     let batchSize = 5000;
+//     let nextLink = null;
+//     let hasMoreItems = true;
+//     currentsiteID=siteID;
+//     currentfolderpath=FolderPath;
+//     const container = document.getElementById("files-container");
+ 
+//     container.classList.remove('hidemydatacards')
+//     container.innerHTML = "";
+//     console.log("folderpath:", FolderPath);
+//     try {
+//       while (hasMoreItems) {
+//         let response;
+//         if (nextLink) {
+//           response = await sp.web(nextLink);
+//         } else {
+//           try {
+//             response = await testidsub.web
+//               .getFolderByServerRelativePath(FolderPath)
+//               .files.select(
+//                 "Name",
+//                 "Length",
+//                 "ServerRelativeUrl",
+//                 "UniqueId",
+//                 "MajorVersion",
+//                 "ListItemAllFields/Status",
+//                 "ListItemAllFields/IsDeleted"
+//               )
+//               .expand("ListItemAllFields")
+//               .orderBy("ListItemAllFields/Modified", false)
+//               .filter(`ListItemAllFields/IsDeleted eq ${null} and ListItemAllFields/Status ne 'Pending'`)
+//               .top(batchSize)();
+//             myfolderdata = response
+//             console.log(response , "response")
+//           } catch (error) {
+//             const container = document.getElementById("files-container");
+//             noFileMessage.textContent = "No files found.";
+//             noFileMessage.style.color = "gray"; 
+//             noFileMessage.style.fontSize = "16px"; 
+//             noFileMessage.style.textAlign = "center";
+//             const CreateFolder=document.getElementById("CreateFolder")
+//             const createFileButton=document.getElementById("createFileButton")
+//             if(createFileButton){
+//               createFileButton.style.display=  "none";
+//             }
+//             if(CreateFolder){
+//               CreateFolder.style.display="none";
+//             }
+//             // Append the message to the container
+//             container.appendChild(noFileMessage);
+//             console.error("Error fetching files:", error);
+//           }
+         
+//         }
+//         // Add the current batch of files to the files array
+//         files = [...files, ...response as IFileInfo[]];
+//         // Check if there is a nextLink for more items
+//         if ("@odata.nextLink" in response) {
+//           nextLink = response["@odata.nextLink"];
+//         } else {
+//           hasMoreItems = false; // No more items, exit loop
+//         }
+//       }
+//       console.log("All files fetched:", files);
+
+//       // Get the details of the users permission.
+//       // start
+//       // const library = testidsub.web.lists.getByTitle(docLibName);
+//       // const library = testidsub.web.getList(`${FolderPath}`);
+//       const permissions = await library.getCurrentUserEffectivePermissions();
+//       // console.log("permissions",permissions);
+       
+//       // Check for all permissions
+//     //   const userPermissions = {
+//     //     canViewPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages),
+//     //     canView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+//     //     canEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+//     //     canAdd: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems),          
+//     //     canFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask),
+//     //     canFullControl1: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//     //     canDelete: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+//     //     canApprove: testidsub.web.hasPermissions(permissions, PermissionKind.ApproveItems),
+//     //     canOpen: testidsub.web.hasPermissions(permissions, PermissionKind.OpenItems),
+//     //     canViewVersions: testidsub.web.hasPermissions(permissions, PermissionKind.ViewVersions),
+//     //     canDeleteVersions: testidsub.web.hasPermissions(permissions, PermissionKind.DeleteVersions),
+//     //     canManagePermissions: testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//     //     canViewFormPages: testidsub.web.hasPermissions(permissions, PermissionKind.ViewFormPages),
+//     //     canEditMyUserInfo: testidsub.web.hasPermissions(permissions, PermissionKind.EditMyUserInfo)
+//     // };
+//     const userPermissions = {
+//       hasFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask) || testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+//       hasContribute: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems) &&
+//                      testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems) &&
+//                      testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+//       hasEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+//       // hasEdit1: testidsub.web.hasPermissions(permissions, PermissionKind.),
+//       hasRead: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+//       hasView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages)
+//     };
+//     console.log("userPermissions",userPermissions);
+//     // End
+
+//     // Belong to admin or not start
+//     // Toggle the createFile and createFolder button based on the permission
+//     // let permission:string;
+//     // const CreateFolder=document.getElementById("CreateFolder")
+//     // const createFileButton=document.getElementById("createFileButton")
+//     // if(userPermissions.hasFullControl){
+//     //   console.log(`Current User has full control on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "block";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="block";
+//     //   }
+//     // }else if(userPermissions.hasContribute || userPermissions.hasEdit){
+//     //   console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "block";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="none";
+//     //   }
+//     // }else{
+//     //   console.log(`Current User has no permission on the library/Folder`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display=  "none";
+//     //   }
+//     //   if(CreateFolder){
+//     //     CreateFolder.style.display="none";
+//     //   }
+//     // }
+//     // Below code check the user belong to which group
+//     // try {
+//     //   const currentUser = await sp.web.currentUser();
+//     //   const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+//     //   const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+//     //   const isMemberOfContribute = userGroups.some(group => group.Title === `${currentEntity}_Contribute`);
+//     //   const isMemberOfInitiator = userGroups.some(group => group.Title === `${currentEntity}_Initiator`);
+//     //   const isMemberOfRead = userGroups.some(group => group.Title === `${currentEntity}_Read`);
+//     //   const isMemberOfView = userGroups.some(group => group.Title === `${currentEntity}_View`);
+//     //   const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+//     //   console.log("isMemberOfSuperAdmin",isMemberOfSuperAdmin);
+//     //   console.log("isMemberOfContribute",isMemberOfContribute);
+//     //   console.log("isMemberOfInitiator",isMemberOfInitiator);
+//     //   console.log("isMemberOfRead",isMemberOfRead);
+//     //   console.log("isMemberOfView",isMemberOfView);
+//     //   console.log(`Is member of ${currentEntity}_Admin:`, isMemberOfGroup);
+//     //   // console.log(`User is a member of the group: ${currentEntity}_Admin`);
+//     //   if (isMemberOfGroup || isMemberOfSuperAdmin) {
+//     //     console.log(`User is a member of the group: ${currentEntity}_Admin`);
+//     //     if(createFileButton){
+//     //       createFileButton.style.display=  "block";
+//     //     }
+//     //     if(createFileButton2){
+//     //     createFileButton2.style.display="block";
+//     //     }
+//     //  }else if(isMemberOfContribute || isMemberOfInitiator || isMemberOfRead){
+//     //       if(createFileButton){
+//     //         createFileButton.style.display=  "block";
+//     //       }
+//     //       if(createFileButton2){
+//     //         createFileButton2.style.display="none";
+//     //         }
+//     //  }else {
+//     //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display="none";
+//     //   }
+//     //   if(createFileButton2){
+//     //     createFileButton2.style.display="none";
+//     //   }
+//     //  }
+//     // } catch (error) {
+//     //   console.log(`User is not a member of the group: ${currentEntity}_Admin`);
+//     //   if(createFileButton){
+//     //     createFileButton.style.display="none";
+//     //   }
+//     //   if(createFileButton2){
+//     //     createFileButton2.style.display="none";
+//     //   }
+ 
+     
+//     // }
+//     // End
+//       const DMSEntityFileMasterList=`DMS${currentEntity}FileMaster`;
+//       console.log(DMSEntityFileMasterList);
+      
+//       const filesData = await sp.web.lists
+//       .getByTitle(`${DMSEntityFileMasterList}`)
+//       .items.select("FileUID","IsFavourite")
+//       .filter(
+//         `IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`
+//       )();
+   
+//       // Create a map for quick lookup of IsFavourite status by FileUID
+//       const favouriteMap = new Map(
+//         filesData.map((item: any) => [item.FileUID, item.IsFavourite])
+//       );
+    
+
+//       // console.log("FavouriteMap",favouriteMap)
+//       console.log("Files", filesData);
+//       // Add breadCrumb start
+//       // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+//       // End
+//       // const container = document.getElementById("files-container");
+//       // container.innerHTML = "";
+//       setdisplayuploadfileandcreatefolder(true)
+//       // Hide the list and grid view start
+//     // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     // const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//     // if (hidegidvewlistviewbutton2) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton2.style.display = 'none'
+    
+//     // }
+//     // if (hidegidvewlistviewbutton) {
+//     // console.log("enter here .....................")
+//     // hidegidvewlistviewbutton.style.display = 'none'
+
+//     // }
+//     // End
+//     const currentUser = await sp.web.currentUser();
+//     const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+//     const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+//     const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+//     const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+//     console.log(`User is a member of ${currentEntity}_Deligation group`,isMemberOfDeligation);
+//     console.log(`User is a member of ${currentEntity}_Admin group`,isMemberOfGroup);
+//     console.log(`User is a member of ${currentEntity}_DMSSuperAdmin group`,isMemberOfSuperAdmin);
+
+//     const CreateFolder=document.getElementById("CreateFolder")
+//     const createFileButton=document.getElementById("createFileButton")
+//     if(isMemberOfSuperAdmin || isMemberOfGroup){
+//       console.log(`Current User is  admin or super admin`);
+//       IsFolderDeligationUser=false;
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
+//     }
+//     else if(userPermissions.hasFullControl){
+//       console.log(`Current User has full control on the library/Folder and user does not belong to admin or super admin group`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
+
+//       if(isMemberOfDeligation){
+//         IsFolderDeligationUser=true;
+//       }else{
+//         IsFolderDeligationUser=false;
+//       }
+//     }else if(userPermissions.hasContribute || userPermissions.hasEdit){
+//       console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }
+
+//       if(isMemberOfDeligation){
+//         IsFolderDeligationUser=true;
+//         CreateFolder.style.display="block";
+//       }else{
+//         IsFolderDeligationUser=false;
+//         CreateFolder.style.display="none";
+//       }
+//     }else if(isMemberOfDeligation){
+//       IsFolderDeligationUser=true;
+//       console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "block";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="block";
+//       }
+//     }
+//     else{
+//       console.log(`Current User has no permission on the library/Folder`);
+//       if(createFileButton){
+//         createFileButton.style.display=  "none";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }
+//     }
+//     ismyrequordoclibforfilepreview = "getdoclibdata"
+//     // handleNavigation(currentSubsite,currentDevision , currentDepartment ,  currentDocumentLibrary, currentFolder);
+//     updateBreadcrumb(FolderPath);
+//       const container = document.getElementById("files-container");
+//       container.innerHTML = "";
+//       const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//       const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//       if (hidegidvewlistviewbutton2) {
+//         console.log("enter here .....................")
+//         hidegidvewlistviewbutton2.style.display = 'none'
+      
+//       }
+//       if (hidegidvewlistviewbutton) {
+//       console.log("enter here .....................")
+//       hidegidvewlistviewbutton.style.display = 'none'
+  
+//       }
+//       if(files.length === 0){
+//         // console.log("no file found");
+//         const container = document.getElementById("files-container");
+//         container.innerHTML = "";
+        
+//         // Create a message element
+//         const noFileMessage = document.createElement("p");
+//         noFileMessage.textContent = "No files found.";
+//         noFileMessage.style.color = "gray"; 
+//         noFileMessage.style.fontSize = "16px"; 
+//         noFileMessage.style.textAlign = "center";
+
+//         // Append the message to the container
+//         container.appendChild(noFileMessage);
+
+//       }
+//       // this is search result when user search in document library or folder 
+//       if (searchText?.value && typeof searchText.value === "string" && searchText.value.trim() !== "") {
+//   files = files.filter((file: any) =>
+//     file.Name?.toLowerCase().includes(searchText.value.toLowerCase())
+//   );
+// }
+//       files.forEach(async(file:any) => {
+//             const isFavourite = favouriteMap.get(file.UniqueId) || 0;
+//             const favouriteText = isFavourite ? "Unmark as Favourite" : "Mark as Favourite";
+       
+//             // Set display properties based on favorite status
+//             const displayPropertyforFillFavourite = isFavourite ? "block" : "none";
+//             const displayPropertyforUnFillFavourite = isFavourite ? "none" : "block";
+            
+//             if(file.ListItemAllFields.IsDeleted === null){
+//                 if(file.ListItemAllFields.Status !== "Pending"){
+//                   if(file.ListItemAllFields.Status !== "Rejected"){
+//                   let permission=file.ListItemAllFields.Status; 
+//                   const {fileIcon} = getFileIcon(file.Name);
+//                   const card=createFileCardForDocumentLibrary(file,fileIcon,siteID,false,docLibName,displayPropertyforUnFillFavourite,displayPropertyforFillFavourite,favouriteText,permission,FolderPath,);
+//                   container.appendChild(card);
+//                 }
+//               }
+//               }
+//       });
+//     } catch (error) {
+//       const CreateFolder=document.getElementById("CreateFolder")
+//       const createFileButton=document.getElementById("createFileButton")
+//       if(createFileButton){
+//         createFileButton.style.display=  "none";
+//       }
+//       if(CreateFolder){
+//         CreateFolder.style.display="none";
+//       }  
+//       console.error("Error fetching Doclib data:", error);
+//     }
+//     }
+
+    
+//   };
+
+// pagination
+const getdoclibdata = async (FolderPath: any, siteID: any, docLibName: any, searchText: any = null) => {
+    console.log(searchText.value + "searchText text")
+   routeToDiffSideBar="documentLibrary";
+    const site = await sp.site.select("Url")();
+    const fullUrl = site.Url;
+    const relativeUrl = new URL(fullUrl).pathname;
+    console.log(relativeUrl + "relativeUrl");
+    setlistorgriddata('');
+
+    // Pagination variables
+    const itemsPerPage = 12; // Number of items per page
+    let currentPage = 1;
+    let totalItems = 0;
+    let paginatedFiles: any[] = [];
+    let favouriteMap: Map<string, boolean>;
+
+    // Function to render pagination controls
+    // const renderPagination = (totalItems: number) => {
+    //     const container = document.getElementById("files-container");
+    //     const paginationContainer = document.createElement("div");
+    //     paginationContainer.className = "pagination-container";
+    //     paginationContainer.style.display = "flex";
+    //     paginationContainer.style.justifyContent = "center";
+    //     paginationContainer.style.marginTop = "20px";
+        
+    //     // Clear existing pagination if any
+    //     const existingPagination = container.querySelector(".pagination-container");
+    //     if (existingPagination) {
+    //         container.removeChild(existingPagination);
+    //     }
+
+    //     const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    //     if (totalPages <= 1) return; // Don't show pagination if only one page
+
+    //     // Previous button
+    //     const prevButton = document.createElement("button");
+    //     prevButton.textContent = "Previous";
+    //     prevButton.disabled = currentPage === 1;
+    //     prevButton.onclick = () => {
+    //         if (currentPage > 1) {
+    //             currentPage--;
+    //             displayPaginatedFiles();
+    //         }
+    //     };
+    //     paginationContainer.appendChild(prevButton);
+
+    //     // Page numbers
+    //     for (let i = 1; i <= totalPages; i++) {
+    //         const pageButton = document.createElement("button");
+    //         pageButton.textContent = i.toString();
+    //         pageButton.style.margin = "0 5px";
+    //         pageButton.disabled = i === currentPage;
+    //         pageButton.onclick = () => {
+    //             currentPage = i;
+    //             displayPaginatedFiles();
+    //         };
+    //         paginationContainer.appendChild(pageButton);
+    //     }
+
+    //     // Next button
+    //     const nextButton = document.createElement("button");
+    //     nextButton.textContent = "Next";
+    //     nextButton.disabled = currentPage === totalPages;
+    //     nextButton.onclick = () => {
+    //         if (currentPage < totalPages) {
+    //             currentPage++;
+    //             displayPaginatedFiles();
+    //         }
+    //     };
+    //     paginationContainer.appendChild(nextButton);
+
+    //     container.appendChild(paginationContainer);
+    // };
+const renderPagination = (totalItems: number) => {
+    const container = document.getElementById("files-container");
+
+    // Remove existing pagination if any
+    const existingPagination = container.querySelector(".pagination-container");
+    if (existingPagination) {
+        container.removeChild(existingPagination);
+    }
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) return;
+
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination-container";
+    paginationContainer.style.display = "flex";
+    paginationContainer.style.flexDirection = "row"; // as requested
+    paginationContainer.style.justifyContent = "space-between";
+    paginationContainer.style.alignItems = "center";
+    paginationContainer.style.width = "100%";
+    paginationContainer.style.marginTop = "20px";
+    paginationContainer.style.padding = "0 10px";
+
+    const buttonsWrapper = document.createElement("div");
+    buttonsWrapper.style.display = "flex";
+    buttonsWrapper.style.gap = "12px";
+
+    const styleButton = (button: HTMLButtonElement) => {
+        button.style.border = "none";
+        button.style.backgroundColor = "#1eb0e5";
+        button.style.color = "#fff";
+        button.style.borderRadius = "4px";
+        button.style.fontSize = "14px";
+        button.style.padding = "6px 14px";
+        button.style.cursor = "pointer";
+    };
+
+    const disableButtonStyle = (button: HTMLButtonElement, disabled: boolean) => {
+        button.disabled = disabled;
+        button.style.opacity = disabled ? "0.6" : "1";
+        button.style.cursor = disabled ? "not-allowed" : "pointer";
+    };
+
+    // Previous Button
+    const prevButton = document.createElement("button");
+    prevButton.textContent = "Previous";
+    prevButton.style.marginRight = "66px";
+    styleButton(prevButton);
+    prevButton.style.width = "73px";
+    disableButtonStyle(prevButton, currentPage === 1);
+    prevButton.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayPaginatedFiles();
+        }
+    };
+    buttonsWrapper.appendChild(prevButton);
+
+    // Next Button
+    const nextButton = document.createElement("button");
+    nextButton.textContent = "Next";
+    styleButton(nextButton);
+    disableButtonStyle(nextButton, currentPage === totalPages);
+    nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayPaginatedFiles();
+        }
+    };
+    buttonsWrapper.appendChild(nextButton);
+
+    // Page info
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageInfo.style.fontSize = "14px";
+    pageInfo.style.color = "#333";
+    pageInfo.style.marginLeft = "auto";
+    pageInfo.style.marginTop = "58px";
+
+    paginationContainer.appendChild(buttonsWrapper);
+    paginationContainer.appendChild(pageInfo);
+    container.appendChild(paginationContainer);
+};
+
+
+
+    // Function to display paginated files
+    const displayPaginatedFiles = () => {
         const container = document.getElementById("files-container");
         container.innerHTML = "";
-        
-        // Create a message element
-        const noFileMessage = document.createElement("p");
-        noFileMessage.textContent = "No files found.";
-        noFileMessage.style.color = "gray"; 
-        noFileMessage.style.fontSize = "16px"; 
-        noFileMessage.style.textAlign = "center";
 
-        // Append the message to the container
-        container.appendChild(noFileMessage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        const currentPageFiles = paginatedFiles.slice(startIndex, endIndex);
 
-      }
-      files.forEach(async(file:any) => {
-            const isFavourite = favouriteMap.get(file.UniqueId) || 0;
-            const favouriteText = isFavourite ? "Unmark as Favourite" : "Mark as Favourite";
-       
-            // Set display properties based on favorite status
-            const displayPropertyforFillFavourite = isFavourite ? "block" : "none";
-            const displayPropertyforUnFillFavourite = isFavourite ? "none" : "block";
-            
-            if(file.ListItemAllFields.IsDeleted === null){
-                if(file.ListItemAllFields.Status !== "Pending"){
-                  if(file.ListItemAllFields.Status !== "Rejected"){
-                  let permission=file.ListItemAllFields.Status; 
-                  const {fileIcon} = getFileIcon(file.Name);
-                  const card=createFileCardForDocumentLibrary(file,fileIcon,siteID,false,docLibName,displayPropertyforUnFillFavourite,displayPropertyforFillFavourite,favouriteText,permission,FolderPath,);
-                  container.appendChild(card);
+        if (currentPageFiles.length === 0) {
+            const noFileMessage = document.createElement("p");
+            noFileMessage.textContent = "No files found.";
+            noFileMessage.style.color = "gray";
+            noFileMessage.style.fontSize = "16px";
+            noFileMessage.style.textAlign = "center";
+            container.appendChild(noFileMessage);
+        } else {
+            currentPageFiles.forEach((file: any) => {
+                const isFavourite = favouriteMap.get(file.UniqueId) || 0;
+                const favouriteText = isFavourite ? "Unmark as Favourite" : "Mark as Favourite";
+                const displayPropertyforFillFavourite = isFavourite ? "block" : "none";
+                const displayPropertyforUnFillFavourite = isFavourite ? "none" : "block";
+                
+                if (file.ListItemAllFields.IsDeleted === null) {
+                    if (file.ListItemAllFields.Status !== "Pending") {
+                        if (file.ListItemAllFields.Status !== "Rejected") {
+                            let permission = file.ListItemAllFields.Status;
+                            const { fileIcon } = getFileIcon(file.Name);
+                            const card = createFileCardForDocumentLibrary(
+                                file, fileIcon, siteID, !1, docLibName,
+                                displayPropertyforUnFillFavourite, displayPropertyforFillFavourite,
+                                favouriteText, permission, FolderPath
+                            );
+                            container.appendChild(card);
+                        }
+                    }
                 }
-              }
-              }
-      });
-    } catch (error) {
-      const CreateFolder=document.getElementById("CreateFolder")
-      const createFileButton=document.getElementById("createFileButton")
-      if(createFileButton){
-        createFileButton.style.display=  "none";
-      }
-      if(CreateFolder){
-        CreateFolder.style.display="none";
-      }  
-      console.error("Error fetching Doclib data:", error);
+            });
+        }
+
+        renderPagination(totalItems);
+    };
+
+    if (isprocessfolder === !0) {
+        const testidsub = await sp.site.openWebById(siteID);
+        const noFileMessage = document.createElement("p");
+        console.log('path   inside getdoclib', FolderPath)
+        let files: any = [];
+        let batchSize = 5000;
+        let nextLink = null;
+        let hasMoreItems = !0;
+        currentsiteID = siteID;
+        currentfolderpath = FolderPath;
+        folderpathbacktodmsfrompreviewisprocessfolder = ""
+        const container = document.getElementById("files-container");
+        container.classList.remove('hidemydatacards')
+        container.innerHTML = "";
+        console.log("folderpath:", FolderPath);
+        try {
+            while (hasMoreItems) {
+                let response;
+                if (nextLink) {
+                    response = await sp.web(nextLink)
+                } else {
+                    try {
+                        response = await testidsub.web.getFolderByServerRelativePath(FolderPath).files.select("Name", "Length", "ServerRelativeUrl", "UniqueId", "MajorVersion", "ListItemAllFields/Status", "ListItemAllFields/IsDeleted").expand("ListItemAllFields").orderBy("ListItemAllFields/Modified", !1).filter(`ListItemAllFields/IsDeleted eq ${null} and ListItemAllFields/Status ne 'Pending'`).top(batchSize)();
+                        myfolderdata = response
+                        console.log(response, "response")
+                    } catch (error) {
+                        const container = document.getElementById("files-container");
+                        noFileMessage.textContent = "No files found.";
+                        noFileMessage.style.color = "gray";
+                        noFileMessage.style.fontSize = "16px";
+                        noFileMessage.style.textAlign = "center";
+                        const CreateFolder = document.getElementById("CreateFolder")
+                        const createFileButton = document.getElementById("createFileButton")
+                        if (createFileButton) { createFileButton.style.display = "none" }
+                        if (CreateFolder) { CreateFolder.style.display = "none" }
+                        container.appendChild(noFileMessage);
+                        console.error("Error fetching files:", error)
+                    }
+                }
+                files = [...files, ...response as IFileInfo[]];
+                if ("@odata.nextLink" in response) {
+                    nextLink = response["@odata.nextLink"]
+                } else {
+                    hasMoreItems = !1
+                }
+            }
+            console.log("All files fetched:", files);
+            let library
+            const library1 = testidsub.web.getFolderByServerRelativePath(FolderPath);
+            debugger;
+            library = await library1.getItem()
+            const permissions = await library.getCurrentUserEffectivePermissions();
+            const userPermissions = {
+                hasFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask) || testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+                hasContribute: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems) && testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems) && testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+                hasEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+                hasRead: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+                hasView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages)
+            };
+            console.log("userPermissions", userPermissions);
+            const DMSEntityFileMasterList = `DMS${currentEntity}FileMaster`;
+            console.log(DMSEntityFileMasterList);
+            const filesData = await sp.web.lists.getByTitle(`${DMSEntityFileMasterList}`).items.select("FileUID", "IsFavourite").filter(`IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`)();
+            favouriteMap = new Map(filesData.map((item: any) => [item.FileUID, item.IsFavourite]));
+            console.log("Files", filesData);
+            setdisplayuploadfileandcreatefolder(!0)
+            const currentUser = await sp.web.currentUser();
+            const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+            const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+            const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+            const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+            console.log(`User is a member of ${currentEntity}_Deligation group`, isMemberOfDeligation);
+            console.log(`User is a member of ${currentEntity}_Admin group`, isMemberOfGroup);
+            console.log(`User is a member of ${currentEntity}_DMSSuperAdmin group`, isMemberOfSuperAdmin);
+            const CreateFolder = document.getElementById("CreateFolder")
+            const createFileButton = document.getElementById("createFileButton")
+            if (isMemberOfSuperAdmin || isMemberOfGroup) {
+                console.log(`Current User is  admin or super admin`);
+                IsFolderDeligationUser = !1;
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+            } else if (userPermissions.hasFullControl) {
+                console.log(`Current User has full control on the library/Folder and user does not belong to admin or super admin group`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+                if (isMemberOfDeligation) { IsFolderDeligationUser = !0 } else { IsFolderDeligationUser = !1 }
+            } else if (userPermissions.hasContribute || userPermissions.hasEdit) {
+                console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "none" }
+                if (isMemberOfDeligation) {
+                    IsFolderDeligationUser = !0;
+                    CreateFolder.style.display = "block"
+                } else {
+                    IsFolderDeligationUser = !1;
+                    CreateFolder.style.display = "none"
+                }
+            } else if (isMemberOfDeligation) {
+                IsFolderDeligationUser = !0;
+                console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+            } else {
+                console.log(`Current User has no permission on the library/Folder`);
+                if (createFileButton) { createFileButton.style.display = "none" }
+                if (CreateFolder) { CreateFolder.style.display = "none" }
+            }
+            ismyrequordoclibforfilepreview = "getdoclibdata"
+            updateBreadcrumb(FolderPath);
+            const container = document.getElementById("files-container");
+            container.innerHTML = "";
+            const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2")
+            const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+            if (hidegidvewlistviewbutton2) {
+                console.log("enter here .....................")
+                hidegidvewlistviewbutton2.style.display = 'none'
+            }
+            if (hidegidvewlistviewbutton) {
+                console.log("enter here .....................")
+                hidegidvewlistviewbutton.style.display = 'none'
+            }
+
+            // Apply search filter if needed
+            if (searchText?.value && typeof searchText.value === "string" && searchText.value.trim() !== "") {
+                files = files.filter((file: any) => file.Name?.toLowerCase().includes(searchText.value.toLowerCase()));
+            }
+
+            // Set up pagination
+            paginatedFiles = files;
+            totalItems = paginatedFiles.length;
+            currentPage = 1; // Reset to first page when new data loads
+            displayPaginatedFiles();
+
+        } catch (error) {
+            const CreateFolder = document.getElementById("CreateFolder")
+            const createFileButton = document.getElementById("createFileButton")
+            if (createFileButton) { createFileButton.style.display = "none" }
+            if (CreateFolder) { CreateFolder.style.display = "none" }
+            console.error("Error fetching Doclib data:", error)
+        }
+    } else {
+        const noFileMessage = document.createElement("p");
+        console.log('path   inside getdoclib', FolderPath)
+        console.log('SiteID :    ', siteID)
+        console.log('docLibName :    ', docLibName);
+        console.log('currentEntity :    ', currentEntity);
+        const segments = FolderPath?.split('/');
+        const currentSubsite = segments[3];
+        console.log("segments", segments);
+        console.log("Inside get doclib current entity", currentSubsite);
+        console.log("Devision", currentDevision);
+        console.log("Department", currentDepartment);
+        const folderData = await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`FolderPath eq '${FolderPath}'`)();
+        console.log("folderData to check folder or library", folderData);
+        IsExternal = folderData[0].External
+        const folName = segments[segments.length - 1];
+        const testidsub = await sp.site.openWebById(siteID);
+        let library;
+        if (folderData[0].IsLibrary === !0) {
+            console.log("its document libray", folName)
+            library = testidsub.web.getList(`${FolderPath}`);
+            currentFolder = ''
+        } else {
+            console.log("its folder", folName)
+            currentFolder = folName
+            const library1 = testidsub.web.getFolderByServerRelativePath(`${FolderPath}`);
+            library = await library1.getItem()
+        }
+        currentEntity = currentSubsite;
+        currentDocumentLibrary = docLibName;
+        if (currentDevision !== "") {
+            console.log("Devision present", currentDevision);
+            if (currentDepartment !== "") {
+                console.log("Department present", currentDepartment);
+                const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}?${currentDepartment}`;
+                window.history.pushState(null, '', newUrl)
+            } else {
+                const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}?${currentDevision}`;
+                window.history.pushState(null, '', newUrl)
+            }
+        } else {
+            const newUrl = `${window.location.origin}${window.location.pathname}?${FolderPath}?${docLibName}?${siteID}`;
+            window.history.pushState(null, '', newUrl)
+        }
+        let files: any = [];
+        let batchSize = 5000;
+        let nextLink = null;
+        let hasMoreItems = !0;
+        currentsiteID = siteID;
+        currentfolderpath = FolderPath;
+        const container = document.getElementById("files-container");
+        container.classList.remove('hidemydatacards')
+        container.innerHTML = "";
+        console.log("folderpath:", FolderPath);
+        try {
+            while (hasMoreItems) {
+                let response;
+                if (nextLink) {
+                    response = await sp.web(nextLink)
+                } else {
+                    try {
+                        response = await testidsub.web.getFolderByServerRelativePath(FolderPath).files.select("Name", "Length", "ServerRelativeUrl", "UniqueId", "MajorVersion", "ListItemAllFields/Status", "ListItemAllFields/IsDeleted").expand("ListItemAllFields").orderBy("ListItemAllFields/Modified", !1).filter(`ListItemAllFields/IsDeleted eq ${null} and ListItemAllFields/Status ne 'Pending'`).top(batchSize)();
+                        myfolderdata = response
+                        console.log(response, "response")
+                    } catch (error) {
+                        const container = document.getElementById("files-container");
+                        noFileMessage.textContent = "No files found.";
+                        noFileMessage.style.color = "gray";
+                        noFileMessage.style.fontSize = "16px";
+                        noFileMessage.style.textAlign = "center";
+                        const CreateFolder = document.getElementById("CreateFolder")
+                        const createFileButton = document.getElementById("createFileButton")
+                        if (createFileButton) { createFileButton.style.display = "none" }
+                        if (CreateFolder) { CreateFolder.style.display = "none" }
+                        container.appendChild(noFileMessage);
+                        console.error("Error fetching files:", error)
+                    }
+                }
+                files = [...files, ...response as IFileInfo[]];
+                if ("@odata.nextLink" in response) {
+                    nextLink = response["@odata.nextLink"]
+                } else {
+                    hasMoreItems = !1
+                }
+            }
+            console.log("All files fetched:", files);
+            const permissions = await library.getCurrentUserEffectivePermissions();
+            const userPermissions = {
+                hasFullControl: testidsub.web.hasPermissions(permissions, PermissionKind.FullMask) || testidsub.web.hasPermissions(permissions, PermissionKind.ManagePermissions),
+                hasContribute: testidsub.web.hasPermissions(permissions, PermissionKind.AddListItems) && testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems) && testidsub.web.hasPermissions(permissions, PermissionKind.DeleteListItems),
+                hasEdit: testidsub.web.hasPermissions(permissions, PermissionKind.EditListItems),
+                hasRead: testidsub.web.hasPermissions(permissions, PermissionKind.ViewListItems),
+                hasView: testidsub.web.hasPermissions(permissions, PermissionKind.ViewPages)
+            };
+            console.log("userPermissions", userPermissions);
+            const DMSEntityFileMasterList = `DMS${currentEntity}FileMaster`;
+            console.log(DMSEntityFileMasterList);
+            const filesData = await sp.web.lists.getByTitle(`${DMSEntityFileMasterList}`).items.select("FileUID", "IsFavourite").filter(`IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`)();
+            favouriteMap = new Map(filesData.map((item: any) => [item.FileUID, item.IsFavourite]));
+            console.log("Files", filesData);
+            setdisplayuploadfileandcreatefolder(!0)
+            const currentUser = await sp.web.currentUser();
+            const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+            const isMemberOfDeligation = userGroups.some(group => group.Title === `${currentEntity}_FolderDeligation`);
+            const isMemberOfGroup = userGroups.some(group => group.Title === `${currentEntity}_Admin`);
+            const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+            console.log(`User is a member of ${currentEntity}_Deligation group`, isMemberOfDeligation);
+            console.log(`User is a member of ${currentEntity}_Admin group`, isMemberOfGroup);
+            console.log(`User is a member of ${currentEntity}_DMSSuperAdmin group`, isMemberOfSuperAdmin);
+            const CreateFolder = document.getElementById("CreateFolder")
+            const createFileButton = document.getElementById("createFileButton")
+            if (isMemberOfSuperAdmin || isMemberOfGroup) {
+                console.log(`Current User is  admin or super admin`);
+                IsFolderDeligationUser = !1;
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+            } else if (userPermissions.hasFullControl) {
+                console.log(`Current User has full control on the library/Folder and user does not belong to admin or super admin group`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+                if (isMemberOfDeligation) { IsFolderDeligationUser = !0 } else { IsFolderDeligationUser = !1 }
+            } else if (userPermissions.hasContribute || userPermissions.hasEdit) {
+                console.log(`Current User has Contribute/Edit permission on the library/Folder`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "none" }
+                if (isMemberOfDeligation) {
+                    IsFolderDeligationUser = !0;
+                    CreateFolder.style.display = "block"
+                } else {
+                    IsFolderDeligationUser = !1;
+                    CreateFolder.style.display = "none"
+                }
+            } else if (isMemberOfDeligation) {
+                IsFolderDeligationUser = !0;
+                console.log(`User is a member of the group: ${currentEntity}_FolderDeligation`);
+                if (createFileButton) { createFileButton.style.display = "block" }
+                if (CreateFolder) { CreateFolder.style.display = "block" }
+            } else {
+                console.log(`Current User has no permission on the library/Folder`);
+                if (createFileButton) { createFileButton.style.display = "none" }
+                if (CreateFolder) { CreateFolder.style.display = "none" }
+            }
+            ismyrequordoclibforfilepreview = "getdoclibdata"
+            updateBreadcrumb(FolderPath);
+            const container = document.getElementById("files-container");
+            container.innerHTML = "";
+            const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2")
+            const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+            if (hidegidvewlistviewbutton2) {
+                console.log("enter here .....................")
+                hidegidvewlistviewbutton2.style.display = 'none'
+            }
+            if (hidegidvewlistviewbutton) {
+                console.log("enter here .....................")
+                hidegidvewlistviewbutton.style.display = 'none'
+            }
+
+            // Apply search filter if needed
+            if (searchText?.value && typeof searchText.value === "string" && searchText.value.trim() !== "") {
+                files = files.filter((file: any) => file.Name?.toLowerCase().includes(searchText.value.toLowerCase()));
+            }
+
+            // Set up pagination
+            paginatedFiles = files;
+            totalItems = paginatedFiles.length;
+            currentPage = 1; // Reset to first page when new data loads
+            displayPaginatedFiles();
+
+        } catch (error) {
+            const CreateFolder = document.getElementById("CreateFolder")
+            const createFileButton = document.getElementById("createFileButton")
+            if (createFileButton) { createFileButton.style.display = "none" }
+            if (CreateFolder) { CreateFolder.style.display = "none" }
+            console.error("Error fetching Doclib data:", error)
+        }
     }
-    
-  };
+};
+
+
+
   // const getdoclibdata = async (FolderPath: any , siteID:any , docLibName:any) => {
   //   console.log('path   ', FolderPath)
   //   console.log('SiteID :    ', siteID)
@@ -4231,6 +5447,8 @@ const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHa
       //         </li>
       //     `;
       // }
+ 
+      if( isprocessfolder === false ||  isprocessfolder === null ||  isprocessfolder === undefined){
       menu.innerHTML = `
         <ul>
           <li onclick="confirmDeleteFile('${file.UniqueId}', '${siteID}', '${IsHardDelete}', '${null}')">
@@ -4261,6 +5479,32 @@ const createFileCardForDocumentLibrary=(file:any,fileIcon:any,siteID:string,IsHa
               ` : ` `}
         </ul>
       `;
+      }else if(isprocessfolder === true){
+        menu.innerHTML = `
+        <ul>
+          <li onclick="confirmDeleteFile('${file.UniqueId}', '${siteID}', '${IsHardDelete}', '${null}')">
+                  <img src=${deleteIcon} alt="Delete"/>
+                  Delete
+          </li>
+      
+          <li onclick="PreviewFile('${file.ServerRelativeUrl}', '${siteID}' , '${docLibName}','${file.ListItemAllFields.Status}')">
+          <img src=${FilePreview} alt="Preview"/>
+                      Preview File
+          </li>
+     
+          <li onclick="shareFile('${file.UniqueId}','${siteID}','${FolderPath}','${file.Name}','DocumentLibrary','${file.MajorVersion}','${((file.Length as unknown as number) / (1024 * 1024)).toFixed(2)}','${file.ListItemAllFields.Status}','','${currentDocumentLibrary}')">
+          <img src=${ShareFile} alt="Share"/> Share
+          </li>
+            ${file.ListItemAllFields.Status === 'Auto Approved' ? `   
+               <li onclick="versionHistory('${file.Name}', '${file.ServerRelativeUrl}', '${siteID}' ,'DocumentLibrary','${file.UniqueId}')">
+                  <img src=${editIcon} alt="Preview"/>
+                    Version History
+               </li>
+              ` : ` `}
+        </ul>
+      `;
+      }
+       
       card.appendChild(menu);
       return card;  
 }
@@ -4437,11 +5681,15 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
   console.log("fileName",fileName)
   console.log("folderPath",folderPath)
   console.log("siteId",siteId)
+  console.log("flag",flag)
+  console.log("fileId",fileId)
   let filePath=""
   if(flag === "DocumentLibrary"){
     filePath=folderPath
+       
   }else{
     filePath=`${folderPath}/${fileName}`
+    
   }
  
   try {
@@ -4449,8 +5697,13 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
     // let filePath = '/sites/AlRostmani/TestHub/DL1/PermissonTest1.doc'
     // const siteid = "3f7babac-3bce-478c-aa2b-1f7df7ed177f"
     const testidsub2 = await sp.site.openWebById(siteId);
-
+   
       const file = testidsub2.web.getFileByServerRelativePath(filePath);
+    
+      if(!file) {
+        console.error("File not found at the specified path:", filePath);
+       
+      }
       const item = await file.getItem();  
       const itemDetails = await item.select("Editor/ID", "Editor/Title", "Editor/Id" ,"*").expand("Editor")()
 
@@ -4472,6 +5725,7 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
           "FileRef"
         )
         .expand("CreatedBy")();
+  
         console.log("historicalVersions[0] url",`${historicalVersions[0]["odata.id"].split('/_api/')[0]}/${historicalVersions[0].Url}`);
       // Fetch current version details
       const currentFileDetails = await file
@@ -4497,10 +5751,10 @@ window.versionHistory=async(fileName:string,folderPath:string,siteId:string,flag
         Size: currentFileDetails.Length,
         Url: filePath,
       };
- 
+  
       // Combine current version with historical versions
       const allVersions = [...historicalVersions, currentVersion];
- 
+
       console.log("All File Versions (Including Current):", allVersions);
 // Create the blurred overlay
 const blurOverlay = document.createElement("div");
@@ -5202,7 +6456,351 @@ document.body.appendChild(blurOverlay);
 
 
 //   };
-window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:string , filepreviewurl){
+function PreviewFileFromMail (path :any , SiteID:any , docLibName:any,status:string , filepreviewurl:any){
+
+  // alert("Preview File From Mail is not supported in this version. Please use the latest version of the application to access this feature.");
+  event.preventDefault()
+  event.stopPropagation()
+  const createpreviewdiv = document.createElement('div')
+  createpreviewdiv.style.display = 'grid'
+  const previewfileframe = document.createElement('iframe')
+  previewfileframe.id = 'filePreview'
+  previewfileframe.style.width = '96%'
+  previewfileframe.style.marginLeft = "4%"
+  previewfileframe.style.height = '500px'
+  const librarydiv= document.getElementById('files-container2')
+  const createbutton = document.createElement('button')
+  createbutton.textContent = 'Back To DMS';
+  console.log("enter here in preview : ",path)
+  const encodedFilePath = encodeURIComponent(path);
+  console.log(encodedFilePath, "encodedFilePath");
+
+  // Get the base site URL
+  const siteUrl = window.location.origin;
+  console.log(siteUrl, "siteUrl");
+   
+  console.log(path , ".....path")
+  // if( ismyrequordoclibforfilepreview === "myRequest" || ismyrequordoclibforfilepreview === "myFavourite" || ismyrequordoclibforfilepreview  === "sharewithme" || ismyrequordoclibforfilepreview  === "sharewithothers"){
+    const previewUrl = filepreviewurl
+   
+    console.log(previewUrl, "Generated preview URL");
+   
+    console.log("Generated Preview URL:", previewUrl);
+    if(previewUrl){
+      librarydiv.innerHTML = "";
+      previewfileframe.src = previewUrl;
+      previewfileframe.onload = () => {
+        console.log("Iframe has loaded");
+   
+        const checkAndHideButton = () => {
+          try {
+            const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+            if (iframeDocument) {
+              const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+              const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+              // const openInAppButton=iframeDocument.getElementById('openCommandGroup') as HTMLButtonElement;
+              // console.log("openInAppButton",openInAppButton);
+              if(excelToolbar){
+                excelToolbar.style.display= "none"
+              }
+              if (button) {
+              const hideclosebutton = iframeDocument.getElementById("closeCommand") as HTMLElement;
+              if(hideclosebutton){
+                hideclosebutton.style.display = "none";
+              }
+                console.log("Hiding the OneUpCommandBar element");
+                // button.style.display = "none";
+   
+   
+                // spinner.style.display = "none";
+                previewfileframe.style.display = "block";
+   
+   
+              } else {
+                console.log("OneUpCommandBar not found, rechecking...");
+              }
+             
+              const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+              if(helpbutton){
+                helpbutton.style.display = "none"
+              }
+            }
+          } catch (error) {
+            console.error("Error accessing iframe content:", error);
+          }
+   
+   
+          setTimeout(checkAndHideButton, 100);
+        };
+   
+   
+        checkAndHideButton();
+      };
+      createpreviewdiv.appendChild(createbutton)
+      createpreviewdiv.appendChild(previewfileframe);
+      librarydiv.appendChild(createpreviewdiv)
+      createbutton.addEventListener('click', (event:any) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setfilepreviewcontainerblank();
+          // just uncomment it
+
+        fetchAndBuildTree2()
+         setDynamicContent('Mentioned below are the documents submitted by logged in user.');
+         setSelectedText('My Uploaded Files');
+         handleShowContent(event);
+    });
+    }
+  
+ 
+   
+  }
+
+  // this is working preview file with flicker
+// window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:string , filepreviewurl){
+//   // console.log(docLibName , "docLibName")
+//   console.log("Status",status);
+//   console.log(filepreviewurl , "filepreviewurl")
+//   console.log("path",path);
+//   const segments = path.split('/');
+//   // extarct the current entity start
+//     const currentSubsite = segments[3];
+//   // end
+//   // Find the index of 'sites'
+//   const sitesIndex = segments.indexOf('sites');
+   
+//   // If 'sites' is found and there are enough segments after it
+//   let myactualdoclib
+//   if (sitesIndex !== -1 && segments.length > sitesIndex + 3) {
+//     myactualdoclib = segments[sitesIndex + 3];
+//     console.log(myactualdoclib , "myactualdoclib")
+//     // return segments[sitesIndex + 3];  // The document library is the 4th segment after 'sites'
+//   } else {
+//     // return null;  // Return null if not enough segments are available
+//   }
+//   event.preventDefault()
+//   event.stopPropagation()
+//   const createpreviewdiv = document.createElement('div')
+//   createpreviewdiv.style.display = 'grid'
+//   const previewfileframe = document.createElement('iframe')
+//   previewfileframe.id = 'filePreview'
+//   previewfileframe.style.width = '930px'
+//   previewfileframe.style.height = '500px'
+//   const librarydiv= document.getElementById('files-container')
+//   const createbutton = document.createElement('button')
+//   createbutton.textContent = 'Close File preivew';
+//   console.log("enter here in preview : ",path)
+//   const encodedFilePath = encodeURIComponent(path);
+//   console.log(encodedFilePath, "encodedFilePath");
+   
+//   // Extract the parent folder correctly
+//   const parentFolder = path.substring(0, path.lastIndexOf('/'));
+//   console.log(parentFolder, "parentFolder");
+   
+//   // Correctly encode the parent folder
+//   const encodedParentFolder = encodeURIComponent(parentFolder);
+   
+//   // Get the base site URL
+//   const siteUrl = window.location.origin;
+//   console.log(siteUrl, "siteUrl");
+   
+//   console.log(path , ".....path")
+//   if( ismyrequordoclibforfilepreview === "myRequest" || ismyrequordoclibforfilepreview === "myFavourite" || ismyrequordoclibforfilepreview  === "sharewithme" || ismyrequordoclibforfilepreview  === "sharewithothers"){
+//     const previewUrl = filepreviewurl
+   
+//     console.log(previewUrl, "Generated preview URL");
+   
+//     console.log("Generated Preview URL:", previewUrl);
+//     if(previewUrl){
+//       librarydiv.innerHTML = "";
+//       previewfileframe.src = previewUrl;
+//       previewfileframe.onload = () => {
+//         console.log("Iframe has loaded");
+   
+//         const checkAndHideButton = () => {
+//           try {
+//             const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+//             if (iframeDocument) {
+//               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+//               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+//               // const openInAppButton=iframeDocument.getElementById('openCommandGroup') as HTMLButtonElement;
+//               // console.log("openInAppButton",openInAppButton);
+//               if(excelToolbar){
+//                 excelToolbar.style.display= "none"
+//               }
+//               if (button) {
+//                 console.log("Hiding the OneUpCommandBar element");
+//                 button.style.display = "none";
+   
+   
+//                 // spinner.style.display = "none";
+//                 previewfileframe.style.display = "block";
+   
+   
+//               } else {
+//                 console.log("OneUpCommandBar not found, rechecking...");
+//               }
+             
+//               const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+//               if(helpbutton){
+//                 helpbutton.style.display = "none"
+//               }
+//             }
+//           } catch (error) {
+//             console.error("Error accessing iframe content:", error);
+//           }
+   
+   
+//           setTimeout(checkAndHideButton, 100);
+//         };
+   
+   
+//         checkAndHideButton();
+//       };
+//       createpreviewdiv.appendChild(createbutton)
+//       createpreviewdiv.appendChild(previewfileframe);
+//       librarydiv.appendChild(createpreviewdiv)
+//       createbutton.addEventListener('click', function() {
+//         event.preventDefault()
+//         event.stopPropagation()
+   
+//         if(ismyrequordoclibforfilepreview === "myRequest"){
+//           myRequest();
+//         }
+//         if(ismyrequordoclibforfilepreview === "myFavourite"){
+//           myFavorite();
+//         }
+//         if(ismyrequordoclibforfilepreview === "sharewithme"){
+//           ShareWithMe();
+//         }
+//         if(ismyrequordoclibforfilepreview === "sharewithothers"){
+//           ShareWithOther();
+//         }
+//         // if(flag === "shareWithMe"){
+//         //     ShareWithMe(null,null);
+//         // }
+//         // if(flag === "documentLibrary"){
+//         //   getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary)
+//         // }
+       
+//     });
+//     }
+//   }
+//   if(ismyrequordoclibforfilepreview === "getdoclibdata"){
+  
+//     // i have added this when there was issue in file preview at path there was & in the path
+//     // so i encode the path and then append in preview url 
+//     let encodepath:any
+
+
+//     const hasAmpersand = path.includes('&');
+//     if (hasAmpersand) {
+//       console.log("Path contains '&'");  
+//        encodepath = encodeURIComponent(path); // Properly declare the variable
+//       // alert("getdoclibdata encodepath: " + encodepath);
+//     } else {
+//       console.log("Path does not contain '&'");
+//       encodepath = path;
+//     }
+  
+//   // Generate the correct preview URL
+
+//     const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${encodepath}&parent=${encodedParentFolder}`;
+//     // const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
+   
+
+   
+//   console.log(previewUrl, "Generated preview URL");
+   
+//     console.log("Generated Preview URL:", previewUrl);
+//     if(previewUrl){
+//       librarydiv.innerHTML = "";
+//       previewfileframe.src = previewUrl;
+//       previewfileframe.onload = () => {
+//         console.log("Iframe has loaded");
+   
+//         const checkAndHideButton = () => {
+//           try {
+//             const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+//             if (iframeDocument) {
+//               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
+//               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+//               if(excelToolbar){
+//                 excelToolbar.style.display= "none"
+//               }
+//               if (button) {
+//                 console.log("Hiding the OneUpCommandBar element");
+//                 button.style.display = "block";
+//                 const commandBar1 = button.querySelectorAll("button");
+//                 commandBar1.forEach(button => {
+//                   button.style.display = "none";
+//                 });
+//                  // Show only the "Open" button
+//                 const openButton = iframeDocument.getElementById("openCommandGroup");
+//                 const userProfile = iframeDocument.getElementById("presenceCommand");
+//                 if(userProfile){
+//                   userProfile.style.display='none'
+//                 }
+//                 if (openButton) {
+//                   // console.log("openButton",openButton);
+//                   if(status === 'Auto Approved'){
+//                     openButton.style.display = "block";
+//                   }
+                 
+//                 }
+//                 previewfileframe.style.display = "block";
+   
+   
+//               } else {
+//                 console.log("OneUpCommandBar not found, rechecking...");
+//               }
+//               // if(openInAppButton){
+//               //   openInAppButton.style.display='block'
+//               // }
+//               const helpbutton = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
+//               if(helpbutton){
+//                 helpbutton.style.display = "none"
+//               }
+//             }
+//           } catch (error) {
+//             console.error("Error accessing iframe content:", error);
+//           }
+   
+   
+//           setTimeout(checkAndHideButton, 100);
+//         };
+   
+   
+//         checkAndHideButton();
+//       };
+//       createpreviewdiv.appendChild(createbutton)
+//       createpreviewdiv.appendChild(previewfileframe);
+//       librarydiv.appendChild(createpreviewdiv)
+//       createbutton.addEventListener('click', function() {
+//         event.preventDefault()
+//         event.stopPropagation()
+   
+//         // if(flag === "shareWithMe"){
+//         //     ShareWithMe(null,null);
+//         // }
+//         // if(flag === "documentLibrary"){
+//         //   getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary)
+//         // }
+//         if(isprocessfolder === true){
+//             //  alert(currentfolderpath  + "currentfolderpath in process true")
+//              getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary ,"")
+//         }else{
+//             // alert(currentfolderpath  + "currentfolderpath in process false")
+//          getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary , "")
+//         }
+      
+//     });
+//     }
+//   }
+   
+//   }
+// this is working fine preview code without even flicker
+window.PreviewFile = function(path :any , SiteID:any , docLibName:any, status:string , filepreviewurl){
   // console.log(docLibName , "docLibName")
   console.log("Status",status);
   console.log(filepreviewurl , "filepreviewurl")
@@ -5231,6 +6829,8 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
   previewfileframe.id = 'filePreview'
   previewfileframe.style.width = '930px'
   previewfileframe.style.height = '500px'
+  // Set initial display to none to prevent flicker
+  previewfileframe.style.display = 'none'
   const librarydiv= document.getElementById('files-container')
   const createbutton = document.createElement('button')
   createbutton.textContent = 'Close File preivew';
@@ -5263,8 +6863,10 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
         console.log("Iframe has loaded");
    
         const checkAndHideButton = () => {
+          // *** Key Change: Declare iframeDocument outside try block ***
+          let iframeDocument: Document | null = null;
           try {
-            const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+            iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
             if (iframeDocument) {
               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
@@ -5277,10 +6879,8 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
                 console.log("Hiding the OneUpCommandBar element");
                 button.style.display = "none";
    
-   
-                // spinner.style.display = "none";
+                // Show iframe only after hiding elements
                 previewfileframe.style.display = "block";
-   
    
               } else {
                 console.log("OneUpCommandBar not found, rechecking...");
@@ -5293,12 +6893,15 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
             }
           } catch (error) {
             console.error("Error accessing iframe content:", error);
+            // Show iframe on error to avoid it being hidden forever
+            previewfileframe.style.display = "block";
           }
    
-   
-          setTimeout(checkAndHideButton, 100);
+          // Continue checking if elements are not yet hidden
+          if (!iframeDocument || !iframeDocument.getElementById("OneUpCommandBar")) {
+            setTimeout(checkAndHideButton, 100);
+          }
         };
-   
    
         checkAndHideButton();
       };
@@ -5336,8 +6939,6 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
     // i have added this when there was issue in file preview at path there was & in the path
     // so i encode the path and then append in preview url 
     let encodepath:any
-
-
     const hasAmpersand = path.includes('&');
     if (hasAmpersand) {
       console.log("Path contains '&'");  
@@ -5348,14 +6949,10 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
       encodepath = path;
     }
   
-  // Generate the correct preview URL
-
+    // Generate the correct preview URL
     const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${encodepath}&parent=${encodedParentFolder}`;
-    // const previewUrl = `${siteUrl}${locationPath}/${currentSubsite}/${myactualdoclib}/Forms/AllItems.aspx?id=${path}&parent=${encodedParentFolder}`;
    
-
-   
-  console.log(previewUrl, "Generated preview URL");
+    console.log(previewUrl, "Generated preview URL");
    
     console.log("Generated Preview URL:", previewUrl);
     if(previewUrl){
@@ -5365,8 +6962,10 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
         console.log("Iframe has loaded");
    
         const checkAndHideButton = () => {
+          // *** Key Change: Declare iframeDocument outside try block ***
+          let iframeDocument: Document | null = null;
           try {
-            const iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
+            iframeDocument = previewfileframe.contentDocument || previewfileframe.contentWindow?.document;
             if (iframeDocument) {
               const button = iframeDocument.getElementById("OneUpCommandBar") as HTMLElement;
               const excelToolbar = iframeDocument.getElementById("m_excelEmbedRenderer_m_ewaEmbedViewerBar") as HTMLElement;
@@ -5393,8 +6992,8 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
                   }
                  
                 }
+                // Show iframe only after hiding elements
                 previewfileframe.style.display = "block";
-   
    
               } else {
                 console.log("OneUpCommandBar not found, rechecking...");
@@ -5409,12 +7008,15 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
             }
           } catch (error) {
             console.error("Error accessing iframe content:", error);
+            // Show iframe on error to avoid it being hidden forever
+            previewfileframe.style.display = "block";
           }
    
-   
-          setTimeout(checkAndHideButton, 100);
+          // Continue checking if elements are not yet hidden
+          if (!iframeDocument || !iframeDocument.getElementById("OneUpCommandBar")) {
+            setTimeout(checkAndHideButton, 100);
+          }
         };
-   
    
         checkAndHideButton();
       };
@@ -5431,12 +7033,22 @@ window.PreviewFile = function(path :any , SiteID:any , docLibName:any,status:str
         // if(flag === "documentLibrary"){
         //   getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary)
         // }
-        getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary)
+        if(isprocessfolder === true){
+            //  alert(currentfolderpath  + "currentfolderpath in process true")
+             getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary ,"")
+        }else{
+            // alert(currentfolderpath  + "currentfolderpath in process false")
+         getdoclibdata(currentfolderpath , currentsiteID , currentDocumentLibrary , "")
+        }
+      
     });
     }
   }
-   
-  }
+}
+
+
+
+
 const RemoveSSearchFile = async (event: React.FormEvent) => {
   event.preventDefault();
   event.stopPropagation();
@@ -5470,7 +7082,7 @@ const RemoveSSearchFile = async (event: React.FormEvent) => {
 const searchFiles = async (event: React.FormEvent) => {
   event.preventDefault();
   event.stopPropagation();
-
+  
   const searchInput = document.getElementById('searchinput') as HTMLInputElement;
   const searchText = searchInput.value;
   console.log(searchText, "searchText")
@@ -5478,6 +7090,7 @@ const searchFiles = async (event: React.FormEvent) => {
     
   if (searchText !== "") {
     try {
+      // alert(routeToDiffSideBar + " routeToDiffSideBar in searchFiles");
       console.log(currentfolderpath, "currentfolderpath")
       // const searchQuery = {
       //   Querytext: `${searchText} AND Path:"https://officeindia.sharepoint.com${currentfolderpath}"`,
@@ -5530,8 +7143,9 @@ const searchFiles = async (event: React.FormEvent) => {
 
       // Display the search results
       // start
-
+        console.log(routeToDiffSideBar + " routeToDiffSideBar")
       if (routeToDiffSideBar === "") {
+
         files.forEach((file: IDocumentDisplayFields) => {
           const card = document.createElement("div");
           const { fileIcon } = getFileIcon(file.Title);
@@ -5588,10 +7202,15 @@ const searchFiles = async (event: React.FormEvent) => {
           container.appendChild(card);
         });
       } else {
+  
         if (routeToDiffSideBar === "myRequest") {
+         
           myRequest(null, null, searchInput);
         }
-
+        else if (routeToDiffSideBar === "documentLibrary") {
+          // console.log("Inside search => documentLibrary");
+          getdoclibdata(currentfolderpath, currentsiteID, currentDocumentLibrary, searchInput);
+        }
         else if (routeToDiffSideBar === "myFavourite") {
 
           // console.log("myFavourite");
@@ -5754,303 +7373,560 @@ const searchFiles = async (event: React.FormEvent) => {
 
 // };
 
+// working fine code previous brefore pagination
+// const ShareWithOther=async(event:React.MouseEvent<HTMLButtonElement>=null,searchText:HTMLInputElement=null)=>{
 
-const ShareWithOther=async(event:React.MouseEvent<HTMLButtonElement>=null,searchText:HTMLInputElement=null)=>{
-   entityclicktext = ''
-  setdisplayuploadfileandcreatefolder(false)
-  ismyrequordoclibforfilepreview  = "sharewithothers";
-if(event){
-  event.preventDefault();
-  event.stopPropagation();
-}
-// Hide the list and grid view start
-const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-if (hidegidvewlistviewbutton2) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton2.style.display = 'none'
+//   // this getfilescontainer is use to first null inner html then display loader other wise it was showing previous data and laoder same time side by side 
+//   const getfilescontainer = document.getElementById('files-container')
+//   if (getfilescontainer) getfilescontainer.innerHTML = ''; // Clear the container
+//    const loader = document.getElementById('loader2');
+//      if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
+
+
+//    entityclicktext = ''
+//   setdisplayuploadfileandcreatefolder(false)
+//   ismyrequordoclibforfilepreview  = "sharewithothers";
+// if(event){
+//   event.preventDefault();
+//   event.stopPropagation();
+// }
+// // Hide the list and grid view start
+// const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+// const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+// if (hidegidvewlistviewbutton2) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton2.style.display = 'none'
  
-}
-if (hidegidvewlistviewbutton) {
- console.log("enter here .....................")
- hidegidvewlistviewbutton.style.display = 'none'
+// }
+// if (hidegidvewlistviewbutton) {
+//  console.log("enter here .....................")
+//  hidegidvewlistviewbutton.style.display = 'none'
 
-}
-// End
-   // clean the url start
-   const newUrl = `${window.location.origin}${window.location.pathname}`;
-   window.history.pushState(null, '', newUrl)
-   // New code to hide the create file and folder button start
-   const CreateFolder=document.getElementById("CreateFolder")
-    const createFileButton=document.getElementById("createFileButton")
-    const CreateRoot=document.getElementById("CreateFolder1")
-   if(CreateFolder){
-    CreateFolder.style.display = 'none'
-     }
-     if(createFileButton){
-     createFileButton.style.display = 'none'
-     }
-     if(CreateRoot){
-      CreateRoot.style.display = 'none'
-      }
-   //End 
-   // end
-   // New Code start
-   const DMSShareWithOtherMaster= await sp.web.lists
-   .getByTitle("DMSShareWithOtherMaster")
-   .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithOthers","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType","ID")
-   .filter(`CurrentUser eq '${currentUserEmailRef.current}'`).orderBy("Created", false)();
+// }
+// // End
+//    // clean the url start
+//    const newUrl = `${window.location.origin}${window.location.pathname}`;
+//    window.history.pushState(null, '', newUrl)
+//    // New code to hide the create file and folder button start
+//    const CreateFolder=document.getElementById("CreateFolder")
+//     const createFileButton=document.getElementById("createFileButton")
+//     const CreateRoot=document.getElementById("CreateFolder1")
+//    if(CreateFolder){
+//     CreateFolder.style.display = 'none'
+//      }
+//      if(createFileButton){
+//      createFileButton.style.display = 'none'
+//      }
+//      if(CreateRoot){
+//       CreateRoot.style.display = 'none'
+//       }
+//    //End 
+//    // end
+//    // New Code start
+//    try {
+//     const DMSShareWithOtherMaster= await sp.web.lists
+//    .getByTitle("DMSShareWithOtherMaster")
+//    .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithOthers","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType","ID" , "SoftDelete")
+//    .filter(`CurrentUser eq '${currentUserEmailRef.current}' and SoftDelete eq 0`).orderBy("Created", false)();
   
-   // Mapped the file with the users
-// Mapped the file with the users
-const groupedData =DMSShareWithOtherMaster.reduce((acc, item) => {
-      const key = `${item.FileUID}-${item.FileName}`;
+//    // Mapped the file with the users
+// // Mapped the file with the users
+// const groupedData =DMSShareWithOtherMaster.reduce((acc, item) => {
+//       const key = `${item.FileUID}-${item.FileName}`;
 
-      if (!acc[key]) {
-          acc[key] = {
-              FileUID: item.FileUID,
-              FileName: item.FileName,
-              FileVersion:item.FileVersion,
-              SiteID:item.SiteID,
-              FileSize:item.FileSize,
-              FilePreviewURL:item.FilePreviewURL,
-              CurrentFolderPath:item.CurrentFolderPath,
-              DocumentLibraryName:item.DocumentLibraryName,
-              Users: []
-          };
-      }
+//       if (!acc[key]) {
+//           acc[key] = {
+//               FileUID: item.FileUID,
+//               FileName: item.FileName,
+//               FileVersion:item.FileVersion,
+//               SiteID:item.SiteID,
+//               FileSize:item.FileSize,
+//               FilePreviewURL:item.FilePreviewURL,
+//               CurrentFolderPath:item.CurrentFolderPath,
+//               DocumentLibraryName:item.DocumentLibraryName,
+//               Users: []
+//           };
+//       }
 
-      acc[key].Users.push({
-          User: item.ShareWithOthers,
-          UserID: item.UserID,
-          PermissionType:item.PermissionType,
-          ShareAt:item.ShareAt,
-          itemID:item.ID
-      });
+//       acc[key].Users.push({
+//           User: item.ShareWithOthers,
+//           UserID: item.UserID,
+//           PermissionType:item.PermissionType,
+//           ShareAt:item.ShareAt,
+//           itemID:item.ID
+//       });
 
-      return acc;
-  }, {})
+//       return acc;
+//   }, {})
 
-// Convert the result back to an array
-const result = [];
-for (let key in groupedData) {
-   result.push(groupedData[key]);
-}
+// // Convert the result back to an array
+// const result = [];
+// for (let key in groupedData) {
+//    result.push(groupedData[key]);
+// }
 
-console.log("DMSShareWithOtherMaster",DMSShareWithOtherMaster);
-console.log("result",result);
-const container = document.getElementById("files-container");
-container.innerHTML="";
+// console.log("DMSShareWithOtherMaster",DMSShareWithOtherMaster);
+// console.log("result",result);
+// const container = document.getElementById("files-container");
+// container.innerHTML="";
 
-routeToDiffSideBar="shareWithOthers"
-let filteredFileData=[];
-if(searchText !== null){
-  filteredFileData=result.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
-  if(filteredFileData.length === 0 && searchText !== null){
-    console.log("combineArray",filteredFileData);
-    fileNotFound(`No file match ${searchText.value}`);
-  }
-}else{
-  filteredFileData=result;
-}
+// routeToDiffSideBar="shareWithOthers"
+// let filteredFileData=[];
+// if(searchText !== null){
+//   filteredFileData=result.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+//   if(filteredFileData.length === 0 && searchText !== null){
+//     console.log("combineArray",filteredFileData);
+//     fileNotFound(`No file match ${searchText.value}`);
+//   }
+// }else{
+//   filteredFileData=result;
+// }
 
-filteredFileData.forEach((file)=>{
+// filteredFileData.forEach((file)=>{
 
-  // Get the first two users
-  const firstTwoUsers = file.Users.slice(0, 2);
-  // Remaining users count
-  const moreUsersCount = file.Users.length - 2;
+//   // Get the first two users
+//   const firstTwoUsers = file.Users.slice(0, 2);
+//   // Remaining users count
+//   const moreUsersCount = file.Users.length - 2;
 
-  // Create shared users HTML for the first two users
-  let sharedUsersHTML = firstTwoUsers.map((user:any) => {
-    let firstNameInitial = "";
-    let lastNameInitial = "";
+//   // Create shared users HTML for the first two users
+//   let sharedUsersHTML = firstTwoUsers.map((user:any) => {
+//     let firstNameInitial = "";
+//     let lastNameInitial = "";
 
-    if (user.User) {
-      const nameParts = user.User.split(" ");  
-      // Assign initials based on the number of name parts
-      if (nameParts.length > 0) {
-          firstNameInitial = nameParts[0].charAt(0).toUpperCase();
-      }
-      if (nameParts.length > 1) {
-          // Use the last part as the last name initial
-          lastNameInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
-      }
-    }
-
-    return `<span class="shared-user">${firstNameInitial}${lastNameInitial}</span>`;
-  })
-  .join("");
-
-  // If there are more users, add "+more"
-  if (moreUsersCount > 0) {
-      sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
-  }
-  // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
-  const extensionHtml=createFileExtensionHtml(file.FileName);
-  const card = document.createElement("div");
-  card.className = "card";
-  card.dataset.fileId = file.FileUID; 
-  card.dataset.listId = file.SiteID;
-      
-  card.innerHTML = `  
-  <div class="row">
-  
-      <div class="col-md-2 pe-0">
-      ${extensionHtml}
-      </div>
-      <div class="col-md-10 pe-0">
-      <div class="CardTextContainer">
-      <p class="p1st" title="${file.FileName}">${file.FileName}</p>
-      <div class="fileSizeAndVersion">
-      <p class="p3rd">${file.FileSize} MB</p>
-      </div>
-      </div>
-      </div>
-  <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-  <span>...</span>
-  </div>
-  </div>
-  <div class="sharedFile">
-        ${sharedUsersHTML}
-  </div>
-    `;
-//   card.innerHTML = `  
-// <div class="row">
-
-//     <div class="col-md-2 pe-0">
-//     <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-//     </div>
-//     <div class="col-md-10 pe-0">
-//     <p class="p1st">${file.FileName}</p>
-//     <div class="fileSizeAndVersion">
-//     <p class="p3rd">${file.FileSize} MB</p>
-//     </div>
-//     </div>
-// <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-// <span>...</span>
-// </div>
-// </div>
-// <div class="sharedFile">
-//       ${sharedUsersHTML}
-// </div>
-//   `;
-  
-  const menu = document.createElement("div");
-  menu.id = `menu-${file.FileUID}`;
-  menu.className = "popup-menu";
-  menu.innerHTML = `
-  <ul>
-    <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
-      <img src=${FilePreview} alt="Share"/> File Preview
-    </li>
-    <li onclick="revokeAccess('${encodeURIComponent(JSON.stringify(file.Users))}' , '${file.FileName}','${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}')">
-      <img src=${RevokeAccess} alt="Share"/> Revoke Access
-    </li>
-  </ul>
-`;  
-  card.appendChild(menu);  
-  container.appendChild(card);
-})
-// End
-
-// const FilesItems = await sp.web.lists
-// .getByTitle("MasterSiteURL")
-// .items.select("Title", "SiteID", "FileMasterList", "Active")
-// .filter(`Active eq 'Yes'`)();
-
-// console.log("Files items", FilesItems);
-// FilesItems.forEach(async(fileItem)=>{
-//   if(fileItem.FileMasterList !== null){
-//     // console.log(files.FileMasterList);
-
-//     const filesData = await sp.web.lists
-//     .getByTitle(`${fileItem.FileMasterList}`)
-//     .items.select("FileName", "FileUID", "FileSize", "FileVersion","ShareWithOthers")
-//     .filter(
-//       `CurrentUser eq '${currentUserEmailRef.current}'`
-//     )();
-
-    
-//     console.log("Files Data ",filesData);
-//     routeToDiffSideBar="shareWithOthers"
-//     let filteredFileData=[];
-//     if(searchText !== null){
-//           filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
-//     }else{
-//       filteredFileData=filesData;
+//     if (user.User) {
+//       const nameParts = user.User.split(" ");  
+//       // Assign initials based on the number of name parts
+//       if (nameParts.length > 0) {
+//           firstNameInitial = nameParts[0].charAt(0).toUpperCase();
+//       }
+//       if (nameParts.length > 1) {
+//           // Use the last part as the last name initial
+//           lastNameInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+//       }
 //     }
-//     filteredFileData.forEach((file) => {
 
-//       if( file.ShareWithOthers !== null ){
+//     return `<span class="shared-user">${firstNameInitial}${lastNameInitial}</span>`;
+//   })
+//   .join("");
 
-//         const sharedUserInTheFormOFstring = file.ShareWithOthers; 
+//   // If there are more users, add "+more"
+//   if (moreUsersCount > 0) {
+//       sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
+//   }
+//   // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+//   const extensionHtml=createFileExtensionHtml(file.FileName);
+//   const card = document.createElement("div");
+//   card.className = "card";
+//   card.dataset.fileId = file.FileUID; 
+//   card.dataset.listId = file.SiteID;
+      
+//   card.innerHTML = `  
+//   <div class="row">
+  
+//       <div class="col-md-2 pe-0">
+//       ${extensionHtml}
+//       </div>
+//       <div class="col-md-10 pe-0">
+//       <div class="CardTextContainer">
+//       <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+//       <div class="fileSizeAndVersion">
+//       <p class="p3rd">${file.FileSize} MB</p>
+//       </div>
+//       </div>
+//       </div>
+//   <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+//   <span>...</span>
+//   </div>
+//   </div>
+//   <div class="sharedFile">
+//         ${sharedUsersHTML}
+//   </div>
+//     `;
+// //   card.innerHTML = `  
+// // <div class="row">
+
+// //     <div class="col-md-2 pe-0">
+// //     <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+// //     </div>
+// //     <div class="col-md-10 pe-0">
+// //     <p class="p1st">${file.FileName}</p>
+// //     <div class="fileSizeAndVersion">
+// //     <p class="p3rd">${file.FileSize} MB</p>
+// //     </div>
+// //     </div>
+// // <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+// // <span>...</span>
+// // </div>
+// // </div>
+// // <div class="sharedFile">
+// //       ${sharedUsersHTML}
+// // </div>
+// //   `;
+  
+//   const menu = document.createElement("div");
+//   menu.id = `menu-${file.FileUID}`;
+//   menu.className = "popup-menu";
+//   menu.innerHTML = `
+//   <ul>
+//     <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
+//       <img src=${FilePreview} alt="Share"/> File Preview
+//     </li>
+//     <li onclick="revokeAccess('${encodeURIComponent(JSON.stringify(file.Users))}' , '${file.FileName}','${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}')">
+//       <img src=${RevokeAccess} alt="Share"/> Revoke Access
+//     </li>
+//   </ul>
+// `;  
+//   card.appendChild(menu);  
+//   container.appendChild(card);
+// })
+// // End
+
+// // const FilesItems = await sp.web.lists
+// // .getByTitle("MasterSiteURL")
+// // .items.select("Title", "SiteID", "FileMasterList", "Active")
+// // .filter(`Active eq 'Yes'`)();
+
+// // console.log("Files items", FilesItems);
+// // FilesItems.forEach(async(fileItem)=>{
+// //   if(fileItem.FileMasterList !== null){
+// //     // console.log(files.FileMasterList);
+
+// //     const filesData = await sp.web.lists
+// //     .getByTitle(`${fileItem.FileMasterList}`)
+// //     .items.select("FileName", "FileUID", "FileSize", "FileVersion","ShareWithOthers")
+// //     .filter(
+// //       `CurrentUser eq '${currentUserEmailRef.current}'`
+// //     )();
+
     
-//         let sharedUsers = JSON.parse(sharedUserInTheFormOFstring);
+// //     console.log("Files Data ",filesData);
+// //     routeToDiffSideBar="shareWithOthers"
+// //     let filteredFileData=[];
+// //     if(searchText !== null){
+// //           filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+// //     }else{
+// //       filteredFileData=filesData;
+// //     }
+// //     filteredFileData.forEach((file) => {
 
-//         if(sharedUsers.length === 0){
-//             return;
-//         }
+// //       if( file.ShareWithOthers !== null ){
+
+// //         const sharedUserInTheFormOFstring = file.ShareWithOthers; 
+    
+// //         let sharedUsers = JSON.parse(sharedUserInTheFormOFstring);
+
+// //         if(sharedUsers.length === 0){
+// //             return;
+// //         }
         
-//         // Get the first two users
-//         const firstTwoUsers = sharedUsers.slice(0, 2);
+// //         // Get the first two users
+// //         const firstTwoUsers = sharedUsers.slice(0, 2);
 
-//         // Remaining users count
-//         const moreUsersCount = sharedUsers.length - 2;
+// //         // Remaining users count
+// //         const moreUsersCount = sharedUsers.length - 2;
 
-//         // Create shared users HTML for the first two users
-//         let sharedUsersHTML = firstTwoUsers
-//             .map((user:any) => {
-//                 let firstNameInitial;
-//                 let lastNameInitial=""
-//                 if(user.FirstName !== null){
-//                       firstNameInitial = user.FirstName.charAt(0).toUpperCase();
-//                 }
-//                 if(user.LastName !== null){
-//                       lastNameInitial=user.LastName.charAt(0).toUpperCase(); 
-//                 }
+// //         // Create shared users HTML for the first two users
+// //         let sharedUsersHTML = firstTwoUsers
+// //             .map((user:any) => {
+// //                 let firstNameInitial;
+// //                 let lastNameInitial=""
+// //                 if(user.FirstName !== null){
+// //                       firstNameInitial = user.FirstName.charAt(0).toUpperCase();
+// //                 }
+// //                 if(user.LastName !== null){
+// //                       lastNameInitial=user.LastName.charAt(0).toUpperCase(); 
+// //                 }
 
-//                 return `<span class="shared-user">${firstNameInitial}${lastNameInitial}</span>`;
-//                 })
-//                 .join("");
+// //                 return `<span class="shared-user">${firstNameInitial}${lastNameInitial}</span>`;
+// //                 })
+// //                 .join("");
 
               
-//         // If there are more users, add "+more"
-//         if (moreUsersCount > 0) {
-//               sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
-//         }
+// //         // If there are more users, add "+more"
+// //         if (moreUsersCount > 0) {
+// //               sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
+// //         }
        
-//         const {fileIcon, fileExtension}= getFileIcon(file.FileName);
-//         // const card = createFileCard(file, fileIcon, fileItem.SiteID,fileItem.FileMasterList,fileExtension);
-//         const card = document.createElement("div");
-//         card.className = "card";
-//         card.dataset.fileId = file.FileUID; // Store file ID in the card element
-//         card.dataset.listId = fileItem.SiteID; // Store site ID
+// //         const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+// //         // const card = createFileCard(file, fileIcon, fileItem.SiteID,fileItem.FileMasterList,fileExtension);
+// //         const card = document.createElement("div");
+// //         card.className = "card";
+// //         card.dataset.fileId = file.FileUID; // Store file ID in the card element
+// //         card.dataset.listId = fileItem.SiteID; // Store site ID
       
-//         card.innerHTML = `        
-//           <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-//           <p class="p1st">${file.FileName}</p>
-//           <div class="fileSizeAndVersion">
-//             <p class="p3rd">${file.FileSize} MB</p>
-//             <p class="p2nd">${file.FileVersion}</p>
-//           </div>
-//            <div class="sharedFile">
-//             ${sharedUsersHTML}
-//           </div>
-//         `;
-//         container.appendChild(card);
+// //         card.innerHTML = `        
+// //           <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+// //           <p class="p1st">${file.FileName}</p>
+// //           <div class="fileSizeAndVersion">
+// //             <p class="p3rd">${file.FileSize} MB</p>
+// //             <p class="p2nd">${file.FileVersion}</p>
+// //           </div>
+// //            <div class="sharedFile">
+// //             ${sharedUsersHTML}
+// //           </div>
+// //         `;
+// //         container.appendChild(card);
 
-//       }
-//     });
+// //       }
+// //     });
     
-//   }        
-// })
+// //   }        
+// // })
 
-}
+//    } catch (error) {
+//       console.error("Error fetching ShareWithOthers data: ", error);
+//    }finally {
+//     loader.style.display = 'none'; // 🔥 Hide loader after the operation is complete
+//      // Hide the loader after the operation is complete 
+//    }
+   
+// }
+const ShareWithOther = async (
+  event: React.MouseEvent<HTMLButtonElement> = null,
+  searchText: HTMLInputElement = null
+) => {
+  const getfilescontainer = document.getElementById('files-container');
+  if (getfilescontainer) getfilescontainer.innerHTML = '';
+  const loader = document.getElementById('loader2');
+  if (loader) loader.style.display = 'block';
+
+  entityclicktext = '';
+  setdisplayuploadfileandcreatefolder(false);
+  ismyrequordoclibforfilepreview = "sharewithothers";
+
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+  const hidegidvewlistviewbutton = document.getElementById("hidegidvewlistviewbutton");
+  if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
+  if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
+
+  const newUrl = `${window.location.origin}${window.location.pathname}`;
+  window.history.pushState(null, '', newUrl);
+
+  const CreateFolder = document.getElementById("CreateFolder");
+  const createFileButton = document.getElementById("createFileButton");
+  const CreateRoot = document.getElementById("CreateFolder1");
+  if (CreateFolder) CreateFolder.style.display = 'none';
+  if (createFileButton) createFileButton.style.display = 'none';
+  if (CreateRoot) CreateRoot.style.display = 'none';
+
+  try {
+    const DMSShareWithOtherMaster = await sp.web.lists
+      .getByTitle("DMSShareWithOtherMaster")
+      .items.select(
+        "FileName", "FileUID", "FileVersion", "FileSize", "CurrentUser", "DocumentLibraryName",
+        "CurrentFolderPath", "ShareWithOthers", "Status", "SiteID", "SiteName", "FilePreviewURL",
+        "ShareAt", "UserID", "PermissionType", "ID", "SoftDelete"
+      )
+      .filter(`CurrentUser eq '${currentUserEmailRef.current}' and SoftDelete eq 0`)
+      .orderBy("Created", false)();
+
+    const groupedData = DMSShareWithOtherMaster.reduce((acc, item) => {
+      const key = `${item.FileUID}-${item.FileName}`;
+      if (!acc[key]) {
+        acc[key] = {
+          FileUID: item.FileUID,
+          FileName: item.FileName,
+          FileVersion: item.FileVersion,
+          SiteID: item.SiteID,
+          FileSize: item.FileSize,
+          FilePreviewURL: item.FilePreviewURL,
+          CurrentFolderPath: item.CurrentFolderPath,
+          DocumentLibraryName: item.DocumentLibraryName,
+          Users: []
+        };
+      }
+      acc[key].Users.push({
+        User: item.ShareWithOthers,
+        UserID: item.UserID,
+        PermissionType: item.PermissionType,
+        ShareAt: item.ShareAt,
+        itemID: item.ID
+      });
+      return acc;
+    }, {});
+
+    const result: any[] = Object.values(groupedData);
+    const container = document.getElementById("files-container");
+    routeToDiffSideBar = "shareWithOthers";
+
+    // Pagination Setup
+    let currentPage = 1;
+    const itemsPerPage = 12;
+    let totalPages = 1;
+    let filteredFileData:any = [];
+
+    if (searchText !== null) {
+      filteredFileData = result.filter(file =>
+        file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase())
+      );
+      if (filteredFileData.length === 0) {
+        fileNotFound(`No file match ${searchText.value}`);
+      }
+    } else {
+      filteredFileData = result;
+    }
+
+    const renderCards = (files: any[]) => {
+      container.innerHTML = "";
+      files.forEach((file) => {
+        const extensionHtml = createFileExtensionHtml(file.FileName);
+
+        const firstTwoUsers = file.Users.slice(0, 2);
+        const moreUsersCount = file.Users.length - 2;
+
+        let sharedUsersHTML = firstTwoUsers.map((user: any) => {
+          let firstNameInitial = "";
+          let lastNameInitial = "";
+          if (user.User) {
+            const nameParts = user.User.split(" ");
+            if (nameParts.length > 0) firstNameInitial = nameParts[0].charAt(0).toUpperCase();
+            if (nameParts.length > 1) lastNameInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+          }
+          return `<span class="shared-user">${firstNameInitial}${lastNameInitial}</span>`;
+        }).join("");
+
+        if (moreUsersCount > 0) {
+          sharedUsersHTML += `<span class="more-users">+${moreUsersCount} more</span>`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.fileId = file.FileUID;
+        card.dataset.listId = file.SiteID;
+
+        card.innerHTML = `
+          <div class="row">
+            <div class="col-md-2 pe-0">${extensionHtml}</div>
+            <div class="col-md-10 pe-0">
+              <div class="CardTextContainer">
+                <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+                <div class="fileSizeAndVersion">
+                  <p class="p3rd">${file.FileSize} MB</p>
+                </div>
+              </div>
+            </div>
+            <div id="three-dots" class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+              <span>...</span>
+            </div>
+          </div>
+          <div class="sharedFile">${sharedUsersHTML}</div>
+        `;
+
+        const menu = document.createElement("div");
+        menu.id = `menu-${file.FileUID}`;
+        menu.className = "popup-menu";
+        menu.innerHTML = `
+          <ul>
+            <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
+              <img src=${FilePreview} alt="Share"/> File Preview
+            </li>
+            <li onclick="revokeAccess('${encodeURIComponent(JSON.stringify(file.Users))}' , '${file.FileName}','${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}')">
+              <img src=${RevokeAccess} alt="Share"/> Revoke Access
+            </li>
+          </ul>
+        `;
+
+        card.appendChild(menu);
+        container.appendChild(card);
+      });
+    };
+
+    const displayItems = (page: number) => {
+      currentPage = page;
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedItems = filteredFileData.slice(startIndex, endIndex);
+      renderCards(paginatedItems);
+      addPaginationControls(filteredFileData.length);
+    };
+
+    const addPaginationControls = (totalItems: number) => {
+      const existingPagination = container.querySelector(".pagination-container");
+      if (existingPagination) container.removeChild(existingPagination);
+
+      totalPages = Math.ceil(totalItems / itemsPerPage);
+      if (totalPages <= 1) return;
+
+      const paginationContainer = document.createElement("div");
+      paginationContainer.className = "pagination-container";
+      const creatediv = document.createElement("div");
+      creatediv.className = "pagination-container-buttons";
+
+      const prevButton = document.createElement("button");
+      prevButton.textContent = "Previous";
+      prevButton.className = "pagination-container-buttons1";
+
+      const nextButton = document.createElement("button");
+      nextButton.textContent = "Next";
+      nextButton.className = "pagination-container-buttons2";
+
+      const disablePrev = currentPage === 1;
+      const disableNext = currentPage === totalPages;
+
+      if (disablePrev) {
+        prevButton.style.opacity = "0.6";
+        prevButton.style.cursor = "not-allowed";
+      } else {
+        prevButton.onclick = () => {
+          currentPage--;
+          displayItems(currentPage);
+        };
+      }
+
+      if (disableNext) {
+        nextButton.style.opacity = "0.6";
+        nextButton.style.cursor = "not-allowed";
+      } else {
+        nextButton.onclick = () => {
+          currentPage++;
+          displayItems(currentPage);
+        };
+      }
+
+      const pageInfo = document.createElement("span");
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      pageInfo.style.margin = "0px 30px 0px 0px";
+      pageInfo.style.lineHeight = "30px";
+
+      creatediv.appendChild(prevButton);
+      creatediv.appendChild(nextButton);
+      paginationContainer.appendChild(creatediv);
+      paginationContainer.appendChild(pageInfo);
+
+      const styleButton = (button: HTMLButtonElement) => {
+        button.style.border = "1px solid #ddd";
+        button.style.backgroundColor = "#f8f9fa";
+        button.style.borderRadius = "4px";
+        button.style.fontSize = "14px";
+      };
+
+      styleButton(prevButton);
+      styleButton(nextButton);
+
+      container.appendChild(paginationContainer);
+    };
+
+    displayItems(1);
+  } catch (error) {
+    console.error("Error fetching ShareWithOthers data: ", error);
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+};
+
+ 
+
 // This function is called when we click on Revoke Access in the ShareWithOthers popup
 // @ts-ignore
 window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,folderpath:any)=>{
   // const users = JSON.parse(UserArray);
+  // alert(JSON.stringify(UserArray))
   const users = JSON.parse(decodeURIComponent(UserArray));
   console.log("users",users);
   console.log("FileName",FileName);
@@ -6201,7 +8077,13 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
          const user = await sp.web.getUserById(userId).select("Id","Title","Email")();
       
         await item.roleAssignments.remove(id,roleType);
-        await sp.web.lists.getByTitle('DMSShareWithOtherMaster').items.getById(itemId).delete();
+        // await sp.web.lists.getByTitle('DMSShareWithOtherMaster').items.getById(itemId).delete();
+        await sp.web.lists
+  .getByTitle('DMSShareWithOtherMaster')
+  .items.getById(itemId)
+  .update({
+    SoftDelete: true
+  });
        
         // Close the popup
         document.body.removeChild(popup);
@@ -6210,33 +8092,121 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
                   text: "User remove successfully.",
                   icon: "success"
         });
- try {
-              const subject = `File Access Revoked - DMS`;
-              // const body = `File shared with you: ${fileName}`;
-             const body = `
-    <p>Please be informed that access for the file <strong>${FileName}</strong> has been revoked.</p>
+//  try {
+//               const subject = `File Access Revoked - DMS`;
+//               // const body = `File shared with you: ${fileName}`;
+//              const body = `
+//     <p>Please be informed that access for the file <strong>${FileName}</strong> has been revoked.</p>
 
-    <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+//     <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
 
-    <p>With regards,<br>${currentUserTitleRef.current}</p>
-`;
+//     <p>With regards,<br>${currentUserTitleRef.current}</p>
+// `;
 
-              const emailProps:any = {
-                To: [user.Email],
-                Subject: subject,
-                Body: body,
-                AdditionalHeaders: {
-                  "content-type": "text/html",
-                }
-              };
+//               const emailProps:any = {
+//                 To: [user.Email],
+//                 Subject: subject,
+//                 Body: body,
+//                 AdditionalHeaders: {
+//                   "content-type": "text/html",
+//                 }
+//               };
           
-              // Send the email
-              await sp.utility.sendEmail(emailProps);
-              console.log("Email sent successfully to", user.Email);
+//               // Send the email
+//               await sp.utility.sendEmail(emailProps);
+//               console.log("Email sent successfully to", user.Email);
           
-            } catch (error) {
-              console.error("Error sending email:", error);
-            }         
+//             } catch (error) {
+//               console.error("Error sending email:", error);
+//             }    
+            
+//             try {
+//         try {
+
+// // Make sure to import and configure MSAL at the top of your file:
+
+// const msalConfig = {
+//   auth: {
+//     clientId: "6265a956-120e-4b6f-b7ae-32ec1a393f99", // Replace with your Azure AD app clientId
+//     authority: "https://login.microsoftonline.com/79a9a17c-1d27-470f-bf5a-3b542a3563ab", // Replace with your tenant ID
+//     redirectUri: window.location.origin,
+//   },
+// };
+// const msalInstance = new PublicClientApplication(msalConfig);
+//  if(!msalInstance) {
+//   console.error("MSAL instance is not initialized");
+//   return;
+// }
+// // Check if the user is already signed in
+// // If not, prompt for login
+// // @ts-ignore
+//   try {
+
+//      await msalInstance.initialize();
+//     const accounts = msalInstance.getAllAccounts();
+
+//     if (accounts.length === 0) {
+//       // No user signed in → Login
+//       await msalInstance.loginPopup({
+//         scopes: ["Mail.Send"]
+//       });
+//     }
+
+//     const tokenResponse = await msalInstance.acquireTokenSilent({
+//       scopes: ["Mail.Send"],
+//       account: msalInstance.getAllAccounts()[0] // use signed-in user
+//     });
+
+//     const accessToken = tokenResponse.accessToken;
+
+//     const response = await fetch(`https://graph.microsoft.com/v1.0/users/admin%40officeindia.onmicrosoft.com/sendMail`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${accessToken}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         message: {
+//           subject: `File Access Revoked - DMS`,
+//           body: {
+//             contentType: "HTML",
+//             content: `
+//               <p>Please be informed that access for the file <strong>${FileName}</strong> has been revoked.</p>
+//               <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+//               <p>With regards,<br>${currentUserTitleRef.current}</p>
+//             `
+//           },
+//           toRecipients: [
+//             {
+//               emailAddress: {
+//                 address: user.Email,
+//                 name: user.Title
+//               }
+//             }
+//           ]
+//         }
+//       })
+//     });
+
+//     if (response.ok) {
+//       console.log("✅ Email sent successfully to", user.Email);
+//     } else {
+//       const error = await response.json();
+//       console.error("❌ Error sending email:", error);
+//     }
+
+//   } catch (error) {
+//     console.error("❌ MSAL or Graph error:", error);
+//   }
+
+
+// } catch (error) {
+//   console.error("Error sending email:", error);
+// }
+//               console.log("Email sent successfully to", user.Email);
+//             } catch (error) {
+              
+//             }
         ShareWithOther();
         // Remove the user from the array
         //  users.splice(index, 1);
@@ -6493,341 +8463,566 @@ window.revokeAccess=(UserArray:string,FileName:string,fileId:any,siteId:any,fold
 // }
 //Toggle the menu card for share with me
 // @ts-ignore
-const ShareWithMe=async(event:React.MouseEvent<HTMLButtonElement>=null,searchText:HTMLInputElement=null)=>{
-   entityclicktext = ''
-  setdisplayuploadfileandcreatefolder(false)
-   ismyrequordoclibforfilepreview = "sharewithme"
 
-if(event){
-  event.preventDefault();
-  event.stopPropagation();
-}      
+// this is working code previously without pagination
+// const ShareWithMe=async(event:React.MouseEvent<HTMLButtonElement>=null,searchText:HTMLInputElement=null)=>{
+//     // this getfilescontainer is use to first null inner html then display loader other wise it was showing previous data and laoder same time side by side 
+//   const getfilescontainer = document.getElementById('files-container')
+//   if (getfilescontainer) getfilescontainer.innerHTML = ''; // Clear the container
+//    const loader = document.getElementById('loader2');
+//      if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
 
-// Hide the list and grid view start
-const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-if (hidegidvewlistviewbutton2) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton2.style.display = 'none'
+
+//    entityclicktext = ''
+//   setdisplayuploadfileandcreatefolder(false)
+//    ismyrequordoclibforfilepreview = "sharewithme"
+
+// if(event){
+//   event.preventDefault();
+//   event.stopPropagation();
+// }      
+
+// // Hide the list and grid view start
+// const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+// const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+// if (hidegidvewlistviewbutton2) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton2.style.display = 'none'
  
-}
-if (hidegidvewlistviewbutton) {
- console.log("enter here .....................")
- hidegidvewlistviewbutton.style.display = 'none'
+// }
+// if (hidegidvewlistviewbutton) {
+//  console.log("enter here .....................")
+//  hidegidvewlistviewbutton.style.display = 'none'
 
-}
-// End
+// }
+// // End
 
-  // clean the url start
-  const newUrl = `${window.location.origin}${window.location.pathname}`;
-  window.history.pushState(null, '', newUrl)
-  // New code to hide the create file and folder button start
-  const CreateFolder=document.getElementById("CreateFolder")
-  const createFileButton=document.getElementById("createFileButton")
-  const CreateRoot=document.getElementById("CreateFolder1")
-  if(CreateFolder){
-    CreateFolder.style.display = 'none'
-    }
-    if(createFileButton){
-    createFileButton.style.display = 'none'
-    }
-    if(CreateRoot){
-      CreateRoot.style.display = 'none'
-    }
-  //End 
-  // end
-  // New Code Start
-  const DMSShareWithOtherMaster= await sp.web.lists
-  .getByTitle("DMSShareWithOtherMaster")
-  .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithMe","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType")
-  .orderBy("Created", false)
-  ();
-const filteredFiles= DMSShareWithOtherMaster.filter(file => file.ShareWithMe === currentUserEmailRef.current);
+//   // clean the url start
+//   const newUrl = `${window.location.origin}${window.location.pathname}`;
+//   window.history.pushState(null, '', newUrl)
+//   // New code to hide the create file and folder button start
+//   const CreateFolder=document.getElementById("CreateFolder")
+//   const createFileButton=document.getElementById("createFileButton")
+//   const CreateRoot=document.getElementById("CreateFolder1")
+//   if(CreateFolder){
+//     CreateFolder.style.display = 'none'
+//     }
+//     if(createFileButton){
+//     createFileButton.style.display = 'none'
+//     }
+//     if(CreateRoot){
+//       CreateRoot.style.display = 'none'
+//     }
+//   //End 
+//   // end
+//   // New Code Start
+// try {
+//    const DMSShareWithOtherMaster= await sp.web.lists
+//   .getByTitle("DMSShareWithOtherMaster")
+//   .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithMe","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType" ,"SoftDelete").filter(`SoftDelete eq 0`)
+//   .orderBy("Created", false)
+//   ();
+// const filteredFiles= DMSShareWithOtherMaster.filter(file => file.ShareWithMe === currentUserEmailRef.current);
 
-const uniqueItems = filteredFiles.filter((item, index, self) =>
-  index === self.findIndex((i) => i.FileUID === item.FileUID)
-);
-console.log("uniqueItems",uniqueItems);
-// console.log("filteredFileData",filteredFiles);
+// const uniqueItems = filteredFiles.filter((item, index, self) =>
+//   index === self.findIndex((i) => i.FileUID === item.FileUID)
+// );
+// console.log("uniqueItems",uniqueItems);
+// // console.log("filteredFileData",filteredFiles);
 
-// const DMSShareWithOtherMaster= await sp.web.lists
-// .getByTitle("DMSShareWithOtherMaster")
-// .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithMe","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType")
-// .filter(`CurrentUser ne '${currentUserEmailRef.current}'`)();
-// console.log("DMSShareWithOtherMaster",DMSShareWithOtherMaster);
+// // const DMSShareWithOtherMaster= await sp.web.lists
+// // .getByTitle("DMSShareWithOtherMaster")
+// // .items.select("FileName", "FileUID", "FileVersion", "FileSize","CurrentUser","DocumentLibraryName","CurrentFolderPath","ShareWithMe","Status","SiteID","SiteName","FilePreviewURL","ShareAt","UserID","PermissionType")
+// // .filter(`CurrentUser ne '${currentUserEmailRef.current}'`)();
+// // console.log("DMSShareWithOtherMaster",DMSShareWithOtherMaster);
 
-// const groupedData =DMSShareWithOtherMaster.reduce((acc, item) => {
-//   const key = `${item.FileUID}-${item.FileName}`;
+// // const groupedData =DMSShareWithOtherMaster.reduce((acc, item) => {
+// //   const key = `${item.FileUID}-${item.FileName}`;
 
-//     if (!acc[key]) {
-//           acc[key] = {
-//               FileUID: item.FileUID,
-//               FileName: item.FileName,
-//               FileVersion:item.FileVersion,
-//               SiteID:item.SiteID,
-//               FileSize:item.FileSize,
-//               CurrentFolderPath:item.CurrentFolderPath,
-//               DocumentLibraryName:item.DocumentLibraryName,
-//               CurrentUser:item.CurrentUser,
-//               Users: []
-//           };
-//       }
+// //     if (!acc[key]) {
+// //           acc[key] = {
+// //               FileUID: item.FileUID,
+// //               FileName: item.FileName,
+// //               FileVersion:item.FileVersion,
+// //               SiteID:item.SiteID,
+// //               FileSize:item.FileSize,
+// //               CurrentFolderPath:item.CurrentFolderPath,
+// //               DocumentLibraryName:item.DocumentLibraryName,
+// //               CurrentUser:item.CurrentUser,
+// //               Users: []
+// //           };
+// //       }
 
-//       acc[key].Users.push({
-//           User: item.ShareWithMe,
-//           UserID: item.UserID,
-//           PermissionType:item.PermissionType,
-//           ShareAt:item.ShareAt
-//       });
+// //       acc[key].Users.push({
+// //           User: item.ShareWithMe,
+// //           UserID: item.UserID,
+// //           PermissionType:item.PermissionType,
+// //           ShareAt:item.ShareAt
+// //       });
 
-//       return acc;
-//   }, {})
+// //       return acc;
+// //   }, {})
 
-// // Convert the result back to an array
-// const result = [];
-// for (let key in groupedData) {
-//   result.push(groupedData[key]);
+// // // Convert the result back to an array
+// // const result = [];
+// // for (let key in groupedData) {
+// //   result.push(groupedData[key]);
+// // }
+
+// // console.log("result",result);
+// // const user = await sp.web.ensureUser(currentUserEmailRef.current);
+// // const userIDToFind = String(user.data.Id);
+// // console.log("userIDToFind",userIDToFind);
+
+// // const filteredFiles = result.filter(file =>
+// //   file.Users.some((user:any) => user.UserID === userIDToFind)
+// // );
+
+// const container = document.getElementById("files-container");
+// container.innerHTML="";
+
+// console.log("Files Share with me",filteredFiles);
+// routeToDiffSideBar="shareWithMe";
+// let filteredFileData=[];
+// if(searchText !== null){
+//   filteredFileData=uniqueItems.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+//   if(filteredFileData.length === 0 && searchText !== null){
+//     console.log("combineArray",filteredFileData);
+//     fileNotFound(`No file match ${searchText.value}`);
+//   }
+// }else{
+//   filteredFileData=uniqueItems;
+// }
+// filteredFileData.forEach(async(file)=>{
+//   // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+//   const extensionHtml=createFileExtensionHtml(file.FileName);
+//   const user = await sp.web.siteUsers.getByEmail(file.CurrentUser)();
+//   const userName=user.Title;
+//   // console.log("file-Details",file);
+//   const card = document.createElement("div");
+//   card.className = "card";
+//   card.dataset.fileId = file.FileUID;
+//   card.dataset.listId = file.SiteID;
+         
+//   // card.innerHTML = `   
+//   // <div class="row">
+//   //         <div class="col-md-2 pe-0">     
+//   //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+//   //   </div>
+//   //   <div class="col-md-10 pe-0">
+//   //   <p class="p1st">${file.FileName}</p>
+//   //   <div class="fileSizeAndVersion">
+//   //   <p class="p3rd">${file.FileSize} MB</p>
+//   //   <p class="p2nd">${file.FileVersion}</p>
+//   //   </div>  </div>  </div>
+//   //   <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+//   //   <span>...</span>
+//   //   </div>
+//   // `;
+//   card.innerHTML = `   
+//   <div class="row">
+//           <div class="col-md-2 pe-0">     
+//     ${extensionHtml}
+//     </div>
+//     <div class="col-md-10 pe-0">
+//     <div class="CardTextContainer">
+//     <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+//     <div class="fileSizeAndVersion">
+//     <p class="p3rd">${file.FileSize} MB</p>
+//     </div>
+//     <p class="p3rd">${userName}</p>  
+//     </div>  
+//   </div>
+//   </div>
+//     <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+//     <span>...</span>
+//     </div>
+//   `;
+//   // card.innerHTML = `   
+//   // <div class="row">
+//   //         <div class="col-md-2 pe-0">     
+//   //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+//   //   </div>
+//   //   <div class="col-md-10 pe-0">
+//   //   <p class="p1st">${file.FileName}</p>
+//   //   <div class="fileSizeAndVersion">
+//   //   <p class="p3rd">${file.FileSize} MB</p>
+//   //   </div>
+//   //   <p class="p3rd">${userName}</p>  
+//   //   </div>  
+//   // </div>
+//   //   <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+//   //   <span>...</span>
+//   //   </div>
+//   // `;
+//   const menu = document.createElement("div");
+//   menu.id = `menu-${file.FileUID}`;
+//   menu.className = "popup-menu";
+//   // menu.innerHTML = `
+//   //   <ul>
+//   //     <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}')">
+//   //       <img src=${ShareFile} alt="Share"/> File Preview
+//   //     </li>
+//   //     <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','ShareWithMe','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//   //       <img src=${ShareFile} alt="Share"/> Share
+//   //     </li>
+//   //     <li onclick="DownloadFile('${file.FileUID}', '${file.SiteID}')">
+//   //       <img src=${ShareFile} alt="Share"/> Download File                
+//   //     </li>
+//   //   </ul>
+//   // `;
+//   // menu.innerHTML = `
+//   //   <ul>
+//   //     <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}')">
+//   //       <img src=${ShareFile} alt="Share"/> File Preview
+//   //     </li>
+
+//   //     <li onclick="DownloadFile('${file.FileUID}', '${file.SiteID}')">
+//   //       <img src=${ShareFile} alt="Share"/> Download File                
+//   //     </li>
+//   //   </ul>
+//   // `;
+//   menu.innerHTML = `
+//   <ul>
+//     <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
+//       <img src=${FilePreview} alt="Share"/> File Preview
+//     </li>
+
+//     <li onclick="Download('${file.FileUID}', '${file.SiteID}')">
+//       <img src=${downloadicon} alt="Share"/> Download File                
+//     </li>
+//   </ul>
+// `;  
+//   card.appendChild(menu);        
+//   container.appendChild(card);
+// })
+// // End
+
+
+// // const FilesItems = await sp.web.lists
+// // .getByTitle("MasterSiteURL")
+// // .items.select("Title", "SiteID", "FileMasterList", "Active")
+// // .filter(`Active eq 'Yes'`)();
+
+// // console.log("MasterSite Items",FilesItems);
+
+// //   FilesItems.forEach(async(fileItem)=>{
+
+// //     if(fileItem.FileMasterList !== null){
+// //       // console.log(files.FileMasterList);
+
+// //       const filesData = await sp.web.lists
+// //       .getByTitle(`${fileItem.FileMasterList}`)
+// //       .items.select("FileName", "FileUID", "FileSize", "FileVersion","ShareWithMe","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL")
+// //       .filter(
+// //         `CurrentUser ne '${currentUserEmailRef.current}'`
+// //       )();
+
+   
+// //       console.log("Files Data ",filesData);
+// //       routeToDiffSideBar="shareWithMe";
+// //       let filteredFileData=[];
+// //       if(searchText !== null){
+// //             filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+// //       }else{
+// //         filteredFileData=filesData;
+// //       }
+// //       filteredFileData.forEach((file)=>{
+// //         if( file.ShareWithMe !== null ){
+// //           // console.log("FilesMe",file)
+// //           const sharedUserInTheFormOFstring = file.ShareWithMe;
+   
+// //           let sharedUsers = JSON.parse(sharedUserInTheFormOFstring);
+
+// //           if(sharedUsers.length === 0){
+// //               return;
+// //           }
+
+// //           let fileShareWithMe=sharedUsers.find( (item:any) =>
+// //             {
+// //               //  console.log(item.SharedWith);
+// //               //  console.log("current User",currentUserEmailRef.current)
+// //                return item.SharedWith === currentUserEmailRef.current
+// //             }
+// //           )
+
+// //           // console.log("files share with me =>",fileShareWithMe);
+// //           // add later these pop option
+// //           // <li onclick="confirmDeleteFile('${file.FileUID}')">
+// //           // <img src=${deleteIcon} alt="Delete"/> Delete
+// //           // </li>
+// //           // <li onclick="shareFile('${file.FileUID}', '${fileItem.SiteID}','${file.CurrentFolderPath}','${file.FileName}','ShareWithMe')">
+// //           // <img src=${ShareFile} alt="Share"/> Share
+// //           // </li>
+// //           // <li onclick="auditHistory('${file.FileUID}', '${fileItem.SiteID}','${file.CurrentFolderPath}','${file.SiteName}')">
+// //           // <img src=${ShareFile} alt="Share"/> Audit History
+// //           // </li>
+// //           // <li onclick="DownloadFile('${file.FileUID}', '${fileItem.SiteID}')">
+// //           // <img src=${ShareFile} alt="Share"/> Download File                
+// //           // </li>
+// //           if( fileShareWithMe !== undefined ){
+
+// //             console.log("This File is Share With me By Other Users",file.FileName);
+         
+// //             const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+// //             console.log("file-Details",file);
+// //             const card = document.createElement("div");
+// //             card.className = "card";
+// //             card.dataset.fileId = file.FileUID; // Store file ID in the card element
+// //             card.dataset.listId = fileItem.SiteID; // Store site ID
+         
+// //             card.innerHTML = `        
+// //               <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+// //               <p class="p1st">${file.FileName}</p>
+// //               <div class="fileSizeAndVersion">
+// //                 <p class="p3rd">${file.FileSize} MB</p>
+// //                 <p class="p2nd">${file.FileVersion}</p>
+// //               </div>
+// //               <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${fileItem.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+// //                 <span>...</span>
+// //               </div>
+// //               `;
+// //             // new code added
+// //               const menu = document.createElement("div");
+// //               menu.id = `menu-${file.FileUID}`;
+// //               menu.className = "popup-menu";
+// //               menu.innerHTML = `
+// //                 <ul>
+// //                   <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${fileItem.SiteID}','${file.DocumentLibraryName}')">
+// //                     <img src=${ShareFile} alt="Share"/> File Preview
+// //                   </li>
+// //                 </ul>
+// //               `;
+         
+// //               card.appendChild(menu);
+         
+// //             container.appendChild(card);
+
+// //           }
+
+// //         }
+// //       })
+
+// //     }
+
+// // })
+
+// } catch (error) {
+//   console.error("Error fetching files for Share with me:", error);
+// }finally{
+//   console.log("Share with me called");
+
+//      loader.style.display = 'none'; // 🔥 Show loader before starting
+
+// }
+ 
 // }
 
-// console.log("result",result);
-// const user = await sp.web.ensureUser(currentUserEmailRef.current);
-// const userIDToFind = String(user.data.Id);
-// console.log("userIDToFind",userIDToFind);
+const ShareWithMe = async (event: React.MouseEvent<HTMLButtonElement> = null, searchText: HTMLInputElement = null) => {
+  const container = document.getElementById("files-container");
+  const loader = document.getElementById('loader2');
+  if (container) container.innerHTML = "";
+  if (loader) loader.style.display = 'block';
 
-// const filteredFiles = result.filter(file =>
-//   file.Users.some((user:any) => user.UserID === userIDToFind)
-// );
+  entityclicktext = '';
+  setdisplayuploadfileandcreatefolder(false);
+  ismyrequordoclibforfilepreview = "sharewithme";
+  routeToDiffSideBar = "shareWithMe";
 
-const container = document.getElementById("files-container");
-container.innerHTML="";
-
-console.log("Files Share with me",filteredFiles);
-routeToDiffSideBar="shareWithMe";
-let filteredFileData=[];
-if(searchText !== null){
-  filteredFileData=uniqueItems.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
-  if(filteredFileData.length === 0 && searchText !== null){
-    console.log("combineArray",filteredFileData);
-    fileNotFound(`No file match ${searchText.value}`);
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
   }
-}else{
-  filteredFileData=uniqueItems;
-}
-filteredFileData.forEach(async(file)=>{
-  // const {fileIcon, fileExtension}= getFileIcon(file.FileName);
-  const extensionHtml=createFileExtensionHtml(file.FileName);
-  const user = await sp.web.siteUsers.getByEmail(file.CurrentUser)();
-  const userName=user.Title;
-  // console.log("file-Details",file);
-  const card = document.createElement("div");
-  card.className = "card";
-  card.dataset.fileId = file.FileUID;
-  card.dataset.listId = file.SiteID;
-         
-  // card.innerHTML = `   
-  // <div class="row">
-  //         <div class="col-md-2 pe-0">     
-  //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-  //   </div>
-  //   <div class="col-md-10 pe-0">
-  //   <p class="p1st">${file.FileName}</p>
-  //   <div class="fileSizeAndVersion">
-  //   <p class="p3rd">${file.FileSize} MB</p>
-  //   <p class="p2nd">${file.FileVersion}</p>
-  //   </div>  </div>  </div>
-  //   <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-  //   <span>...</span>
-  //   </div>
-  // `;
-  card.innerHTML = `   
-  <div class="row">
-          <div class="col-md-2 pe-0">     
-    ${extensionHtml}
-    </div>
-    <div class="col-md-10 pe-0">
-    <div class="CardTextContainer">
-    <p class="p1st" title="${file.FileName}">${file.FileName}</p>
-    <div class="fileSizeAndVersion">
-    <p class="p3rd">${file.FileSize} MB</p>
-    </div>
-    <p class="p3rd">${userName}</p>  
-    </div>  
-  </div>
-  </div>
-    <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-    <span>...</span>
-    </div>
-  `;
-  // card.innerHTML = `   
-  // <div class="row">
-  //         <div class="col-md-2 pe-0">     
-  //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-  //   </div>
-  //   <div class="col-md-10 pe-0">
-  //   <p class="p1st">${file.FileName}</p>
-  //   <div class="fileSizeAndVersion">
-  //   <p class="p3rd">${file.FileSize} MB</p>
-  //   </div>
-  //   <p class="p3rd">${userName}</p>  
-  //   </div>  
-  // </div>
-  //   <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-  //   <span>...</span>
-  //   </div>
-  // `;
-  const menu = document.createElement("div");
-  menu.id = `menu-${file.FileUID}`;
-  menu.className = "popup-menu";
-  // menu.innerHTML = `
-  //   <ul>
-  //     <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}')">
-  //       <img src=${ShareFile} alt="Share"/> File Preview
-  //     </li>
-  //     <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','ShareWithMe','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
-  //       <img src=${ShareFile} alt="Share"/> Share
-  //     </li>
-  //     <li onclick="DownloadFile('${file.FileUID}', '${file.SiteID}')">
-  //       <img src=${ShareFile} alt="Share"/> Download File                
-  //     </li>
-  //   </ul>
-  // `;
-  // menu.innerHTML = `
-  //   <ul>
-  //     <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}')">
-  //       <img src=${ShareFile} alt="Share"/> File Preview
-  //     </li>
 
-  //     <li onclick="DownloadFile('${file.FileUID}', '${file.SiteID}')">
-  //       <img src=${ShareFile} alt="Share"/> Download File                
-  //     </li>
-  //   </ul>
-  // `;
-  menu.innerHTML = `
-  <ul>
-    <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
-      <img src=${FilePreview} alt="Share"/> File Preview
-    </li>
+  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+  const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton');
+  if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
+  if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
 
-    <li onclick="Download('${file.FileUID}', '${file.SiteID}')">
-      <img src=${downloadicon} alt="Share"/> Download File                
-    </li>
-  </ul>
-`;  
-  card.appendChild(menu);        
-  container.appendChild(card);
-})
-// End
+  const CreateFolder = document.getElementById("CreateFolder");
+  const createFileButton = document.getElementById("createFileButton");
+  const CreateRoot = document.getElementById("CreateFolder1");
+  if (CreateFolder) CreateFolder.style.display = 'none';
+  if (createFileButton) createFileButton.style.display = 'none';
+  if (CreateRoot) CreateRoot.style.display = 'none';
+
+  const newUrl = `${window.location.origin}${window.location.pathname}`;
+  window.history.pushState(null, '', newUrl);
+
+  try {
+    const allItems = await sp.web.lists
+      .getByTitle("DMSShareWithOtherMaster")
+      .items.select("FileName", "FileUID", "FileVersion", "FileSize", "CurrentUser", "DocumentLibraryName", "CurrentFolderPath", "ShareWithMe", "Status", "SiteID", "SiteName", "FilePreviewURL", "ShareAt", "UserID", "PermissionType", "SoftDelete")
+      .filter(`SoftDelete eq 0`)
+      .orderBy("Created", false)();
+
+    const filteredFiles = allItems.filter(file => file.ShareWithMe === currentUserEmailRef.current);
+    const uniqueItems = filteredFiles.filter((item, index, self) =>
+      index === self.findIndex((i) => i.FileUID === item.FileUID)
+    );
+
+    let finalFiles = uniqueItems;
+    if (searchText !== null) {
+      finalFiles = uniqueItems.filter((file: any) =>
+        file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase())
+      );
+      if (finalFiles.length === 0) {
+        fileNotFound(`No file match ${searchText.value}`);
+        if (loader) loader.style.display = 'none';
+        return;
+      }
+    }
+
+    // Pagination setup
+    const itemsPerPage = 12;
+    let currentPage = 1;
+    const totalPages = Math.ceil(finalFiles.length / itemsPerPage);
+
+    // Fetch user display names in parallel
+    const userTitleMap: Record<string, string> = {};
+    const uniqueEmails = [...new Set(finalFiles.map(f => f.CurrentUser))];
+    const userPromises = uniqueEmails.map(async (email) => {
+      try {
+        const user = await sp.web.siteUsers.getByEmail(email)();
+        userTitleMap[email] = user.Title;
+      } catch {
+        userTitleMap[email] = email;
+      }
+    });
+    await Promise.all(userPromises);
+
+    const renderPage = (page: number) => {
+      container.innerHTML = "";
+
+      const start = (page - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const itemsToShow = finalFiles.slice(start, end);
+
+      const cardFragments = document.createDocumentFragment();
+
+      for (const file of itemsToShow) {
+        const extensionHtml = createFileExtensionHtml(file.FileName);
+        const userName = userTitleMap[file.CurrentUser] || file.CurrentUser;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.fileId = file.FileUID;
+        card.dataset.listId = file.SiteID;
+
+        card.innerHTML = `
+          <div class="row">
+            <div class="col-md-2 pe-0">${extensionHtml}</div>
+            <div class="col-md-10 pe-0">
+              <div class="CardTextContainer">
+                <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+                <div class="fileSizeAndVersion">
+                  <p class="p3rd">${file.FileSize} MB</p>
+                </div>
+                <p class="p3rd">${userName}</p>
+              </div>
+            </div>
+          </div>
+          <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
+            <span>...</span>
+          </div>
+        `;
+
+        const menu = document.createElement("div");
+        menu.id = `menu-${file.FileUID}`;
+        menu.className = "popup-menu";
+        menu.innerHTML = `
+          <ul>
+            <li onclick="PreviewFile('${file.CurrentFolderPath}' , '${file.FileName}', '${file.SiteID}','${file.DocumentLibraryName}','${file.FilePreviewURL}')">
+              <img src=${FilePreview} alt="Preview"/> File Preview
+            </li>
+            <li onclick="Download('${file.FileUID}', '${file.SiteID}')">
+              <img src=${downloadicon} alt="Download"/> Download File
+            </li>
+          </ul>
+        `;
+
+        card.appendChild(menu);
+        cardFragments.appendChild(card);
+      }
+
+      container.appendChild(cardFragments);
+      renderPaginationControls();
+    };
+
+  const renderPaginationControls = () => {
+  let existing = document.querySelector(".pagination-container");
+  if (existing) existing.remove();
+
+  if (totalPages <= 1) return;
+
+  const pagination = document.createElement("div");
+  pagination.className = "pagination-container";
+
+  const controls = document.createElement("div");
+  controls.className = "pagination-container-buttons";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "Previous";
+  prevBtn.className = "pagination-container-buttons1";
+
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Next";
+  nextBtn.className = "pagination-container-buttons2";
+
+  const pageInfo = document.createElement("span");
+  pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  pageInfo.style.margin = "0px 30px 0px 0px";
+  pageInfo.style.lineHeight = "30px";
+
+  // Disable/enable buttons with styles
+  const styleButton = (button: HTMLButtonElement, disabled: boolean) => {
+    button.style.border = "1px solid #ddd";
+    button.style.backgroundColor = "#f8f9fa";
+    button.style.borderRadius = "4px";
+    button.style.fontSize = "14px";
+    button.style.opacity = disabled ? "0.6" : "1";
+    button.style.cursor = disabled ? "not-allowed" : "pointer";
+    button.disabled = disabled;
+  };
+
+  styleButton(prevBtn, currentPage === 1);
+  styleButton(nextBtn, currentPage === totalPages);
+
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderPage(currentPage);
+    }
+  };
+
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderPage(currentPage);
+    }
+  };
+
+  controls.appendChild(prevBtn);
+  controls.appendChild(nextBtn);
+  pagination.appendChild(controls);
+  pagination.appendChild(pageInfo);
+
+  container.appendChild(pagination);
+};
 
 
-// const FilesItems = await sp.web.lists
-// .getByTitle("MasterSiteURL")
-// .items.select("Title", "SiteID", "FileMasterList", "Active")
-// .filter(`Active eq 'Yes'`)();
+    // First page render
+    renderPage(currentPage);
 
-// console.log("MasterSite Items",FilesItems);
+  } catch (error) {
+    console.error("Error in ShareWithMe:", error);
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+};
 
-//   FilesItems.forEach(async(fileItem)=>{
 
-//     if(fileItem.FileMasterList !== null){
-//       // console.log(files.FileMasterList);
 
-//       const filesData = await sp.web.lists
-//       .getByTitle(`${fileItem.FileMasterList}`)
-//       .items.select("FileName", "FileUID", "FileSize", "FileVersion","ShareWithMe","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL")
-//       .filter(
-//         `CurrentUser ne '${currentUserEmailRef.current}'`
-//       )();
-
-   
-//       console.log("Files Data ",filesData);
-//       routeToDiffSideBar="shareWithMe";
-//       let filteredFileData=[];
-//       if(searchText !== null){
-//             filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
-//       }else{
-//         filteredFileData=filesData;
-//       }
-//       filteredFileData.forEach((file)=>{
-//         if( file.ShareWithMe !== null ){
-//           // console.log("FilesMe",file)
-//           const sharedUserInTheFormOFstring = file.ShareWithMe;
-   
-//           let sharedUsers = JSON.parse(sharedUserInTheFormOFstring);
-
-//           if(sharedUsers.length === 0){
-//               return;
-//           }
-
-//           let fileShareWithMe=sharedUsers.find( (item:any) =>
-//             {
-//               //  console.log(item.SharedWith);
-//               //  console.log("current User",currentUserEmailRef.current)
-//                return item.SharedWith === currentUserEmailRef.current
-//             }
-//           )
-
-//           // console.log("files share with me =>",fileShareWithMe);
-//           // add later these pop option
-//           // <li onclick="confirmDeleteFile('${file.FileUID}')">
-//           // <img src=${deleteIcon} alt="Delete"/> Delete
-//           // </li>
-//           // <li onclick="shareFile('${file.FileUID}', '${fileItem.SiteID}','${file.CurrentFolderPath}','${file.FileName}','ShareWithMe')">
-//           // <img src=${ShareFile} alt="Share"/> Share
-//           // </li>
-//           // <li onclick="auditHistory('${file.FileUID}', '${fileItem.SiteID}','${file.CurrentFolderPath}','${file.SiteName}')">
-//           // <img src=${ShareFile} alt="Share"/> Audit History
-//           // </li>
-//           // <li onclick="DownloadFile('${file.FileUID}', '${fileItem.SiteID}')">
-//           // <img src=${ShareFile} alt="Share"/> Download File                
-//           // </li>
-//           if( fileShareWithMe !== undefined ){
-
-//             console.log("This File is Share With me By Other Users",file.FileName);
-         
-//             const {fileIcon, fileExtension}= getFileIcon(file.FileName);
-//             console.log("file-Details",file);
-//             const card = document.createElement("div");
-//             card.className = "card";
-//             card.dataset.fileId = file.FileUID; // Store file ID in the card element
-//             card.dataset.listId = fileItem.SiteID; // Store site ID
-         
-//             card.innerHTML = `        
-//               <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-//               <p class="p1st">${file.FileName}</p>
-//               <div class="fileSizeAndVersion">
-//                 <p class="p3rd">${file.FileSize} MB</p>
-//                 <p class="p2nd">${file.FileVersion}</p>
-//               </div>
-//               <div id="three-dots" class="three-dots" onclick="shareWithMePopUp('${file.FileUID}','${fileItem.SiteID}','${file.CurrentFolderPath}','${file.FileName}')">
-//                 <span>...</span>
-//               </div>
-//               `;
-//             // new code added
-//               const menu = document.createElement("div");
-//               menu.id = `menu-${file.FileUID}`;
-//               menu.className = "popup-menu";
-//               menu.innerHTML = `
-//                 <ul>
-//                   <li onclick="PreviewFile('${file.CurrentFolderPath}/${file.FileName}', '${fileItem.SiteID}','${file.DocumentLibraryName}')">
-//                     <img src=${ShareFile} alt="Share"/> File Preview
-//                   </li>
-//                 </ul>
-//               `;
-         
-//               card.appendChild(menu);
-         
-//             container.appendChild(card);
-
-//           }
-
-//         }
-//       })
-
-//     }
-
-// })
-
-}
 
 //@ts-ignore
 //  window.shareWithMePopUp = async function(fileId: string , siteID:any , FolderPath:any , FileName:any) {
@@ -7127,248 +9322,680 @@ if (!isClickInsideMenu && !isClickInsideThreeDots) {
 
 
 
-const Recyclebin=async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any = null)=>{
-  entityclicktext = ''
-  setdisplayuploadfileandcreatefolder(false)
-if(event){
-  event.preventDefault();
-  event.stopPropagation();
-}
+// const Recyclebin=async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any = null)=>{
+//   entityclicktext = ''
+//   setdisplayuploadfileandcreatefolder(false)
+// if(event){
+//   event.preventDefault();
+//   event.stopPropagation();
+// }
 
-// Hide the list and grid view start
-const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-if (hidegidvewlistviewbutton2) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton2.style.display = 'none'
+// // Hide the list and grid view start
+// const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+// const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+// if (hidegidvewlistviewbutton2) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton2.style.display = 'none'
  
-}
-if (hidegidvewlistviewbutton) {
- console.log("enter here .....................")
- hidegidvewlistviewbutton.style.display = 'none'
+// }
+// if (hidegidvewlistviewbutton) {
+//  console.log("enter here .....................")
+//  hidegidvewlistviewbutton.style.display = 'none'
 
-}
-// End
+// }
+// // End
 
-const container = document.getElementById("files-container");
-if(siteIdToUpdate ===  null){
-  container.innerHTML="";
-}
+// const container = document.getElementById("files-container");
+// if(siteIdToUpdate ===  null){
+//   container.innerHTML="";
+// }
 
-const FilesItems = await sp.web.lists
-.getByTitle("MasterSiteURL")
-.items.select("Title", "SiteID", "FileMasterList", "Active")
-.filter(`Active eq 'Yes'`)();
+// const FilesItems = await sp.web.lists
+// .getByTitle("MasterSiteURL")
+// .items.select("Title", "SiteID", "FileMasterList", "Active")
+// .filter(`Active eq 'Yes'`)();
 
-FilesItems.forEach(async (fileItem) => {
-  if (fileItem.FileMasterList !== null) {
+// FilesItems.forEach(async (fileItem) => {
+//   if (fileItem.FileMasterList !== null) {
 
-    if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
-      return;
+//     if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//       return;
+//     }
+
+//     console.log("fileItem.FileMasterList",fileItem.FileMasterList);
+//     const filesData = await sp.web.lists
+//       .getByTitle(`${fileItem.FileMasterList}`)
+//       .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted")
+//       .filter(
+//         `CurrentUser eq '${currentUserEmailRef.current}'`
+//       )();
+
+//       const listElements = document.querySelectorAll(
+//         `[data-list-id='${fileItem.SiteID}']`
+//       );
+//       console.log("ListElemet To update",listElements)
+//       listElements.forEach((el) => el.remove());
+    
+//       console.log("files",filesData);
+//       // new code to filter only the unique files start
+//       const uniqueFiles = filesData.filter((file, index, self) => 
+//         self.findIndex(f => f.FileUID === file.FileUID) === index
+//       );
+//       console.log(uniqueFiles,"uniqueFiles.....");
+//       // end
+//      routeToDiffSideBar="recyclebin";
+//      let filteredFileData;
+//      if(searchText !== null){
+//        filteredFileData=uniqueFiles.filter((file: any) => file.FileName.toLowerCase().includes(searchText.value.toLowerCase()))
+//      }else{
+//        filteredFileData=uniqueFiles;
+//      }
+
+//      filteredFileData.forEach((file)=>{
+//       if(file.IsDeleted !== null){
+//         const card = document.createElement("div");
+//         let fileIcon;
+//         const fileExtension = file.FileName?.split(".").pop().toLowerCase();
+//         // switch (fileExtension) {
+//         //   case "doc":
+//         //   case "docx":
+//         //     fileIcon = Docicon;
+//         //     break;
+//         //   case "txt":
+//         //     fileIcon = Txticon;
+//         //     break;
+//         //   case "pdf":
+//         //     fileIcon = Pdficon;
+//         //     break;
+//         //   case "xls":
+//         //   case "xlsx":
+//         //     fileIcon = Xlsicon;
+//         //     break;
+//         //   case "zip":
+//         //     fileIcon = Zipicon;
+//         //     break;
+//         //   default:
+//         //     fileIcon = Docicon; 
+//         //     break;
+//         // }
+//         switch (fileExtension.toLowerCase()) {
+//           // Documents
+//           case "doc":
+//           case "docx":
+//             fileIcon = Docicon;
+//             break;
+//           case "txt":
+//             fileIcon = Txticon;
+//             break;
+//           case "pdf":
+//             fileIcon = Pdficon;
+//             break;
+//           case "xls":
+//           case "xlsx":
+//           case "csv":
+//             fileIcon = Xlsicon;
+//             break;
+//           case "ppt":
+//           case "pptx":
+//             fileIcon = Ppticon;
+//             break;
+        
+//           // Images
+//           case "jpg":
+//           case "jpeg":
+//           case "png":
+//           case "gif":
+//           case "bmp":
+//           case "tiff":
+//           case "svg":
+//           case "webp":
+//             fileIcon = Jpgicon;
+//             break;
+        
+//           // Audio
+//           case "mp3":
+//           case "wav":
+//           case "aac":
+//           case "ogg":
+//           case "flac":
+//             fileIcon = Mp3icon;
+//             break;
+        
+//           // Video
+//           case "mp4":
+//           case "avi":
+//           case "mkv":
+//           case "mov":
+//           case "wmv":
+//           case "flv":
+//           case "webm":
+//             fileIcon = Mp4icon;
+//             break;
+        
+//           // Compressed files
+//           case "zip":
+//           case "rar":
+//           case "7z":
+//           case "tar":
+//           case "gz":
+//             fileIcon = Zipicon;
+//             break;
+        
+//           // Code files
+//           case "html":
+//           case "css":
+//           case "js":
+//           case "ts":
+//           case "json":
+//           case "xml":
+//           case "sql":
+//           case "php":
+//           case "py":
+//           case "java":
+//           case "c":
+//           case "cpp":
+//           case "cs":
+//           case "swift":
+//           case "go":
+//           case "rb":
+//             fileIcon = Htmlicon;
+//             break;
+        
+//           // Default
+//           default:
+//             fileIcon = Docicon; // Default fallback icon
+//             break;
+//         }
+// 	const extensionHtml=createFileExtensionHtml(file.FileName);
+//         card.className = "card";
+//         card.dataset.listId = file.SiteID;
+//         card.innerHTML = `  
+//         <div class="row">
+//           <div class="col-md-2 pe-0"> 
+//           <div class="IMGContainer"> 
+                 
+//           ${extensionHtml}
+//          </div></div>
+//          <div class="col-md-10 pe-0">
+//          <div class="CardTextContainer"> 
+//           <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+//           <p class="p2nd"></p>
+//           <p class="p3rd">${file.FileSize}</p>
+//           </div></div></div>
+//           <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+//               <span>...</span>
+//           </div>
+//         `;
+//         // card.innerHTML = `  
+//         // <div class="row">
+//         //   <div class="col-md-2 pe-0"> 
+//         //   <div class="IMGContainer"> 
+//         //   <div class="CardTextContainer">       
+//         //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+//         //  </div></div></div>
+//         //  <div class="col-md-10 pe-0">
+//         //   <p class="p1st">${file.FileName}</p>
+//         //   <p class="p2nd"></p>
+//         //   <p class="p3rd">${file.FileSize}</p>
+//         //   </div></div>
+//         //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+//         //       <span>...</span>
+//         //   </div>
+//         // `;
+    
+//         const menu = document.createElement("div");
+//         menu.id = `menu-${file.FileUID}`;
+//         menu.className = "popup-menu";
+//         // const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
+//         menu.innerHTML = `
+//          <ul>
+//           <li onclick="confirmUndo('${file.FileUID}','${file.SiteID}','${fileItem.FileMasterList}','${file.DocumentLibraryName}','${file.ID}','${file.CurrentFolderPath}','${file.FileName}')">
+//             <img src=${Undo} alt="undo"/>Undo
+//           </li>
+//         </ul>
+//         `;
+//         card.appendChild(menu);
+//         container.appendChild(card);
+//       }
+//      })
+
+//   }
+// })
+
+
+// }
+
+// const Recyclebin = async (event: React.MouseEvent<HTMLButtonElement> = null, siteIdToUpdate: string = null, searchText: any = null) => {
+//   entityclicktext = '';
+//   setdisplayuploadfileandcreatefolder(false);
+  
+//   if (event) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//   }
+
+//   // Hide the list and grid view
+//   const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+//   const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton');
+//   if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
+//   if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
+
+//   const container = document.getElementById("files-container");
+//   if (siteIdToUpdate === null) {
+//     container.innerHTML = "";
+//   }
+
+//   // Show loader
+//   const loader = document.getElementById('loader2');
+//   if (loader) loader.style.display = 'block';
+
+//   try {
+//     const FilesItems = await sp.web.lists
+//       .getByTitle("MasterSiteURL")
+//       .items.select("Title", "SiteID", "FileMasterList", "Active")
+//       .filter(`Active eq 'Yes'`)();
+
+//     let allFilesData: any[] = [];
+    
+//     // Collect all files data first
+//     for (const fileItem of FilesItems) {
+//       if (fileItem.FileMasterList !== null) {
+//         if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//           continue;
+//         }
+
+//         const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", "SiteName", "FilePreviewURL", "IsDeleted")
+//           .filter(`CurrentUser eq '${currentUserEmailRef.current}'`)();
+
+//         const uniqueFiles = filesData.filter((file, index, self) => 
+//           self.findIndex(f => f.FileUID === file.FileUID) === index
+//         );
+        
+//         // Add FileMasterList reference to each file
+//         const filesWithMasterList = uniqueFiles.map(file => ({
+//           ...file,
+//           FileMasterList: fileItem.FileMasterList
+//         }));
+        
+//         allFilesData = [...allFilesData, ...filesWithMasterList];
+//       }
+//     }
+
+//     // Remove existing elements
+//     const listElements = document.querySelectorAll(`[data-list-id]`);
+//     listElements.forEach((el) => el.remove());
+
+//     routeToDiffSideBar = "recyclebin";
+//     let filteredFileData: any;
+    
+//     // Fixed search text handling
+//     if (searchText && searchText.value && typeof searchText.value === 'string') {
+//       const searchTerm = searchText.value.toLowerCase();
+//       filteredFileData = allFilesData.filter((file: any) => 
+//         file.FileName && file.FileName.toLowerCase().includes(searchTerm)
+//       );
+//     } else {
+//       filteredFileData = allFilesData;
+//     }
+
+//     // Filter only deleted files
+//     const deletedFiles = filteredFileData.filter((file:any) => file.IsDeleted !== null);
+
+//     // Pagination variables
+//     const itemsPerPage = 12;
+//     let currentPage = 1;
+//     const totalPages = Math.ceil(deletedFiles.length / itemsPerPage);
+
+//     // Function to display items for current page
+//     const displayItems = (page: number) => {
+//       container.innerHTML = "";
+//       currentPage = page;
+      
+//       const startIndex = (page - 1) * itemsPerPage;
+//       const endIndex = Math.min(startIndex + itemsPerPage, deletedFiles.length);
+//       const paginatedItems = deletedFiles.slice(startIndex, endIndex);
+
+//       if (paginatedItems.length === 0) {
+//         const noFileMessage = document.createElement("p");
+//         noFileMessage.textContent = "No files found in recycle bin.";
+//         noFileMessage.style.color = "black";
+//         noFileMessage.style.fontSize = "16px";
+//         noFileMessage.style.textAlign = "center";
+//         container.appendChild(noFileMessage);
+//       } else {
+//         paginatedItems.forEach((file:any) => {
+//           const card = document.createElement("div");
+//           const extensionHtml = createFileExtensionHtml(file.FileName);
+          
+//           card.className = "card";
+//           card.dataset.listId = file.SiteID;
+//           card.innerHTML = `  
+//             <div class="row">
+//               <div class="col-md-2 pe-0"> 
+//                 <div class="IMGContainer"> 
+//                   ${extensionHtml}
+//                 </div>
+//               </div>
+//               <div class="col-md-10 pe-0">
+//                 <div class="CardTextContainer"> 
+//                   <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+//                   <p class="p2nd"></p>
+//                   <p class="p3rd">${file.FileSize}</p>
+//                 </div>
+//               </div>
+//             </div>
+//             <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}','${file.FileMasterList}')">
+//               <span>...</span>
+//             </div>
+//           `;
+
+//           const menu = document.createElement("div");
+//           menu.id = `menu-${file.FileUID}`;
+//           menu.className = "popup-menu";
+//           menu.innerHTML = `
+//             <ul>
+//               <li onclick="confirmUndo('${file.FileUID}','${file.SiteID}','${file.FileMasterList}',
+//                 '${file.DocumentLibraryName}','${file.ID}','${file.CurrentFolderPath}',
+//                 '${file.FileName}')">
+//                 <img src=${Undo} alt="undo"/>Undo
+//               </li>
+//             </ul>
+//           `;
+//           card.appendChild(menu);
+//           container.appendChild(card);
+//         });
+//       }
+
+//       // Add pagination controls
+//       addPaginationControls();
+//     };
+
+//     // Function to add pagination controls
+//     const addPaginationControls = () => {
+//       // Remove existing pagination if any
+//       const existingPagination = document.querySelector('.pagination-container');
+//       if (existingPagination) {
+//         existingPagination.remove();
+//       }
+
+//       if (deletedFiles.length <= itemsPerPage) {
+//         return; // Don't show pagination if only one page
+//       }
+
+//       const paginationContainer = document.createElement("div");
+//       paginationContainer.className = "pagination-container";
+      
+//       const buttonContainer = document.createElement("div");
+//       buttonContainer.className = "pagination-container-buttons";
+      
+//       // Previous button
+//       const prevButton = document.createElement("button");
+//       prevButton.textContent = "Previous";
+//       prevButton.className = "pagination-container-buttons1";
+//       prevButton.disabled = currentPage <= 1;
+//       prevButton.onclick = () => displayItems(currentPage - 1);
+      
+//       // Next button
+//       const nextButton = document.createElement("button");
+//       nextButton.textContent = "Next";
+//       nextButton.className = "pagination-container-buttons2";
+//       nextButton.disabled = currentPage >= totalPages;
+//       nextButton.onclick = () => displayItems(currentPage + 1);
+      
+//       // Page info
+//       const pageInfo = document.createElement("span");
+//       pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+//       pageInfo.style.margin = "0px 30px 0px 0px";
+//       pageInfo.style.lineHeight = "30px";
+
+//       // Apply disabled styles
+//       if (prevButton.disabled) {
+//         prevButton.style.opacity = "0.6";
+//         prevButton.style.cursor = "not-allowed";
+//       }
+//       if (nextButton.disabled) {
+//         nextButton.style.opacity = "0.6";
+//         nextButton.style.cursor = "not-allowed";
+//       }
+
+//       buttonContainer.appendChild(prevButton);
+//       buttonContainer.appendChild(nextButton);
+//       paginationContainer.appendChild(buttonContainer);
+//       paginationContainer.appendChild(pageInfo);
+//       container.appendChild(paginationContainer);
+//     };
+
+//     // Initial display
+//     displayItems(1);
+
+//   } catch (error) {
+//     console.error("Error in Recyclebin function:", error);
+//   } finally {
+//     // Hide loader when done
+//     if (loader) loader.style.display = 'none';
+//   }
+// };
+const Recyclebin = async (
+  event: React.MouseEvent<HTMLButtonElement> = null, 
+  siteIdToUpdate: string = null, 
+  searchText: any = null,
+  currentPage: number = 1  // Add currentPage parameter to maintain pagination state
+) => {
+  entityclicktext = '';
+  setdisplayuploadfileandcreatefolder(false);
+  
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Hide the list and grid view
+  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+  const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton');
+  if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
+  if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
+
+  const container = document.getElementById("files-container");
+  if (siteIdToUpdate === null) {
+    container.innerHTML = "";
+  }
+
+  // before loader empty id="files-container"
+  const mymaincontiner = document.getElementById('files-container');
+  if(mymaincontiner){
+    mymaincontiner.innerHTML = "";
+  }
+  // Show loader
+  const loader = document.getElementById('loader2');
+  if (loader) loader.style.display = 'block';
+
+  try {
+    const FilesItems = await sp.web.lists
+      .getByTitle("MasterSiteURL")
+      .items.select("Title", "SiteID", "FileMasterList", "Active")
+      .filter(`Active eq 'Yes'`)();
+
+    let allFilesData: any[] = [];
+    
+    // Collect all files data first
+    for (const fileItem of FilesItems) {
+      if (fileItem.FileMasterList !== null) {
+        // Remove the siteId filter to get all files
+        const filesData = await sp.web.lists
+          .getByTitle(`${fileItem.FileMasterList}`)
+          .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", "SiteName", "FilePreviewURL", "IsDeleted")
+          .filter(`CurrentUser eq '${currentUserEmailRef.current}'`)();
+
+        const uniqueFiles = filesData.filter((file, index, self) => 
+          self.findIndex(f => f.FileUID === file.FileUID) === index
+        );
+        
+        // Add FileMasterList reference to each file
+        const filesWithMasterList = uniqueFiles.map(file => ({
+          ...file,
+          FileMasterList: fileItem.FileMasterList
+        }));
+        
+        allFilesData = [...allFilesData, ...filesWithMasterList];
+      }
     }
 
-    console.log("fileItem.FileMasterList",fileItem.FileMasterList);
-    const filesData = await sp.web.lists
-      .getByTitle(`${fileItem.FileMasterList}`)
-      .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted")
-      .filter(
-        `CurrentUser eq '${currentUserEmailRef.current}'`
-      )();
+    // Remove existing elements
+    const listElements = document.querySelectorAll(`[data-list-id]`);
+    listElements.forEach((el) => el.remove());
 
-      const listElements = document.querySelectorAll(
-        `[data-list-id='${fileItem.SiteID}']`
-      );
-      console.log("ListElemet To update",listElements)
-      listElements.forEach((el) => el.remove());
+    routeToDiffSideBar = "recyclebin";
+    let filteredFileData: any;
     
-      console.log("files",filesData);
-      // new code to filter only the unique files start
-      const uniqueFiles = filesData.filter((file, index, self) => 
-        self.findIndex(f => f.FileUID === file.FileUID) === index
+    // Fixed search text handling
+    if (searchText && searchText.value && typeof searchText.value === 'string') {
+      const searchTerm = searchText.value.toLowerCase();
+      filteredFileData = allFilesData.filter((file: any) => 
+        file.FileName && file.FileName.toLowerCase().includes(searchTerm)
       );
-      console.log(uniqueFiles,"uniqueFiles.....");
-      // end
-     routeToDiffSideBar="recyclebin";
-     let filteredFileData;
-     if(searchText !== null){
-       filteredFileData=uniqueFiles.filter((file: any) => file.FileName.toLowerCase().includes(searchText.value.toLowerCase()))
-     }else{
-       filteredFileData=uniqueFiles;
-     }
+    } else {
+      filteredFileData = allFilesData;
+    }
 
-     filteredFileData.forEach((file)=>{
-      if(file.IsDeleted !== null){
-        const card = document.createElement("div");
-        let fileIcon;
-        const fileExtension = file.FileName?.split(".").pop().toLowerCase();
-        // switch (fileExtension) {
-        //   case "doc":
-        //   case "docx":
-        //     fileIcon = Docicon;
-        //     break;
-        //   case "txt":
-        //     fileIcon = Txticon;
-        //     break;
-        //   case "pdf":
-        //     fileIcon = Pdficon;
-        //     break;
-        //   case "xls":
-        //   case "xlsx":
-        //     fileIcon = Xlsicon;
-        //     break;
-        //   case "zip":
-        //     fileIcon = Zipicon;
-        //     break;
-        //   default:
-        //     fileIcon = Docicon; 
-        //     break;
-        // }
-        switch (fileExtension.toLowerCase()) {
-          // Documents
-          case "doc":
-          case "docx":
-            fileIcon = Docicon;
-            break;
-          case "txt":
-            fileIcon = Txticon;
-            break;
-          case "pdf":
-            fileIcon = Pdficon;
-            break;
-          case "xls":
-          case "xlsx":
-          case "csv":
-            fileIcon = Xlsicon;
-            break;
-          case "ppt":
-          case "pptx":
-            fileIcon = Ppticon;
-            break;
-        
-          // Images
-          case "jpg":
-          case "jpeg":
-          case "png":
-          case "gif":
-          case "bmp":
-          case "tiff":
-          case "svg":
-          case "webp":
-            fileIcon = Jpgicon;
-            break;
-        
-          // Audio
-          case "mp3":
-          case "wav":
-          case "aac":
-          case "ogg":
-          case "flac":
-            fileIcon = Mp3icon;
-            break;
-        
-          // Video
-          case "mp4":
-          case "avi":
-          case "mkv":
-          case "mov":
-          case "wmv":
-          case "flv":
-          case "webm":
-            fileIcon = Mp4icon;
-            break;
-        
-          // Compressed files
-          case "zip":
-          case "rar":
-          case "7z":
-          case "tar":
-          case "gz":
-            fileIcon = Zipicon;
-            break;
-        
-          // Code files
-          case "html":
-          case "css":
-          case "js":
-          case "ts":
-          case "json":
-          case "xml":
-          case "sql":
-          case "php":
-          case "py":
-          case "java":
-          case "c":
-          case "cpp":
-          case "cs":
-          case "swift":
-          case "go":
-          case "rb":
-            fileIcon = Htmlicon;
-            break;
-        
-          // Default
-          default:
-            fileIcon = Docicon; // Default fallback icon
-            break;
-        }
-	const extensionHtml=createFileExtensionHtml(file.FileName);
-        card.className = "card";
-        card.dataset.listId = file.SiteID;
-        card.innerHTML = `  
-        <div class="row">
-          <div class="col-md-2 pe-0"> 
-          <div class="IMGContainer"> 
-                 
-          ${extensionHtml}
-         </div></div>
-         <div class="col-md-10 pe-0">
-         <div class="CardTextContainer"> 
-          <p class="p1st" title="${file.FileName}">${file.FileName}</p>
-          <p class="p2nd"></p>
-          <p class="p3rd">${file.FileSize}</p>
-          </div></div></div>
-          <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+    // Filter only deleted files
+    const deletedFiles = filteredFileData.filter((file:any) => file.IsDeleted !== null);
+
+    // Pagination variables
+    const itemsPerPage = 12;
+    const totalPages = Math.ceil(deletedFiles.length / itemsPerPage);
+
+    // Function to display items for current page
+    const displayItems = (page: number) => {
+      container.innerHTML = "";
+      currentPage = page;
+      
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, deletedFiles.length);
+      const paginatedItems = deletedFiles.slice(startIndex, endIndex);
+
+      if (paginatedItems.length === 0) {
+        const noFileMessage = document.createElement("p");
+        noFileMessage.textContent = "No files found in recycle bin.";
+        noFileMessage.style.color = "black";
+        noFileMessage.style.fontSize = "16px";
+        noFileMessage.style.textAlign = "center";
+        container.appendChild(noFileMessage);
+      } else {
+        paginatedItems.forEach((file:any) => {
+          const card = document.createElement("div");
+          const extensionHtml = createFileExtensionHtml(file.FileName);
+          
+          card.className = "card";
+          card.dataset.listId = file.SiteID;
+          card.innerHTML = `  
+            <div class="row">
+              <div class="col-md-2 pe-0"> 
+                <div class="IMGContainer"> 
+                  ${extensionHtml}
+                </div>
+              </div>
+              <div class="col-md-10 pe-0">
+                <div class="CardTextContainer"> 
+                  <p class="p1st" title="${file.FileName}">${file.FileName}</p>
+                  <p class="p2nd"></p>
+                  <p class="p3rd">${file.FileSize}</p>
+                </div>
+              </div>
+            </div>
+            <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}','${file.FileMasterList}')">
               <span>...</span>
-          </div>
-        `;
-        // card.innerHTML = `  
-        // <div class="row">
-        //   <div class="col-md-2 pe-0"> 
-        //   <div class="IMGContainer"> 
-        //   <div class="CardTextContainer">       
-        //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-        //  </div></div></div>
-        //  <div class="col-md-10 pe-0">
-        //   <p class="p1st">${file.FileName}</p>
-        //   <p class="p2nd"></p>
-        //   <p class="p3rd">${file.FileSize}</p>
-        //   </div></div>
-        //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
-        //       <span>...</span>
-        //   </div>
-        // `;
-    
-        const menu = document.createElement("div");
-        menu.id = `menu-${file.FileUID}`;
-        menu.className = "popup-menu";
-        // const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
-        menu.innerHTML = `
-         <ul>
-          <li onclick="confirmUndo('${file.FileUID}','${file.SiteID}','${fileItem.FileMasterList}','${file.DocumentLibraryName}','${file.ID}','${file.CurrentFolderPath}','${file.FileName}')">
-            <img src=${Undo} alt="undo"/>Undo
-          </li>
-        </ul>
-        `;
-        card.appendChild(menu);
-        container.appendChild(card);
+            </div>
+          `;
+
+          const menu = document.createElement("div");
+          menu.id = `menu-${file.FileUID}`;
+          menu.className = "popup-menu";
+          menu.innerHTML = `
+            <ul>
+              <li onclick="confirmUndo('${file.FileUID}','${file.SiteID}','${file.FileMasterList}',
+                '${file.DocumentLibraryName}','${file.ID}','${file.CurrentFolderPath}',
+                '${file.FileName}')">
+                <img src=${Undo} alt="undo"/>Undo
+              </li>
+            </ul>
+          `;
+          card.appendChild(menu);
+          container.appendChild(card);
+        });
       }
-     })
 
+      // Add pagination controls
+      addPaginationControls();
+    };
+
+    // Function to add pagination controls
+    const addPaginationControls = () => {
+      // Remove existing pagination if any
+      const existingPagination = document.querySelector('.pagination-container');
+      if (existingPagination) {
+        existingPagination.remove();
+      }
+
+      if (deletedFiles.length <= itemsPerPage) {
+        return; // Don't show pagination if only one page
+      }
+
+      const paginationContainer = document.createElement("div");
+      paginationContainer.className = "pagination-container";
+      
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className = "pagination-container-buttons";
+      
+      // Previous button
+      const prevButton = document.createElement("button");
+      prevButton.textContent = "Previous";
+      prevButton.className = "pagination-container-buttons1";
+      prevButton.disabled = currentPage <= 1;
+      prevButton.onclick = () => displayItems(currentPage - 1);
+      
+      // Next button
+      const nextButton = document.createElement("button");
+      nextButton.textContent = "Next";
+      nextButton.className = "pagination-container-buttons2";
+      nextButton.disabled = currentPage >= totalPages;
+      nextButton.onclick = () => displayItems(currentPage + 1);
+      
+      // Page info
+      const pageInfo = document.createElement("span");
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      pageInfo.style.margin = "0px 30px 0px 0px";
+      pageInfo.style.lineHeight = "30px";
+
+      // Apply disabled styles
+      if (prevButton.disabled) {
+        prevButton.style.opacity = "0.6";
+        prevButton.style.cursor = "not-allowed";
+      }
+      if (nextButton.disabled) {
+        nextButton.style.opacity = "0.6";
+        nextButton.style.cursor = "not-allowed";
+      }
+
+      buttonContainer.appendChild(prevButton);
+      buttonContainer.appendChild(nextButton);
+      paginationContainer.appendChild(buttonContainer);
+      paginationContainer.appendChild(pageInfo);
+      container.appendChild(paginationContainer);
+    };
+
+    // Initial display - use the provided currentPage
+    displayItems(currentPage);
+
+  } catch (error) {
+    console.error("Error in Recyclebin function:", error);
+  } finally {
+    // Hide loader when done
+    if (loader) loader.style.display = 'none';
   }
-})
+};
 
-
-}
 // window.undo=async(fileId:any,siteId:any,FileMasterList:any,documentLibraryName:any,ID:any,folderPath:any,fileName:any)=>{
 //   console.log("Undo function called");
 //   console.log("fileId",fileId);
@@ -7435,13 +10062,15 @@ try {
   // update the correponding IsDeleted Column of the document libray to which file belong to.
   try {
     const subsiteContext=await sp.site.openWebById(siteId);
+    console.log("folderPath",folderPath);
+    console.log("fileName",fileName);
     const fileItem = await subsiteContext.web.getFileByServerRelativePath(`${folderPath}/${fileName}`).getItem();
     let payload:any={
       IsDeleted:null
     }
     const itemData = await fileItem.update(payload)
     console.log("column updated successfully",itemData);
-    await Recyclebin(null,siteId);
+   await Recyclebin(null, siteId, null, 1); // Pass currentPage if you're tracking it
   } catch (error) {
     console.log(`Error in updating the columns of document library ${documentLibraryName}`,error);
   }
@@ -8369,16 +10998,16 @@ function closePopup() {
   // }
   // myfunction()
 
-  console.log("Inside the toggleMenu2");
-  console.log(siteID, "siteID")
-  console.log(fileId , "fileId")
-  console.log("enter here i n menu card")
+  // console.log("Inside the toggleMenu2");
+  // console.log(siteID, "siteID")
+  // console.log(fileId , "fileId")
+  // console.log("enter here i n menu card")
   const allMenus = document.querySelectorAll('.popup-menu');
   console.log(allMenus , "allMenus")
   allMenus.forEach(menu => {
-    console.log(menu , "menu")
-    console.log(menu.id , "menu.id")
-    console.log(fileId , "fileId")
+    // console.log(menu , "menu")
+    // console.log(menu.id , "menu.id")
+    // console.log(fileId , "fileId")
     if (menu.id !== `menu-${fileId}`) {
       menu.classList.remove("show");
     }
@@ -8790,7 +11419,7 @@ window.deleteFile = async(fileId:string, siteID:string, IsHardDelete:any, ListTo
     }
     // end
   console.log("currentfolderpath",currentfolderpath,"currentsiteID",currentsiteID,"currentDocumentLibrary",currentDocumentLibrary)
-   getdoclibdata(currentfolderpath, currentsiteID , currentDocumentLibrary)
+   getdoclibdata(currentfolderpath, currentsiteID , currentDocumentLibrary , "")
   //  getfolderdata(currentfolderpath,currentsiteID)
 };
 
@@ -9449,363 +12078,789 @@ window.view=(message:string)=>{
 //   }
 
 // }
-const mycreatedfolders = async (event:any=null, searchText:any=null )=>{
-   entityclicktext = ''
-  setdisplayuploadfileandcreatefolder(false)
-const wait = document.getElementById('files-container')
-wait.classList.remove('hidemydatacards')
-const CreateFolder=document.getElementById("CreateFolder")
-const createFileButton=document.getElementById("createFileButton")
-const CreateRoot=document.getElementById("CreateFolder1")
-if(CreateFolder){
-  CreateFolder.style.display = 'none'
-  }
-  if(createFileButton){
-  createFileButton.style.display = 'none'
-  }
-  if(CreateRoot){
-    CreateRoot.style.display = 'none'
-  }
-setlistorgriddata('')
-setlistorgriddata('')
-setShowMyrequButtons(false)
-setShowMyfavButtons(false)
 
-if(event){
-  event.preventDefault()
-  event.stopPropagation()
-}
-// clean the url start
-const newUrl = `${window.location.origin}${window.location.pathname}`;
-window.history.pushState(null, '', newUrl)
-// end
+//  this is my working mycreatedfolders code before pagingation button added
+// const mycreatedfolders = async (event:any=null, searchText:any=null )=>{
+//     // this getfilescontainer is use to first null inner html then display loader other wise it was showing previous data and laoder same time side by side 
+//   const getfilescontainer = document.getElementById('files-container')
+//   if (getfilescontainer) getfilescontainer.innerHTML = ''; // Clear the container
+//     const loader = document.getElementById('loader2');
+//      if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
 
-// start
-// call this function onClick of the myFolder Button
-// handleShowContent(event)
-// end
-// if(createFileButton2){
-//    createFileButton2.style.display = 'none'
+//    entityclicktext = ''
+//   //  setshowFolderListviewgridviewbutton(true)
+//   setdisplayuploadfileandcreatefolder(false)
+// const wait = document.getElementById('files-container')
+// wait.classList.remove('hidemydatacards')
+// const CreateFolder=document.getElementById("CreateFolder")
+// const createFileButton=document.getElementById("createFileButton")
+// const CreateRoot=document.getElementById("CreateFolder1")
+// if(CreateFolder){
+//   CreateFolder.style.display = 'none'
+//   }
+//   if(createFileButton){
+//   createFileButton.style.display = 'none'
+//   }
+//   if(CreateRoot){
+//     CreateRoot.style.display = 'none'
+//   }
+// setlistorgriddata('')
+// setlistorgriddata('')
+// setShowMyrequButtons(false)
+// setShowMyfavButtons(false)
+
+// if(event){
+//   event.preventDefault()
+//   event.stopPropagation()
 // }
-//  if(createFileButton){
-// createFileButton.style.display = 'none'
-//  }  
- const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
- const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
- if (hidegidvewlistviewbutton) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton.style.display = 'none'
+// // clean the url start
+// const newUrl = `${window.location.origin}${window.location.pathname}`;
+// window.history.pushState(null, '', newUrl)
+// // end
+
+// // start
+// // call this function onClick of the myFolder Button
+// // handleShowContent(event)
+// // end
+// // if(createFileButton2){
+// //    createFileButton2.style.display = 'none'
+// // }
+// //  if(createFileButton){
+// // createFileButton.style.display = 'none'
+// //  }  
+//  const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+//  if (hidegidvewlistviewbutton) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton.style.display = 'none'
  
-}
-if (hidegidvewlistviewbutton2) {
-    console.log("enter here .....................");
-    hidegidvewlistviewbutton2.style.display = 'none';
-}
+// }
+// if (hidegidvewlistviewbutton2) {
+//     console.log("enter here .....................");
+//     hidegidvewlistviewbutton2.style.display = 'none';
+// }
 
-// Check if the user is super Admin start
-let superAdmin=false;
+// // Check if the user is super Admin start
+// let superAdmin=false;
+// // let folderItems:any[]=[]
 // let folderItems:any[]=[]
-let folderItems:any[]=[]
-  const currentUser = await sp.web.currentUser();
-  const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
-  const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
-  if(isMemberOfSuperAdmin){
+// try{
+//   const currentUser = await sp.web.currentUser();
+//   const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+//   const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+//   if(isMemberOfSuperAdmin){
 
-    // superAdmin=true;
-    // folderItems = await sp.web.lists
-    // .getByTitle("DMSFolderMaster")
-    // .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External").filter(`IsActive eq 1`)
-    // .orderBy("Created", false).getAll();
+//     // superAdmin=true;
+//     // folderItems = await sp.web.lists
+//     // .getByTitle("DMSFolderMaster")
+//     // .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName","IsRename" ,"External").filter(`IsActive eq 1`)
+//     // .orderBy("Created", false).getAll();
   
-    let pageSize = 5000; // Set the desired page size
-    superAdmin=true;
+//     let pageSize = 5000; // Set the desired page size
+//     superAdmin=true;
      
-    let filterfolderItems: any[] = [];
-    let AllfolderItems = await sp.web.lists
-      .getByTitle("DMSFolderMaster")
-      .items
-      .select(
-        "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
-        "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
-        "IsRename", "External", "IsActive", "Created"
-      )
-      .top(pageSize)
-      .getPaged();
+//     let filterfolderItems: any[] = [];
+     
+//     let AllfolderItems = await sp.web.lists
+//       .getByTitle("DMSFolderMaster")
+//       .items
+//       .select(
+//         "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+//         "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+//         "IsRename", "External", "IsActive", "Created"
+//       )
+//       .top(pageSize)
+//       .getPaged();
     
-    // First page
-    filterfolderItems.push(...AllfolderItems.results);
+//     // First page
+//     filterfolderItems.push(...AllfolderItems.results);
     
-    // Remaining pages
-    while (AllfolderItems.hasNext) {
-      AllfolderItems = await AllfolderItems.getNext();
-      filterfolderItems.push(...AllfolderItems.results);
-    }
+//     // Remaining pages
+//     while (AllfolderItems.hasNext) {
+//       AllfolderItems = await AllfolderItems.getNext();
+//       filterfolderItems.push(...AllfolderItems.results);
+//     }
     
-    // ✅ THEN filter and sort in JS
-     folderItems = filterfolderItems
-      .filter(item => item.IsActive === true)
-      .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+//     // ✅ THEN filter and sort in JS
+//      folderItems = filterfolderItems
+//       .filter(item => item.IsActive === true)
+//       .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
     
-    console.log("SuperAdmin All folder items in mycreatedfolders", folderItems);
+//     console.log("SuperAdmin All folder items in mycreatedfolders", folderItems);
 
-  }else{
+//   }else{
   
-    const pageSize = 5000;
+//     const pageSize = 5000;
 
-    let allPagedItems: any[] = []; // Temporarily stores all paginated items
+//     let allPagedItems: any[] = []; // Temporarily stores all paginated items
     
-    let paged = await sp.web.lists
-      .getByTitle("DMSFolderMaster")
-      .items
-      .select(
-        "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
-        "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
-        "IsRename", "External", "IsActive", "Created"
-      )
-      .top(pageSize)
-      .getPaged();
+//     let paged = await sp.web.lists
+//       .getByTitle("DMSFolderMaster")
+//       .items
+//       .select(
+//         "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+//         "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+//         "IsRename", "External", "IsActive", "Created"
+//       )
+//       .top(pageSize)
+//       .getPaged();
     
-    // First page
-    allPagedItems.push(...paged.results);
+//     // First page
+//     allPagedItems.push(...paged.results);
     
-    // Remaining pages
-    while (paged.hasNext) {
-      paged = await paged.getNext();
-      allPagedItems.push(...paged.results);
-    }
+//     // Remaining pages
+//     while (paged.hasNext) {
+//       paged = await paged.getNext();
+//       allPagedItems.push(...paged.results);
+//     }
     
-    // ✅ Filter and sort AFTER getting all data
-    folderItems = allPagedItems
-      .filter(item => 
-        item.IsActive === true && 
-        item.CurrentUser?.toLowerCase() === currentUserEmailRef.current.toLowerCase()
-      )
-      .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+//     // ✅ Filter and sort AFTER getting all data
+//     folderItems = allPagedItems
+//       .filter(item => 
+//         item.IsActive === true && 
+//         item.CurrentUser?.toLowerCase() === currentUserEmailRef.current.toLowerCase()
+//       )
+//       .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
     
-    console.log("All folder items in mycreatedfolders", folderItems);
-  }
-// end
+//     console.log("All folder items in mycreatedfolders", folderItems);
+//   }
+// // end
 
-// const folderItems = await sp.web.lists
-// .getByTitle("DMSFolderMaster")
-// .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName")
-// .filter(`CurrentUser eq '${currentUserEmailRef.current}'`).orderBy("Created", false)();
-// console.log(folderItems , "folderItems");
+// // const folderItems = await sp.web.lists
+// // .getByTitle("DMSFolderMaster")
+// // .items.select("CurrentUser" , "IsFolder" , "FolderPath" , "DocumentLibraryName","SiteTitle","ID" , "IsPrivate","IsLibrary","FolderName")
+// // .filter(`CurrentUser eq '${currentUserEmailRef.current}'`).orderBy("Created", false)();
+// // console.log(folderItems , "folderItems");
 
-// new code to fetch the siteId from the masterSiteURl and map this siteid with corresponding siteTitle forEach folder in the folderData that fetch from the DMSFolderMaster
-const dataFromMasterSiteURL=await sp.web.lists.getByTitle("MasterSiteURL").items.select("Title","SiteID").filter(`Active eq 'Yes'`)();
-console.log("dataFromMasterSiteURL",dataFromMasterSiteURL);
+// // new code to fetch the siteId from the masterSiteURl and map this siteid with corresponding siteTitle forEach folder in the folderData that fetch from the DMSFolderMaster
+// const dataFromMasterSiteURL=await sp.web.lists.getByTitle("MasterSiteURL").items.select("Title","SiteID").filter(`Active eq 'Yes'`)();
+// console.log("dataFromMasterSiteURL",dataFromMasterSiteURL);
 
-// check the folder permission start
+// // check the folder permission start
 
-// if(folderItems[0].IsLibrary){
-//   console.log(`folder path - ${folderItems[0].FolderPath}`)
-//   try {
-//     const library = await sp.web.getList(`${folderItems[0].FolderPath}`).roleAssignments.expand("Member", "RoleDefinitionBindings")();
+// // if(folderItems[0].IsLibrary){
+// //   console.log(`folder path - ${folderItems[0].FolderPath}`)
+// //   try {
+// //     const library = await sp.web.getList(`${folderItems[0].FolderPath}`).roleAssignments.expand("Member", "RoleDefinitionBindings")();
 
-//     library.forEach((assignment:any) => {
-//         console.log("Assigned to:", assignment.Member.Title);
-//         console.log(
-//             "Roles:",
-//             assignment.RoleDefinitionBindings.map((role:any) => role.Name).join(", ")
-//         );
-//     });
-// } catch (error) {
-//     console.error("Error fetching library permissions:", error);
+// //     library.forEach((assignment:any) => {
+// //         console.log("Assigned to:", assignment.Member.Title);
+// //         console.log(
+// //             "Roles:",
+// //             assignment.RoleDefinitionBindings.map((role:any) => role.Name).join(", ")
+// //         );
+// //     });
+// // } catch (error) {
+// //     console.error("Error fetching library permissions:", error);
+// // }
+// // }
+
+
+//   // end
+
+// const siteMap=new Map();
+// dataFromMasterSiteURL.forEach(site => {
+//   siteMap.set(site.Title, site.SiteID);
+// });
+
+// const folderDataWithSiteId= folderItems.map(folder => {
+//    // Get the SiteID or null if not found
+//   const siteID = siteMap.get(folder.SiteTitle) || null;
+//   return {
+//     ...folder,
+//     // Append SiteID to the folder object
+//     SiteID: siteID
+//   };
+// });
+
+// console.log("Resultant folder data",folderDataWithSiteId);
+// // end new code
+
+// const container = document.getElementById("files-container");
+// container.innerHTML = "";
+// const folderimg = require('../assets/Folder.png')
+
+// // start
+// console.log("searchInput",searchText);
+// routeToDiffSideBar="myFolder";
+// let filteredFileData;
+// if(searchText !== null){
+//   // here we change the array to new siteId containing array
+//   filteredFileData=folderDataWithSiteId.filter((folder: any) =>
+//        folder.DocumentLibraryName?.toLowerCase().includes(searchText.value.toLowerCase())
+//   ||   folder.FolderName?.toLowerCase().includes(searchText.value.toLowerCase())
+//   // ||   folder.ParentFolder.toLowerCase().includes(searchText.value.toLowerCase())
+// )
+
+// if(filteredFileData.length === 0 && searchText !== null){
+//   console.log("combineArray",filteredFileData);
+//   fileNotFound(`No folder match ${searchText.value}`);
+// }
+// }else{
+//   // here we change the array to new siteId containing array
+//   filteredFileData=folderDataWithSiteId;
+//   console.log("filteredFileData",filteredFileData)
+// }
+// // end
+// if(filteredFileData.length === 0){
+//   // console.log("no file found");
+//   const container = document.getElementById("files-container");
+//   container.innerHTML = "";
+  
+//   // Create a message element
+//   const noFileMessage = document.createElement("p");
+//   noFileMessage.textContent = "No folders found.";
+//   noFileMessage.style.color = "gray"; 
+//   noFileMessage.style.fontSize = "16px"; 
+//   noFileMessage.style.textAlign = "center";
+
+//   // Append the message to the container
+//   container.appendChild(noFileMessage);
+
+// }
+// // change the array name in the for loop
+// for(const files of filteredFileData){
+//   let externalFolder=false;
+// if(files.External === true){
+//   externalFolder=true;
+// }
+// // console.log("FolderName",files.FolderName);
+// let deleteFolderName=''
+// let folderName='';
+// if(files.IsLibrary === true){
+//   folderName=files.DocumentLibraryName;
+//   deleteFolderName=files.DocumentLibraryName;
+// }else if(files.IsFolder === true){
+//   folderName=files.FolderName;
+//   deleteFolderName=files.FolderName;
+// }
+//   if(files.IsRename !== null){
+//     folderName=files.IsRename;
+//   }
+//   let folderisprivateorpublic : any = ""
+//   if(files.IsPrivate === true){
+//     folderisprivateorpublic = "Private"
+//   }else if(files.IsPrivate === false){
+//     folderisprivateorpublic = "Public"
+//   }else if(files.IsPrivate === null){
+//     folderisprivateorpublic = "Null"
+//   }
+//   // console.log("files111",files);
+//   const card = document.createElement("div");
+
+//   card.className = "card";
+//   card.innerHTML = `
+//    <div class="row"> 
+//     <div class="col-md-2 pe-0">   
+//     <div class="IMGContainer">  
+//      <div class="CardTextContainer">
+//   <img class="filextension" src=${folderimg} icon"/>
+//   </div></div></div>
+//   <div class="col-md-10"> 
+//   <p class="p1st p1stfolder">${folderName}</p>
+//   <p class="p2nd">${files.SiteTitle} </p>
+//   <div class="mycreatedfolderpublicorlibrary"> <p class="filestatus">${folderisprivateorpublic} </p> 
+  
+//   <p class="filestatus2 ${files.IsLibrary === true ? 'root-folder' : 'sub-folder'}"> ${files.IsLibrary === true ? 'Root Folder' : 'Sub Folder'} </p> </div>
+//   </div>
+//   <div class="three-dots folderthreedots" onclick="toggleMenu2('${files.ID}','${files.SiteID}')">
+//       <span>...</span>
+//   </div> </div>
+//            </div>
+// `;
+// const menu = document.createElement("div");
+// menu.id =`menu-${files.ID}`;
+// menu.className = "popup-menu";
+// menu.innerHTML = `
+// <ul>
+//      <li onclick="managePermission('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}','${files.FolderName}','${files.FolderPath}' , '${externalFolder}','${files.ID}')">
+//       <img src=${ManagePermissionFolder} alt="ManagePermission"/>
+//       Manage Permission
+//   </li>
+//   <li onclick="manageWorkflow('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}')">
+//     <img src=${ManageWorkflowFolder} alt="ManageWorkFlow"/>
+//     Manage Workflow
+//   </li>
+//   <li onclick="editFile('${files.SiteTitle}','${files.DocumentLibraryName}')">
+//     <img src=${AddMetaData} alt="Edit"/>
+//     Add Meta Data
+//   </li>
+//  <li onclick="deleteFolder('${files.SiteTitle}','${deleteFolderName}','${files.ID}','${files.SiteID}','${files.FolderPath}','${files.IsLibrary}')">
+//     <img src=${DeleteFolder} alt="Edit"/>
+//     Delete Folder
+//     </li>
+//      ${superAdmin === true ? 
+//     `
+//     <li onclick="renameFolder('${files.SiteTitle}','${folderName}','${files.ID}','${files.SiteID}')">
+//       <img src=${RenameFolder} alt="Edit"/>
+//       Rename Folder
+//     </li>
+//     ${files.IsLibrary === true ? `<li onclick="renameColumn('${files.SiteTitle}','${files.DocumentLibraryName}')">
+//       <img src=${RenameMetaData} alt="Edit"/>
+//       Rename Meta Data
+//     </li>`: ''}
+//     `
+//     : ''}
+// </ul>
+// `;
+
+
+// card.appendChild(menu);
+//  const isfolderordoclib = card.querySelector(".filestatus2") as HTMLElement;
+//  switch (files.IsLibrary === true){
+//   case true:
+//   isfolderordoclib.style.backgroundColor = "gray";
+//   isfolderordoclib.style.color = "white";
+//  }
+// const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+// switch (files.IsPrivate) {
+//   case false:
+//     fileStatusElement.style.backgroundColor = "#b5e7d3";
+//     fileStatusElement.style.color = "#008751";
+//     break;
+//   case true:
+//     fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+//     fileStatusElement.style.color = "#f1556c";
+//     break;
+//   case null:
+//     fileStatusElement.style.backgroundColor = "gray";
+//     fileStatusElement.style.color = "white";
+//     break;
+//       default:
+//         fileStatusElement.style.backgroundColor = "gray";
+//         fileStatusElement.style.color = "white";
+//         break;
+// }
+
+// container.appendChild(card);
+// const menu1 = document.getElementById(`menu-${files.ID}`);
+// if(files.IsFolder === true){
+//   const secondItem = menu1.children[0]?.children[1] as HTMLElement;
+//   const thirdItem = menu1.children[0]?.children[2] as HTMLElement;
+//   if (secondItem && secondItem.style.display !== "none") {
+//       secondItem.style.display = "none";
+//   }
+//   if (thirdItem && thirdItem.style.display !== "none") {
+//     thirdItem.style.display = "none";
+//   }
 // }
 // }
 
+// }catch (error) {  
+//    console.error("Error in mycreatedfolders function:", error);
+// }finally {
+//   if (loader) {
+//     loader.style.display = "none";
+//   }
+// }
+   
+// }
 
-  // end
+// this is last updated code for mycreatedfolders after pagination
+const mycreatedfolders = async (event: any = null, searchText: any = null) => {
+    // Clear container and show loader
+    const getfilescontainer = document.getElementById('files-container');
+    if (getfilescontainer) getfilescontainer.innerHTML = ''; // Clear the container
+    const loader = document.getElementById('loader2');
+    if (loader) loader.style.display = 'block'; // Show loader before starting
 
-const siteMap=new Map();
-dataFromMasterSiteURL.forEach(site => {
-  siteMap.set(site.Title, site.SiteID);
-});
+    entityclicktext = '';
+    setdisplayuploadfileandcreatefolder(false);
+    const wait = document.getElementById('files-container');
+    wait.classList.remove('hidemydatacards');
+    
+    // Hide create folder buttons
+    const CreateFolder = document.getElementById("CreateFolder");
+    const createFileButton = document.getElementById("createFileButton");
+    const CreateRoot = document.getElementById("CreateFolder1");
+    if (CreateFolder) CreateFolder.style.display = 'none';
+    if (createFileButton) createFileButton.style.display = 'none';
+    if (CreateRoot) CreateRoot.style.display = 'none';
+    
+    setlistorgriddata('');
+    setShowMyrequButtons(false);
+    setShowMyfavButtons(false);
 
-const folderDataWithSiteId= folderItems.map(folder => {
-   // Get the SiteID or null if not found
-  const siteID = siteMap.get(folder.SiteTitle) || null;
-  return {
-    ...folder,
-    // Append SiteID to the folder object
-    SiteID: siteID
-  };
-});
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
-console.log("Resultant folder data",folderDataWithSiteId);
-// end new code
+    // Clean the URL
+    const newUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.pushState(null, '', newUrl);
 
-const container = document.getElementById("files-container");
-container.innerHTML = "";
-const folderimg = require('../assets/Folder.png')
+    // Hide grid/list view buttons
+    const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton');
+    const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+    if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
+    if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
 
-// start
-console.log("searchInput",searchText);
-routeToDiffSideBar="myFolder";
-let filteredFileData;
-if(searchText !== null){
-  // here we change the array to new siteId containing array
-  filteredFileData=folderDataWithSiteId.filter((folder: any) =>
-       folder.DocumentLibraryName?.toLowerCase().includes(searchText.value.toLowerCase())
-  ||   folder.FolderName?.toLowerCase().includes(searchText.value.toLowerCase())
-  // ||   folder.ParentFolder.toLowerCase().includes(searchText.value.toLowerCase())
-)
+    // Check if user is super admin
+    let superAdmin = false;
+    let folderItems: any[] = [];
+    try {
+        const currentUser = await sp.web.currentUser();
+        const userGroups = await sp.web.siteUsers.getById(currentUser.Id).groups();
+        const isMemberOfSuperAdmin = userGroups.some(group => group.Title === `DMSSuper_Admin`);
+        
+        if (isMemberOfSuperAdmin) {
+            superAdmin = true;
+            let pageSize = 5000;
+            let filterfolderItems: any[] = [];
+            let AllfolderItems = await sp.web.lists
+                .getByTitle("DMSFolderMaster")
+                .items
+                .select(
+                    "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+                    "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+                    "IsRename", "External", "IsActive", "Created"
+                )
+                .top(pageSize)
+                .getPaged();
+            
+            filterfolderItems.push(...AllfolderItems.results);
+            while (AllfolderItems.hasNext) {
+                AllfolderItems = await AllfolderItems.getNext();
+                filterfolderItems.push(...AllfolderItems.results);
+            }
+            
+            folderItems = filterfolderItems
+                .filter(item => item.IsActive === true)
+                .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+        } else {
+            const pageSize = 5000;
+            let allPagedItems: any[] = [];
+            let paged = await sp.web.lists
+                .getByTitle("DMSFolderMaster")
+                .items
+                .select(
+                    "CurrentUser", "IsFolder", "FolderPath", "DocumentLibraryName",
+                    "SiteTitle", "ID", "IsPrivate", "IsLibrary", "FolderName", 
+                    "IsRename", "External", "IsActive", "Created"
+                )
+                .top(pageSize)
+                .getPaged();
+            
+            allPagedItems.push(...paged.results);
+            while (paged.hasNext) {
+                paged = await paged.getNext();
+                allPagedItems.push(...paged.results);
+            }
+            
+            folderItems = allPagedItems
+                .filter(item => 
+                    item.IsActive === true && 
+                    item.CurrentUser?.toLowerCase() === currentUserEmailRef.current.toLowerCase()
+                )
+                .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime());
+        }
 
-if(filteredFileData.length === 0 && searchText !== null){
-  console.log("combineArray",filteredFileData);
-  fileNotFound(`No folder match ${searchText.value}`);
+        // Get site data for mapping
+        const dataFromMasterSiteURL = await sp.web.lists.getByTitle("MasterSiteURL").items.select("Title", "SiteID").filter(`Active eq 'Yes'`)();
+        const siteMap = new Map();
+        dataFromMasterSiteURL.forEach(site => {
+            siteMap.set(site.Title, site.SiteID);
+        });
+
+        const folderDataWithSiteId = folderItems.map(folder => {
+            const siteID = siteMap.get(folder.SiteTitle) || null;
+            return {
+                ...folder,
+                SiteID: siteID
+            };
+        });
+
+        const container = document.getElementById("files-container");
+        container.innerHTML = "";
+        const folderimg = require('../assets/Folder.png');
+
+        // Filter data based on search text
+        routeToDiffSideBar = "myFolder";
+        let mycreatedfilteredFileData:any;
+        if (searchText !== null) {
+            mycreatedfilteredFileData = folderDataWithSiteId.filter((folder: any) =>
+                folder.DocumentLibraryName?.toLowerCase().includes(searchText.value.toLowerCase()) ||
+                folder.FolderName?.toLowerCase().includes(searchText.value.toLowerCase())
+            );
+        
+
+            if (mycreatedfilteredFileData.length === 0 && searchText !== null) {
+                fileNotFound(`No folder match ${searchText.value}`);
+            }
+        } else {
+            mycreatedfilteredFileData = folderDataWithSiteId;
+        }
+
+        // Pagination implementation
+        const itemsPerPage = 12;
+        let currentPage = 1;
+        const totalPages = Math.ceil(mycreatedfilteredFileData.length / itemsPerPage);
+
+        const displayItems = (page: number) => {
+            container.innerHTML = "";
+            // currentPage = page;
+            
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, mycreatedfilteredFileData.length);
+            const paginatedItems = mycreatedfilteredFileData.slice(startIndex, endIndex);
+
+            if (paginatedItems.length === 0) {
+                const noFileMessage = document.createElement("p");
+                noFileMessage.textContent = "No folders found.";
+                noFileMessage.style.color = "black";
+                noFileMessage.style.fontSize = "16px";
+                noFileMessage.style.textAlign = "center";
+                container.appendChild(noFileMessage);
+                return;
+            }
+
+            for (const files of paginatedItems) {
+                let externalFolder = false;
+                if (files.External === true) {
+                    externalFolder = true;
+                }
+
+                let deleteFolderName = '';
+                let folderName = '';
+                if (files.IsLibrary === true) {
+                    folderName = files.DocumentLibraryName;
+                    deleteFolderName = files.DocumentLibraryName;
+                } else if (files.IsFolder === true) {
+                    folderName = files.FolderName;
+                    deleteFolderName = files.FolderName;
+                }
+                if (files.IsRename !== null) {
+                    folderName = files.IsRename;
+                }
+
+                let folderisprivateorpublic: any = "";
+                if (files.IsPrivate === true) {
+                    folderisprivateorpublic = "Private";
+                } else if (files.IsPrivate === false) {
+                    folderisprivateorpublic = "Public";
+                } else if (files.IsPrivate === null) {
+                    folderisprivateorpublic = "Null";
+                }
+
+                const card = document.createElement("div");
+                card.className = "card";
+                card.innerHTML = `
+                    <div class="row"> 
+                        <div class="col-md-2 pe-0">   
+                            <div class="IMGContainer">  
+                                <div class="CardTextContainer">
+                                    <img class="filextension" src=${folderimg} icon"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-10"> 
+                            <p class="p1st p1stfolder">${folderName}</p>
+                            <p class="p2nd">${files.SiteTitle} </p>
+                            <div class="mycreatedfolderpublicorlibrary"> 
+                                <p class="filestatus">${folderisprivateorpublic} </p> 
+                                <p class="filestatus2 ${files.IsLibrary === true ? 'root-folder' : 'sub-folder'}"> 
+                                    ${files.IsLibrary === true ? 'Root Folder' : 'Sub Folder'} 
+                                </p> 
+                            </div>
+                        </div>
+                        <div class="three-dots folderthreedots" onclick="toggleMenu2('${files.ID}','${files.SiteID}')">
+                            <span>...</span>
+                        </div> 
+                    </div>
+                `;
+
+                const menu = document.createElement("div");
+                menu.id = `menu-${files.ID}`;
+                menu.className = "popup-menu";
+                menu.innerHTML = `
+                    <ul>
+                        <li onclick="managePermission('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}','${files.FolderName}','${files.FolderPath}' , '${externalFolder}','${files.ID}')">
+                            <img src=${ManagePermissionFolder} alt="ManagePermission"/>
+                            Manage Permission
+                        </li>
+                        <li onclick="manageWorkflow('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}')">
+                            <img src=${ManageWorkflowFolder} alt="ManageWorkFlow"/>
+                            Manage Workflow
+                        </li>
+                        <li onclick="editFile('${files.SiteTitle}','${files.DocumentLibraryName}')">
+                            <img src=${AddMetaData} alt="Edit"/>
+                            Add Meta Data
+                        </li>
+                        <li onclick="deleteFolder('${files.SiteTitle}','${deleteFolderName}','${files.ID}','${files.SiteID}','${files.FolderPath}','${files.IsLibrary}')">
+                            <img src=${DeleteFolder} alt="Edit"/>
+                            Delete Folder
+                        </li>
+                        ${superAdmin === true ? 
+                            `
+                            <li onclick="renameFolder('${files.SiteTitle}','${folderName}','${files.ID}','${files.SiteID}')">
+                                <img src=${RenameFolder} alt="Edit"/>
+                                Rename Folder
+                            </li>
+                            ${files.IsLibrary === true ? `<li onclick="renameColumn('${files.SiteTitle}','${files.DocumentLibraryName}')">
+                                <img src=${RenameMetaData} alt="Edit"/>
+                                Rename Meta Data
+                            </li>` : ''}
+                            `
+                        : ''}
+                    </ul>
+                `;
+
+                card.appendChild(menu);
+                const isfolderordoclib = card.querySelector(".filestatus2") as HTMLElement;
+                if (files.IsLibrary === true) {
+                    isfolderordoclib.style.backgroundColor = "gray";
+                    isfolderordoclib.style.color = "white";
+                }
+
+                const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+                switch (files.IsPrivate) {
+                    case false:
+                        fileStatusElement.style.backgroundColor = "#b5e7d3";
+                        fileStatusElement.style.color = "#008751";
+                        break;
+                    case true:
+                        fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+                        fileStatusElement.style.color = "#f1556c";
+                        break;
+                    case null:
+                        fileStatusElement.style.backgroundColor = "gray";
+                        fileStatusElement.style.color = "white";
+                        break;
+                    default:
+                        fileStatusElement.style.backgroundColor = "gray";
+                        fileStatusElement.style.color = "white";
+                        break;
+                }
+
+                container.appendChild(card);
+                const menu1 = document.getElementById(`menu-${files.ID}`);
+                if (files.IsFolder === true) {
+                    const secondItem = menu1.children[0]?.children[1] as HTMLElement;
+                    const thirdItem = menu1.children[0]?.children[2] as HTMLElement;
+                    if (secondItem) secondItem.style.display = "none";
+                    if (thirdItem) thirdItem.style.display = "none";
+                }
+            }
+
+            // Add pagination controls
+            addPaginationControls();
+        };
+
+        const addPaginationControls = () => {
+           const paginationContainer = document.createElement("div");
+            paginationContainer.className = "pagination-container";
+            // paginationContainer.style.display = "flex";
+            // paginationContainer.style.justifyContent = "center";
+            // paginationContainer.style.marginTop = "20px";
+            // paginationContainer.style.gap = "5px";
+            
+            const creatediv = document.createElement("div");
+            creatediv.className = "pagination-container-buttons";
+           // Previous button
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Previous";
+            prevButton.className = "pagination-container-buttons1"
+            // 
+            // prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener("click", () => {
+                if (currentPage > 1) {
+                    displayItems(currentPage - 1);
+                }
+            });
+
+            // Next button
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Next";
+             nextButton.className = "pagination-container-buttons2"
+            //  
+            // nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener("click", () => {
+                if (currentPage < totalPages) {
+                    displayItems(currentPage + 1);
+                }
+            });
+// alert("currentPage:"+ currentPage);
+// alert("totalPages:" + totalPages);
+// alert("filtered data:"+ mycreatedfilteredFileData.length);
+
+const shouldDisable = mycreatedfilteredFileData.length < 13;
+const disablePrev = currentPage === 1 || shouldDisable;
+const disableNext = currentPage === totalPages || shouldDisable;
+
+if (disablePrev) {
+    prevButton.style.opacity = "0.6";
+    prevButton.style.cursor = "not-allowed";
+    prevButton.onclick = null; // remove click event
+} else {
+    prevButton.style.opacity = "1";
+    prevButton.style.cursor = "pointer";
+    prevButton.onclick = () => {
+        currentPage--;
+      displayItems(currentPage)};
 }
-}else{
-  // here we change the array to new siteId containing array
-  filteredFileData=folderDataWithSiteId;
-  console.log("filteredFileData",filteredFileData)
+
+if (disableNext) {
+    nextButton.style.opacity = "0.6";
+    nextButton.style.cursor = "not-allowed";
+    nextButton.onclick = null;
+} else {
+    nextButton.style.opacity = "1";
+    nextButton.style.cursor = "pointer";
+    nextButton.onclick = () => {
+        currentPage++;
+      displayItems(currentPage )};
 }
-// end
-if(filteredFileData.length === 0){
-  // console.log("no file found");
-  const container = document.getElementById("files-container");
-  container.innerHTML = "";
+
+// alert("Prev disabled:"+ prevButton.disabled);
+// alert("Next disabled:"+ nextButton.disabled);
+            // Page info
+            const pageInfo = document.createElement("span");
+            // pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+           pageInfo.textContent = `Page ${currentPage} of ${Math.max(totalPages, 1)}`;
+            pageInfo.style.margin = "0px 30px 0px 0px";
+            pageInfo.style.lineHeight = "30px";
   
-  // Create a message element
-  const noFileMessage = document.createElement("p");
-  noFileMessage.textContent = "No folders found.";
-  noFileMessage.style.color = "gray"; 
-  noFileMessage.style.fontSize = "16px"; 
-  noFileMessage.style.textAlign = "center";
+            // Add controls to container
+                  paginationContainer.appendChild(creatediv); 
+            creatediv.appendChild(prevButton)
+            creatediv.appendChild(nextButton)
+            // paginationContainer.appendChild(prevButton);
+            paginationContainer.appendChild(pageInfo);
+            // paginationContainer.appendChild(nextButton);
 
-  // Append the message to the container
-  container.appendChild(noFileMessage);
+            // Style buttons
+            const styleButton = (button: HTMLButtonElement) => {
+                  // button.style.padding = "5px 10px";
+                button.style.border = "1px solid #ddd";
+                button.style.backgroundColor = "#f8f9fa";
+                button.style.borderRadius = "4px";
+                // button.style.cursor = "pointer";
+                button.style.fontSize = "14px";
+                if (button.disabled) {
+                    // button.style.opacity = "0.5";
+                }
+            };
 
-}
-// change the array name in the for loop
-for(const files of filteredFileData){
-  let externalFolder=false;
-if(files.External === true){
-  externalFolder=true;
-}
-// console.log("FolderName",files.FolderName);
-let deleteFolderName=''
-let folderName='';
-if(files.IsLibrary === true){
-  folderName=files.DocumentLibraryName;
-  deleteFolderName=files.DocumentLibraryName;
-}else if(files.IsFolder === true){
-  folderName=files.FolderName;
-  deleteFolderName=files.FolderName;
-}
-  if(files.IsRename !== null){
-    folderName=files.IsRename;
-  }
-  let folderisprivateorpublic : any = ""
-  if(files.IsPrivate === true){
-    folderisprivateorpublic = "Private"
-  }else if(files.IsPrivate === false){
-    folderisprivateorpublic = "Public"
-  }else if(files.IsPrivate === null){
-    folderisprivateorpublic = "Null"
-  }
-  // console.log("files111",files);
-  const card = document.createElement("div");
+            styleButton(prevButton);
+            styleButton(nextButton);
 
-  card.className = "card";
-  card.innerHTML = `
-   <div class="row"> 
-    <div class="col-md-2 pe-0">   
-    <div class="IMGContainer">  
-     <div class="CardTextContainer">
-  <img class="filextension" src=${folderimg} icon"/>
-  </div></div></div>
-  <div class="col-md-10"> 
-  <p class="p1st p1stfolder">${folderName}</p>
-  <p class="p2nd">${files.SiteTitle} </p>
-  <div class="mycreatedfolderpublicorlibrary"> <p class="filestatus">${folderisprivateorpublic} </p> 
-  
-  <p class="filestatus2 ${files.IsLibrary === true ? 'root-folder' : 'sub-folder'}"> ${files.IsLibrary === true ? 'Root Folder' : 'Sub Folder'} </p> </div>
-  </div>
-  <div class="three-dots folderthreedots" onclick="toggleMenu2('${files.ID}','${files.SiteID}')">
-      <span>...</span>
-  </div> </div>
-           </div>
-`;
-const menu = document.createElement("div");
-menu.id =`menu-${files.ID}`;
-menu.className = "popup-menu";
-menu.innerHTML = `
-<ul>
-     <li onclick="managePermission('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}','${files.FolderName}','${files.FolderPath}' , '${externalFolder}','${files.ID}')">
-      <img src=${ManagePermissionFolder} alt="ManagePermission"/>
-      Manage Permission
-  </li>
-  <li onclick="manageWorkflow('${files.DocumentLibraryName}','${files.SiteTitle}','${files.SiteID}')">
-    <img src=${ManageWorkflowFolder} alt="ManageWorkFlow"/>
-    Manage Workflow
-  </li>
-  <li onclick="editFile('${files.SiteTitle}','${files.DocumentLibraryName}')">
-    <img src=${AddMetaData} alt="Edit"/>
-    Add Meta Data
-  </li>
-  ${superAdmin === true ? 
-    `<li onclick="deleteFolder('${files.SiteTitle}','${deleteFolderName}','${files.ID}','${files.SiteID}','${files.FolderPath}','${files.IsLibrary}')">
-    <img src=${DeleteFolder} alt="Edit"/>
-    Delete Folder
-    </li>
-    <li onclick="renameFolder('${files.SiteTitle}','${folderName}','${files.ID}','${files.SiteID}')">
-      <img src=${RenameFolder} alt="Edit"/>
-      Rename Folder
-    </li>
-    ${files.IsLibrary === true ? `<li onclick="renameColumn('${files.SiteTitle}','${files.DocumentLibraryName}')">
-      <img src=${RenameMetaData} alt="Edit"/>
-      Rename Meta Data
-    </li>`: ''}
-    `
-    : ''}
-</ul>
-`;
+            container.appendChild(paginationContainer);
+        };
+
+        // Initial display
+        displayItems(1);
+
+    } catch (error) {
+        console.error("Error in mycreatedfolders function:", error);
+    } finally {
+        if (loader) {
+            loader.style.display = "none";
+        }
+    }
+};
 
 
-card.appendChild(menu);
- const isfolderordoclib = card.querySelector(".filestatus2") as HTMLElement;
- switch (files.IsLibrary === true){
-  case true:
-  isfolderordoclib.style.backgroundColor = "gray";
-  isfolderordoclib.style.color = "white";
- }
-const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
-switch (files.IsPrivate) {
-  case false:
-    fileStatusElement.style.backgroundColor = "#b5e7d3";
-    fileStatusElement.style.color = "#008751";
-    break;
-  case true:
-    fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
-    fileStatusElement.style.color = "#f1556c";
-    break;
-  case null:
-    fileStatusElement.style.backgroundColor = "gray";
-    fileStatusElement.style.color = "white";
-    break;
-      default:
-        fileStatusElement.style.backgroundColor = "gray";
-        fileStatusElement.style.color = "white";
-        break;
-}
-
-container.appendChild(card);
-const menu1 = document.getElementById(`menu-${files.ID}`);
-if(files.IsFolder === true){
-  const secondItem = menu1.children[0]?.children[1] as HTMLElement;
-  const thirdItem = menu1.children[0]?.children[2] as HTMLElement;
-  if (secondItem && secondItem.style.display !== "none") {
-      secondItem.style.display = "none";
-  }
-  if (thirdItem && thirdItem.style.display !== "none") {
-    thirdItem.style.display = "none";
-  }
-}
-}
-
-}
 // Function to delete the folder
 // @ts-ignore
 // window.deleteFolder=(siteName:any,documentLibraryName:any)=>{
@@ -9815,7 +12870,185 @@ if(files.IsFolder === true){
 
 // Function to delete the folder
 // @ts-ignore
+
+// previous working code withou pagination in id document library
+// window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpath:any,IsLibrary:any)=>{
+//   console.log("siteName",siteName)
+//   console.log("folderName",folderName)
+//   console.log("itemId",itemId)
+//   console.log("siteId",siteId)
+//   console.log("folderpath",folderpath)
+//   console.log("IsLibrary",IsLibrary)
+//   Swal.fire({
+//     title: "Are you sure you want to delete this folder?",
+//     text: "Deleting this folder will also permanently delete all files and subfolders inside it.",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#3085d6",
+//     cancelButtonColor: "#d33",
+//     confirmButtonText: "Yes, delete it!"
+//   }).then(async(result) => {
+//     if (result.isConfirmed) {
+//       // Delete the Library and folder in sharepoint
+//       try {
+
+//         const {web}=await sp.site.openWebById(siteId);
+//         if(IsLibrary === 'true'){
+//           const data=await web.lists.getByTitle(folderName).delete();
+//           console.log("Library deleted succesfully",data);
+//           // console.log("Library deleted succesfully");
+//         }else{
+//           const data=await web.getFolderByServerRelativePath(`${folderpath}`).delete();
+//           console.log("Folder deleted succesfully",data);
+//           // console.log("Folder deleted succesfully");
+//         }
+        
+//         // Delete the data related to the folder/library inside the DMSFolderMster
+//         try {
+//           // await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(itemId).delete();
+//           if(IsLibrary === 'true'){
+//             const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+//             console.log("folderMasterData",folderMasterData);
+//             if(folderMasterData){
+//               const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}'`)();
+//               console.log("documentNestedData",libraryNestedData);
+//               if(libraryNestedData.length > 0){
+//                 for(let item of libraryNestedData){
+//                   try {
+//                     await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+//                     console.log("Delete foldermasterdata",item.FolderPath);
+//                   } catch (error) {
+//                     console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+//                   }
+                  
+//                   const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+//                   .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+//                   .select("Id")();
+//                   console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+//                   console.log("itemsFileMaster",itemsFileMaster);
+//                   if(itemsFileMaster.length >0){
+//                       // Delete all matching items
+//                       for (const item of itemsFileMaster) {   
+//                         try {
+//                           await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+//                           console.log(`Deleted item with ID: ${item.Id}`);
+//                         } catch (error) {
+//                           console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+//                         }
+//                       }
+//                   }
+//                 }
+              
+//               }
+             
+//             }
+//           }else{
+//             const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+//             console.log("folderMasterData for folder",folderMasterData);
+//              const fetchNestedFolders=async(parentFolderID: string): Promise<any[]> =>{
+//               // Fetch direct subfolders for the given folder
+//               const subFolderData = await sp.web.lists.getByTitle("DMSFolderMaster").items
+//                   .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentID eq ${parentFolderID}`)
+//                   .select("*")();
+              
+//               // console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
+//               console.log(`Subfolders for ParentFolderID '${parentFolderID}':`, subFolderData);
+//               // If no subfolders are found, return an empty array
+//               if (!subFolderData.length) {
+//                   return [];
+//               }
+          
+//               // For each subfolder, recursively fetch its nested subfolders
+//               const nestedFolders = await Promise.all(
+//                   subFolderData.map(async (subFolder) => {
+//                       const nestedData = await fetchNestedFolders(subFolder.ID);
+//                       // Include the subfolder's details along with its children
+//                       return { ...subFolder, subFolders: nestedData }; 
+//                   })
+//               );
+          
+//               return nestedFolders;
+//           }
+           
+//             // Helper function to flatten the nested folder structure
+//             const flattenNestedFolders = (nestedFolders: any[]): any[] => {
+//               const flatFolders: any[] = [];
+//               const stack = [...nestedFolders]; // Use a stack to handle nested folders
+
+//               while (stack.length) {
+//                 const folder = stack.pop();
+//                 flatFolders.push(folder);
+//                 if (folder.subFolders && folder.subFolders.length) {
+//                   stack.push(...folder.subFolders);
+//                 }
+//               }
+
+//               return flatFolders;
+//             };
+
+//              // Start fetching nested folders recursively
+//             //  const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
+//             const allNestedFolders = await fetchNestedFolders(folderMasterData.ID);
+//              console.log("All Nested Folders:", allNestedFolders);
+ 
+//              // Flatten the nested folder structure
+//              const flatFolderArray = flattenNestedFolders(allNestedFolders);
+             
+//              flatFolderArray.push(folderMasterData);
+//              console.log("All Nested Folders (Flat Array):", flatFolderArray);
+//             if(flatFolderArray.length > 0){
+//               for(let item of flatFolderArray){
+//                 try {
+//                   await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+//                   console.log("Delete foldermasterdata",item.FolderPath);
+//                 } catch (error) {
+//                   console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+//                 }
+
+//                 const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+//                   .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+//                   .select("Id")();
+//                   console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+//                   console.log("itemsFileMaster",itemsFileMaster);
+//                   if(itemsFileMaster.length >0){
+//                       // Delete all matching items
+//                       for (const item of itemsFileMaster) {   
+//                         try {
+//                           await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+//                           console.log(`Deleted item with ID: ${item.Id}`);
+//                         } catch (error) {
+//                           console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+//                         }
+//                       }
+//                   }
+//               }
+//             } 
+
+//           }
+//           console.log(`Item with ID ${itemId} deleted successfully from list DMSFolderMaster.`);
+//         } catch (error) {
+//           console.error(`Error deleting item: ${error.message}`);
+//         }
+//       } catch (error) {
+//         console.log("Error in deleteing Folder ",error);
+//       }
+      
+      
+//       Swal.fire({
+//         title: "Deleted!",
+//         text: "Your folder has been deleted.",
+//         icon: "success"
+//       });
+//       mycreatedfolders(null,null);
+//     }
+//   });
+
+// }
+
+
+
 window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpath:any,IsLibrary:any)=>{
+   
   console.log("siteName",siteName)
   console.log("folderName",folderName)
   console.log("itemId",itemId)
@@ -9832,6 +13065,7 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
     confirmButtonText: "Yes, delete it!"
   }).then(async(result) => {
     if (result.isConfirmed) {
+        setIsLoading(true);
       // Delete the Library and folder in sharepoint
       try {
 
@@ -9852,120 +13086,386 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
           if(IsLibrary === 'true'){
             const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
             console.log("folderMasterData",folderMasterData);
-            if(folderMasterData){
-              const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}'`)();
-              console.log("documentNestedData",libraryNestedData);
-              if(libraryNestedData.length > 0){
-                for(let item of libraryNestedData){
-                  try {
-                    await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
-                    console.log("Delete foldermasterdata",item.FolderPath);
-                  } catch (error) {
-                    console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
-                  }
-                  
-                  const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
-                  .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
-                  .select("Id")();
-                  console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
-                  console.log("itemsFileMaster",itemsFileMaster);
-                  if(itemsFileMaster.length >0){
-                      // Delete all matching items
-                      for (const item of itemsFileMaster) {   
-                        try {
-                          await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
-                          console.log(`Deleted item with ID: ${item.Id}`);
-                        } catch (error) {
-                          console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
-                        }
-                      }
-                  }
-                }
-              
+            if (folderMasterData) {
+  try {
+   let pageSize = 5000; // Set the desired page size
+    let libraryNestedData: any[] = [];
+
+     let paged = await sp.web.lists
+    .getByTitle("DMSFolderMaster")
+    .items
+    .select("SiteTitle", "DocumentLibraryName", "ID", "FolderPath") // Add other fields if needed
+    .top(pageSize)
+    .getPaged();
+
+  // Add first page
+  libraryNestedData.push(...paged.results);
+
+  // Fetch remaining pages
+  while (paged.hasNext) {
+    paged = await paged.getNext();
+    libraryNestedData.push(...paged.results);
+  }
+
+  console.log("All libraryNestedData:", libraryNestedData);
+
+  // ✅ Now filter the results as intended
+  const activeItems = libraryNestedData.filter(item =>
+    item.SiteTitle === folderMasterData.SiteTitle &&
+    item.DocumentLibraryName === folderMasterData.DocumentLibraryName
+  );
+
+  console.log("Filtered activeItems:", activeItems);
+
+
+
+    if (activeItems.length > 0) {
+      
+      for (let item of activeItems) {
+        try {
+          await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(item.ID).delete();
+          console.log("Deleted folder master entry:", item.FolderPath);
+        } catch (error) {
+          console.log(`Error deleting folder master data '${item.FolderPath}':`, error);
+        }
+
+        try {
+          const itemsFileMaster = await sp.web.lists
+            .getByTitle(`DMS${siteName}FileMaster`)
+            .items
+            .filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+            .select("Id")();
+
+          console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+          console.log("itemsFileMaster:", itemsFileMaster);
+
+          if (itemsFileMaster.length > 0) {
+            for (const fileItem of itemsFileMaster) {
+              try {
+                await sp.web.lists
+                  .getByTitle(`DMS${siteName}FileMaster`)
+                  .items.getById(fileItem.Id)
+                  .delete();
+                console.log(`Deleted file master item with ID: ${fileItem.Id}`);
+              } catch (error) {
+                console.log(`Error deleting file master item '${fileItem.FolderPath}':`, error);
               }
-             
             }
-          }else{
-            const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
-            console.log("folderMasterData for folder",folderMasterData);
-             const fetchNestedFolders=async(parentFolderID: string): Promise<any[]> =>{
-              // Fetch direct subfolders for the given folder
-              const subFolderData = await sp.web.lists.getByTitle("DMSFolderMaster").items
-                  .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentID eq ${parentFolderID}`)
-                  .select("*")();
-              
-              // console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
-              console.log(`Subfolders for ParentFolderID '${parentFolderID}':`, subFolderData);
-              // If no subfolders are found, return an empty array
-              if (!subFolderData.length) {
-                  return [];
-              }
-          
-              // For each subfolder, recursively fetch its nested subfolders
-              const nestedFolders = await Promise.all(
-                  subFolderData.map(async (subFolder) => {
-                      const nestedData = await fetchNestedFolders(subFolder.ID);
-                      // Include the subfolder's details along with its children
-                      return { ...subFolder, subFolders: nestedData }; 
-                  })
-              );
-          
-              return nestedFolders;
           }
-           
-            // Helper function to flatten the nested folder structure
-            const flattenNestedFolders = (nestedFolders: any[]): any[] => {
-              const flatFolders: any[] = [];
-              const stack = [...nestedFolders]; // Use a stack to handle nested folders
-
-              while (stack.length) {
-                const folder = stack.pop();
-                flatFolders.push(folder);
-                if (folder.subFolders && folder.subFolders.length) {
-                  stack.push(...folder.subFolders);
-                }
-              }
-
-              return flatFolders;
-            };
-
-             // Start fetching nested folders recursively
-            //  const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
-            const allNestedFolders = await fetchNestedFolders(folderMasterData.ID);
-             console.log("All Nested Folders:", allNestedFolders);
- 
-             // Flatten the nested folder structure
-             const flatFolderArray = flattenNestedFolders(allNestedFolders);
+        } catch (error) {
+          console.log("Error fetching/deleting from FileMaster:", error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error retrieving or processing libraryNestedData:", error);
+  }
+  
+            } else {
+              console.log("No folder master data found for deletion.");
+            }
+            // if(folderMasterData){
+            //   const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}'`)();
+            //   console.log("documentNestedData",libraryNestedData);
+            //   if(libraryNestedData.length > 0){
+            //     for(let item of libraryNestedData){
+            //       try {
+            //         await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+            //         console.log("Delete foldermasterdata",item.FolderPath);
+            //       } catch (error) {
+            //         console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+            //       }
+                  
+            //       const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+            //       .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+            //       .select("Id")();
+            //       console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+            //       console.log("itemsFileMaster",itemsFileMaster);
+            //       if(itemsFileMaster.length >0){
+            //           // Delete all matching items
+            //           for (const item of itemsFileMaster) {   
+            //             try {
+            //               await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+            //               console.log(`Deleted item with ID: ${item.Id}`);
+            //             } catch (error) {
+            //               console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+            //             }
+            //           }
+            //       }
+            //     }
+              
+            //   }
              
-             flatFolderArray.push(folderMasterData);
-             console.log("All Nested Folders (Flat Array):", flatFolderArray);
-            if(flatFolderArray.length > 0){
-              for(let item of flatFolderArray){
-                try {
-                  await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
-                  console.log("Delete foldermasterdata",item.FolderPath);
-                } catch (error) {
-                  console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
-                }
+            // }
+// const folderMasterData = await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+// console.log("folderMasterData", folderMasterData);
 
-                const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
-                  .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
-                  .select("Id")();
-                  console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
-                  console.log("itemsFileMaster",itemsFileMaster);
-                  if(itemsFileMaster.length >0){
-                      // Delete all matching items
-                      for (const item of itemsFileMaster) {   
-                        try {
-                          await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
-                          console.log(`Deleted item with ID: ${item.Id}`);
-                        } catch (error) {
-                          console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
-                        }
-                      }
-                  }
-              }
-            } 
+// if (folderMasterData) {
+//   const listRef = sp.web.lists.getByTitle("DMSFolderMaster");
+//   let batchSize = 1000;
+//   let lastId = 0;
+//   let libraryNestedData: any[] = [];
+//   let hasMore = true;
+
+//   while (hasMore) {
+//     const camlQuery = `
+//       <View>
+//         <Query>
+//           <Where>
+//             <And>
+//               <And>
+//                 <Gt><FieldRef Name='ID' /><Value Type='Counter'>${lastId}</Value></Gt>
+//                 <Eq><FieldRef Name='SiteTitle' /><Value Type='Text'>${folderMasterData.SiteTitle}</Value></Eq>
+//               </And>
+//               <Eq><FieldRef Name='DocumentLibraryName' /><Value Type='Text'>${folderMasterData.DocumentLibraryName}</Value></Eq>
+//             </And>
+//           </Where>
+//           <OrderBy><FieldRef Name='ID' Ascending='TRUE' /></OrderBy>
+//         </Query>
+//         <RowLimit>${batchSize}</RowLimit>
+//       </View>`;
+
+//     const results = await listRef.getItemsByCAMLQuery({ ViewXml: camlQuery });
+//     if (results.length > 0) {
+//       libraryNestedData.push(...results);
+//       lastId = results[results.length - 1].ID;
+//     }
+
+//     hasMore = results.length === batchSize;
+//   }
+
+//   console.log("documentNestedData", libraryNestedData);
+
+//   for (let item of libraryNestedData) {
+//     try {
+//       await listRef.items.getById(item.ID).delete();
+//       console.log("Deleted foldermasterdata", item.FolderPath);
+//     } catch (error) {
+//       console.log(`Error deleting folder master '${item.FolderPath}'`, error);
+//     }
+
+//     // Now handle File Master list
+//     const fileListRef = sp.web.lists.getByTitle(`DMS${siteName}FileMaster`);
+//     let fileLastId = 0;
+//     let fileBatch = 1000;
+//     let hasMoreFiles = true;
+
+//     while (hasMoreFiles) {
+//       const fileCamlQuery = `
+//         <View>
+//           <Query>
+//             <Where>
+//               <And>
+//                 <Gt><FieldRef Name='ID' /><Value Type='Counter'>${fileLastId}</Value></Gt>
+//                 <Eq><FieldRef Name='CurrentFolderPath' /><Value Type='Text'>${item.FolderPath}</Value></Eq>
+//               </And>
+//             </Where>
+//             <OrderBy><FieldRef Name='ID' Ascending='TRUE' /></OrderBy>
+//           </Query>
+//           <ViewFields><FieldRef Name='ID' /></ViewFields>
+//           <RowLimit>${fileBatch}</RowLimit>
+//         </View>`;
+
+//       const fileResults = await fileListRef.getItemsByCAMLQuery({ ViewXml: fileCamlQuery });
+
+//       if (fileResults.length > 0) {
+//         for (const file of fileResults) {
+//           try {
+//             await fileListRef.items.getById(file.ID).delete();
+//             console.log(`Deleted file ID: ${file.ID}`);
+//           } catch (error) {
+//             console.log(`Error deleting file at '${item.FolderPath}'`, error);
+//           }
+//         }
+//         fileLastId = fileResults[fileResults.length - 1].ID;
+//       }
+
+//       hasMoreFiles = fileResults.length === fileBatch;
+//     }
+//   }
+// }
+
+
+          }else{
+            // Step 1: Get all folder master items with pagination
+const getAllDMSFolderMasterItems = async (): Promise<any[]> => {
+  const pageSize = 5000;
+  const allItems: any[] = [];
+
+  let paged = await sp.web.lists
+    .getByTitle("DMSFolderMaster")
+    .items
+    .select("ID", "Title", "FolderName", "ParentID", "SiteTitle", "DocumentLibraryName", "FolderPath")
+    .top(pageSize)
+    .getPaged();
+
+  allItems.push(...paged.results);
+
+  while (paged.hasNext) {
+    paged = await paged.getNext();
+    allItems.push(...paged.results);
+  }
+
+  return allItems;
+};
+
+// Step 2: Recursive tree builder
+const buildFolderTree = (items: any[], parentId: number): any[] => {
+  const children = items.filter(i => i.ParentID === parentId);
+  return children.map(child => ({
+    ...child,
+    subFolders: buildFolderTree(items, child.ID)
+  }));
+};
+
+// Step 3: Flatten nested tree
+const flattenNestedFolders = (nested: any[]): any[] => {
+  const flat: any[] = [];
+  const stack = [...nested];
+
+  while (stack.length) {
+    const folder = stack.pop();
+    flat.push(folder);
+    if (folder.subFolders?.length) {
+      stack.push(...folder.subFolders);
+    }
+  }
+
+  return flat;
+};
+
+// ✅ Step 4: Main delete logic
+const folderMasterData = await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+console.log("folderMasterData for folder", folderMasterData);
+
+const allItems = await getAllDMSFolderMasterItems();
+
+// In-memory filter
+const filteredItems = allItems.filter(
+  i => i.SiteTitle === folderMasterData.SiteTitle && i.DocumentLibraryName === folderMasterData.DocumentLibraryName
+);
+
+// Build nested tree and flatten
+const nestedFolders = buildFolderTree(filteredItems, folderMasterData.ID);
+const flatFolderArray = flattenNestedFolders(nestedFolders);
+
+// Add root folder to delete as well
+flatFolderArray.push(folderMasterData);
+
+console.log("All Nested Folders (Flat Array):", flatFolderArray);
+
+if (flatFolderArray.length > 0) {
+  for (const item of flatFolderArray) {
+    try {
+      await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(item.ID).delete();
+      console.log("Deleted folder master data:", item.FolderPath);
+    } catch (error) {
+      console.error(`Error deleting folder master '${item.FolderPath}'`, error);
+    }
+
+    try {
+      const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+        .items
+        .filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+        .select("Id")();
+
+      console.log(`Files in path '${item.FolderPath}':`, itemsFileMaster);
+
+      if (itemsFileMaster.length > 0) {
+        for (const fileItem of itemsFileMaster) {
+          try {
+            await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(fileItem.Id).delete();
+            console.log(`Deleted file master item ID: ${fileItem.Id}`);
+          } catch (fileDeleteErr) {
+            console.error(`Error deleting file in '${item.FolderPath}'`, fileDeleteErr);
+          }
+        }
+      }
+    } catch (fileMasterFetchErr) {
+      console.error(`Error fetching files in '${item.FolderPath}'`, fileMasterFetchErr);
+    }
+  }
+}
+          //   const folderMasterData=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(itemId)();
+          //   console.log("folderMasterData for folder",folderMasterData);
+          //    const fetchNestedFolders=async(parentFolderID: string): Promise<any[]> =>{
+          //     // Fetch direct subfolders for the given folder
+          //     const subFolderData = await sp.web.lists.getByTitle("DMSFolderMaster").items
+          //         .filter(`SiteTitle eq '${folderMasterData.SiteTitle}' and DocumentLibraryName eq '${folderMasterData.DocumentLibraryName}' and ParentID eq ${parentFolderID}`)
+          //         .select("*")();
+              
+          //     // console.log(`Subfolders for ParentFolderName '${parentFolderName}':`, subFolderData);
+          //     console.log(`Subfolders for ParentFolderID '${parentFolderID}':`, subFolderData);
+          //     // If no subfolders are found, return an empty array
+          //     if (!subFolderData.length) {
+          //         return [];
+          //     }
+          
+          //     // For each subfolder, recursively fetch its nested subfolders
+          //     const nestedFolders = await Promise.all(
+          //         subFolderData.map(async (subFolder) => {
+          //             const nestedData = await fetchNestedFolders(subFolder.ID);
+          //             // Include the subfolder's details along with its children
+          //             return { ...subFolder, subFolders: nestedData }; 
+          //         })
+          //     );
+          
+          //     return nestedFolders;
+          // }
+           
+          //   // Helper function to flatten the nested folder structure
+          //   const flattenNestedFolders = (nestedFolders: any[]): any[] => {
+          //     const flatFolders: any[] = [];
+          //     const stack = [...nestedFolders]; // Use a stack to handle nested folders
+
+          //     while (stack.length) {
+          //       const folder = stack.pop();
+          //       flatFolders.push(folder);
+          //       if (folder.subFolders && folder.subFolders.length) {
+          //         stack.push(...folder.subFolders);
+          //       }
+          //     }
+
+          //     return flatFolders;
+          //   };
+
+          //    // Start fetching nested folders recursively
+          //   //  const allNestedFolders = await fetchNestedFolders(folderMasterData.FolderName);
+          //   const allNestedFolders = await fetchNestedFolders(folderMasterData.ID);
+          //    console.log("All Nested Folders:", allNestedFolders);
+ 
+          //    // Flatten the nested folder structure
+          //    const flatFolderArray = flattenNestedFolders(allNestedFolders);
+             
+          //    flatFolderArray.push(folderMasterData);
+          //    console.log("All Nested Folders (Flat Array):", flatFolderArray);
+          //   if(flatFolderArray.length > 0){
+          //     for(let item of flatFolderArray){
+          //       try {
+          //         await sp.web.lists.getByTitle(`DMSFolderMaster`).items.getById(item.ID).delete();
+          //         console.log("Delete foldermasterdata",item.FolderPath);
+          //       } catch (error) {
+          //         console.log(`Error in deleting the folder master data '${item.FolderPath}'`,error)
+          //       }
+
+          //       const itemsFileMaster = await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`)
+          //         .items.filter(`CurrentFolderPath eq '${item.FolderPath}'`)
+          //         .select("Id")();
+          //         console.log(`CurrentFolderPath eq '${item.FolderPath}'`);
+          //         console.log("itemsFileMaster",itemsFileMaster);
+          //         if(itemsFileMaster.length >0){
+          //             // Delete all matching items
+          //             for (const item of itemsFileMaster) {   
+          //               try {
+          //                 await sp.web.lists.getByTitle(`DMS${siteName}FileMaster`).items.getById(item.Id).delete();
+          //                 console.log(`Deleted item with ID: ${item.Id}`);
+          //               } catch (error) {
+          //                 console.log(`Error in deleting the file master data '${item.FolderPath}'`,error)
+          //               }
+          //             }
+          //         }
+          //     }
+          //   } 
 
           }
           console.log(`Item with ID ${itemId} deleted successfully from list DMSFolderMaster.`);
@@ -9975,7 +13475,7 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
       } catch (error) {
         console.log("Error in deleteing Folder ",error);
       }
-      
+        setIsLoading(false);
       
       Swal.fire({
         title: "Deleted!",
@@ -9990,6 +13490,8 @@ window.deleteFolder=(siteName:any,folderName:any,itemId:any,siteId:any,folderpat
 
 // Function to rename the folder
 // @ts-ignore
+
+
 window.renameFolder=(siteName:any,folderName:any,itemId:any,siteId:any)=>{
   console.log("siteName",siteName)
   console.log("documentLibraryName",folderName)
@@ -10293,170 +13795,414 @@ window.renameColumn=async(siteName:string,documentLibraryName:string)=>{
 
 }
 
-
-   const myFavorite= async (event: any = null, siteIdToUpdate: string = null,searchText:any=null) => {
-
-
-    // setMyreqormyfav('Myfavourite')
-    // // setShowButtons(true)
-    // setShowMyrequButtons(false)
-    // setShowMyfavButtons(true)
-
-    // clean the url start
-    const newUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.pushState(null, '', newUrl)
-    const CreateFolder=document.getElementById("CreateFolder")
-    const createFileButton=document.getElementById("createFileButton")
-    const CreateRoot=document.getElementById("CreateFolder1")
-    if(CreateFolder){
-      CreateFolder.style.display = 'none'
-      }
-      if(createFileButton){
-      createFileButton.style.display = 'none'
-      }
-      if(CreateRoot){
-        CreateRoot.style.display = 'none'
-        }
-    // end
-    setTimeout(() => {
-
-      setlistorgriddata('');  // Update state to '' after a delay
+// this is working myfavourite code without pagination buttons
+//    const myFavorite= async (event: any = null, siteIdToUpdate: string = null,searchText:any=null) => {
+//   // this getfilescontainer is use to first null inner html then display loader other wise it was showing previous data and laoder same time side by side 
+//   const getfilescontainer = document.getElementById('files-container')
+//   if (getfilescontainer) getfilescontainer.innerHTML = ''; // Clear the container
+//     const loader = document.getElementById('loader2');
  
 
-    }, 100);
+//      if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
+
+
+//     // setMyreqormyfav('Myfavourite')
+//     // // setShowButtons(true)
+//     // setShowMyrequButtons(false)
+//     // setShowMyfavButtons(true)
+
+//     // clean the url start
+//     const newUrl = `${window.location.origin}${window.location.pathname}`;
+//     window.history.pushState(null, '', newUrl)
+//     const CreateFolder=document.getElementById("CreateFolder")
+//     const createFileButton=document.getElementById("createFileButton")
+//     const CreateRoot=document.getElementById("CreateFolder1")
+//     if(CreateFolder){
+//       CreateFolder.style.display = 'none'
+//       }
+//       if(createFileButton){
+//       createFileButton.style.display = 'none'
+//       }
+//       if(CreateRoot){
+//         CreateRoot.style.display = 'none'
+//         }
+//     // end
+//     setTimeout(() => {
+
+//       setlistorgriddata('');  // Update state to '' after a delay
+ 
+
+//     }, 100);
     
-    const wait = document.getElementById('files-container')
-    wait.classList.remove('hidemydatacards')
-    setShowMyrequButtons(false)
-    setShowMyfavButtons(true)
-    setMyreqormyfav((previous)=>'Myfavourite')
+//     const wait = document.getElementById('files-container')
+//     wait.classList.remove('hidemydatacards')
+//     setShowMyrequButtons(false)
+//     setShowMyfavButtons(true)
+//     setMyreqormyfav((previous)=>'Myfavourite')
    
 
-    // const hidegidvewlistviewbutton=document.getElementById("hidegidvewlistviewbutton")
-    // if (hidegidvewlistviewbutton) {
-    //   console.log("enter here .....................")
-    //   hidegidvewlistviewbutton.style.display = 'flex'
+//     // const hidegidvewlistviewbutton=document.getElementById("hidegidvewlistviewbutton")
+//     // if (hidegidvewlistviewbutton) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton.style.display = 'flex'
      
-    // }
+//     // }
 
-    const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
-    if (hidegidvewlistviewbutton2) {
-      console.log("enter here .....................")
-      hidegidvewlistviewbutton2.style.display = 'flex'
+//     const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton')
+//     if (hidegidvewlistviewbutton2) {
+//       console.log("enter here .....................")
+//       hidegidvewlistviewbutton2.style.display = 'flex'
      
-    }
-    if (hidegidvewlistviewbutton) {
-     console.log("enter here .....................")
-     hidegidvewlistviewbutton.style.display = 'none'
+//     }
+//     if (hidegidvewlistviewbutton) {
+//      console.log("enter here .....................")
+//      hidegidvewlistviewbutton.style.display = 'none'
     
-   }
+//    }
   
-    // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    // if (hidegidvewlistviewbutton2) {
-    //   console.log("enter here .....................")
-    //   hidegidvewlistviewbutton2.style.display = 'none'
+//     // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     // if (hidegidvewlistviewbutton2) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton2.style.display = 'none'
      
-    // }
+//     // }
 
-    // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-    // if (hidegidvewlistviewbutton2) {
-    //   console.log("enter here .....................")
-    //   hidegidvewlistviewbutton2.style.display = 'flex'
+//     // const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+//     // if (hidegidvewlistviewbutton2) {
+//     //   console.log("enter here .....................")
+//     //   hidegidvewlistviewbutton2.style.display = 'flex'
      
-    // }
+//     // }
 
-    if(event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+//     if(event) {
+//       event.preventDefault();
+//       event.stopPropagation();
+//     }
   
-    console.log("myFavorite Function is called");
+//     console.log("myFavorite Function is called");
   
-    const container = document.getElementById("files-container");
-    if(siteIdToUpdate ===  null){
-        container.innerHTML="";
-    }
+//     const container = document.getElementById("files-container");
+//  // Clear the container if we're updating all lists OR a specific list
+// // if(siteIdToUpdate === null || siteIdToUpdate !== null){
+// //     container.innerHTML="";
+// // }
+//     let combineArray:any[]=[];
+  
+//     // Fetch the list of active lists
+//      try {
+//         const FilesItems = await sp.web.lists
+//       .getByTitle("MasterSiteURL")
+//       .items.select("Title", "SiteID", "FileMasterList", "Active")
+//       .filter(`Active eq 'Yes'`)();
+  
+//     console.log("Files items", FilesItems);
+//     console.log("searchInput",searchText);
+//     FilesItems.forEach(async (fileItem,index) => {
+//       if (fileItem.FileMasterList !== null) {
+  
+//         console.log("siteIdToUpdate",siteIdToUpdate)
+//         // Skip rendering if we're updating only a specific list
+//         if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//           return;
+//         }
+  
+//         console.log("SiteIddd", fileItem.SiteID);
+  
+//         // Fetch files marked as favorite
+//         const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID","FileName", "FileUID", "FileSize", "FileVersion","IsDeleted","DocumentLibraryName","CurrentFolderPath","SiteName","Status","SiteID","FilePreviewURL")
+//           .filter(
+//             `IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`
+//           ).orderBy("Modified", false)();
+//           // ("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL")
+  
+//         console.log("Files", filesData);
+  
+//         // Remove existing content for this specific list to avoid duplication
+//         const listElements = document.querySelectorAll(
+//           `[data-list-id='${fileItem.SiteID}']`
+//         );
+//         console.log("ListElemet To update",listElements)
+//         listElements.forEach((el) => el.remove());
 
-    let combineArray:any[]=[];
+//         // start
+//         routeToDiffSideBar="myFavourite";
+//         let filteredFileData:any;
+//         if(searchText !== null){
+//           filteredFileData=filesData.filter((file: any) => file.FileName.toLowerCase().includes(searchText.value.toLowerCase()))
+
+//           combineArray=[...combineArray, ...filteredFileData]
+//          if(combineArray.length === 0 && searchText !== null && FilesItems.length === index+1){
+//            console.log("combineArray",combineArray);
+//            fileNotFound(`No files match ${searchText.value}`);
+//          }
+//           // console.log("this is filtered data",filteredFileData)
+//         }else{
+//           filteredFileData=filesData;
+//         }
+//         // end
+
+//         // change the array name
+//         // Render only the updated list's items
+//         console.log("fl data",filteredFileData)
+//         filteredFileData.forEach((file:any) => {
+//           console.log(file, "FILE DATA")
+//           console.log("file.IsDeleted",file.IsDeleted);
+//           console.log("file.Status",file.Status);
+//           if(file.IsDeleted === null){
+//               const {fileIcon, fileExtension}= getFileIcon(file.FileName);
+//               const card = createFileCard(file, fileIcon, fileItem.SiteID,fileItem.FileMasterList,fileExtension,file.CurrentFolderPath,file.FileName);
+//               container.appendChild(card);   
+//           }
+//         });
+//       }
+//     });
   
-    // Fetch the list of active lists
+//      } catch (error) {
+//       console.error("Error fetching my favourite lists:", error);
+//      } finally {
+//       if (loader) loader.style.display = 'none'; // 🔥 Hide loader after completion
+//      }
+  
+//     return;
+//   };
+
+
+// this is working myfavourite code after pagination buttons
+  
+const myFavorite = async (event: any = null, siteIdToUpdate: string = null, searchText: any = null) => {
+  routeToDiffSideBar === "myFavourite"
+  // Pagination variables
+
+  let currentPage = 1;
+  const itemsPerPage = 12;
+  let totalPages = 1;
+  let allFilesData: any[] = [];
+  let filteredFilesData: any[] = [];
+  
+  const getfilescontainer = document.getElementById('files-container');
+  if (getfilescontainer) getfilescontainer.innerHTML = '';
+  const loader = document.getElementById('loader2');
+  if (loader) loader.style.display = 'block';
+
+  // Clean URL
+  const newUrl = `${window.location.origin}${window.location.pathname}`;
+  window.history.pushState(null, '', newUrl);
+  
+  // Hide buttons
+  const CreateFolder = document.getElementById("CreateFolder");
+  const createFileButton = document.getElementById("createFileButton");
+  const CreateRoot = document.getElementById("CreateFolder1");
+  if (CreateFolder) CreateFolder.style.display = 'none';
+  if (createFileButton) createFileButton.style.display = 'none';
+  if (CreateRoot) CreateRoot.style.display = 'none';
+
+  setTimeout(() => {
+    setlistorgriddata('');
+  }, 100);
+  
+  const wait = document.getElementById('files-container');
+  wait.classList.remove('hidemydatacards');
+  setShowMyrequButtons(false);
+  setShowMyfavButtons(true);
+  setMyreqormyfav((previous) => 'Myfavourite');
+
+  // Show/hide view buttons
+  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+  const hidegidvewlistviewbutton = document.getElementById('hidegidvewlistviewbutton');
+  if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'flex';
+  if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'none';
+
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  console.log("myFavorite Function is called");
+  const container = document.getElementById("files-container");
+  let combineArray: any[] = [];
+
+  try {
     const FilesItems = await sp.web.lists
       .getByTitle("MasterSiteURL")
       .items.select("Title", "SiteID", "FileMasterList", "Active")
       .filter(`Active eq 'Yes'`)();
-  
+
     console.log("Files items", FilesItems);
-    console.log("searchInput",searchText);
-    FilesItems.forEach(async (fileItem,index) => {
-      if (fileItem.FileMasterList !== null) {
-  
-        console.log("siteIdToUpdate",siteIdToUpdate)
-        // Skip rendering if we're updating only a specific list
-        if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
-          return;
+    console.log("searchInput", searchText);
+
+    // Process all files first for pagination
+    const filesPromises = FilesItems
+      .filter(fileItem => fileItem.FileMasterList !== null)
+      .filter(fileItem => !siteIdToUpdate || fileItem.SiteID === siteIdToUpdate)
+      .map(async (fileItem) => {
+        try {
+          const filesData = await sp.web.lists
+            .getByTitle(`${fileItem.FileMasterList}`)
+            .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "IsDeleted", "DocumentLibraryName", "CurrentFolderPath", "SiteName", "Status", "SiteID", "FilePreviewURL")
+            .filter(`IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`)
+            .orderBy("Modified", false)();
+
+          return filesData.map(file => ({
+            ...file,
+            FileMasterList: fileItem.FileMasterList,
+            SiteID: fileItem.SiteID
+          }));
+        } catch (error) {
+          console.error(`Error fetching files for ${fileItem.FileMasterList}:`, error);
+          return [];
         }
-  
-        console.log("SiteIddd", fileItem.SiteID);
-  
-        // Fetch files marked as favorite
-        const filesData = await sp.web.lists
-          .getByTitle(`${fileItem.FileMasterList}`)
-          .items.select("ID","FileName", "FileUID", "FileSize", "FileVersion","IsDeleted","DocumentLibraryName","CurrentFolderPath","SiteName","Status","SiteID","FilePreviewURL")
-          .filter(
-            `IsFavourite eq 1 and CurrentUser eq '${currentUserEmailRef.current}'`
-          ).orderBy("Modified", false)();
-          // ("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL")
-  
-        console.log("Files", filesData);
-  
-        // Remove existing content for this specific list to avoid duplication
-        const listElements = document.querySelectorAll(
-          `[data-list-id='${fileItem.SiteID}']`
+      });
+
+    const allFilesArrays = await Promise.all(filesPromises);
+    allFilesData = allFilesArrays.flat().filter(file => file.IsDeleted === null && file.FileName); // Filter out deleted files and ensure FileName exists
+
+    // Apply search filter if provided
+    if (searchText !== null) {
+      filteredFilesData = allFilesData.filter((file: any) => 
+        file.FileName.toLowerCase().includes(searchText.value.toLowerCase())
+      );
+      
+      if (filteredFilesData.length === 0) {
+        fileNotFound(`No files match ${searchText.value}`);
+        if (loader) loader.style.display = 'none';
+        return;
+      }
+    } else {
+      filteredFilesData = [...allFilesData];
+    }
+
+    // Calculate total pages
+    totalPages = Math.ceil(filteredFilesData.length / itemsPerPage);
+
+    // Display current page
+    displayCurrentPage();
+
+  } catch (error) {
+    console.error("Error fetching my favourite lists:", error);
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+
+  function displayCurrentPage() {
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageData = filteredFilesData.slice(startIndex, endIndex);
+
+    currentPageData.forEach((file: any) => {
+      if (file.IsDeleted === null) {
+        const { fileIcon, fileExtension } = getFileIcon(file.FileName);
+        const card = createFileCard(
+          file, 
+          fileIcon, 
+          file.SiteID, 
+          file.FileMasterList, 
+          fileExtension, 
+          file.CurrentFolderPath, 
+          file.FileName
         );
-        console.log("ListElemet To update",listElements)
-        listElements.forEach((el) => el.remove());
-
-        // start
-        routeToDiffSideBar="myFavourite";
-        let filteredFileData;
-        if(searchText !== null){
-          filteredFileData=filesData.filter((file: any) => file.FileName.toLowerCase().includes(searchText.value.toLowerCase()))
-
-          combineArray=[...combineArray, ...filteredFileData]
-         if(combineArray.length === 0 && searchText !== null && FilesItems.length === index+1){
-           console.log("combineArray",combineArray);
-           fileNotFound(`No files match ${searchText.value}`);
-         }
-          // console.log("this is filtered data",filteredFileData)
-        }else{
-          filteredFileData=filesData;
-        }
-        // end
-
-        // change the array name
-        // Render only the updated list's items
-        console.log("fl data",filteredFileData)
-        filteredFileData.forEach((file) => {
-          console.log("hello---> ")
-          console.log("file.IsDeleted",file.IsDeleted);
-          console.log("file.Status",file.Status);
-          if(file.IsDeleted === null){
-              const {fileIcon, fileExtension}= getFileIcon(file.FileName);
-              const card = createFileCard(file, fileIcon, fileItem.SiteID,fileItem.FileMasterList,fileExtension,file.CurrentFolderPath,file.FileName);
-              container.appendChild(card);   
-          }
-        });
+        container.appendChild(card);
       }
     });
-  
-    return;
-  };
+
+    // Add pagination controls
+    addPaginationControls();
+  }
+
+ function addPaginationControls() {
+    if (!container || totalPages <= 1) return;
+    
+    // Main container
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination-container";
+    paginationContainer.style.display = "flex";
+    paginationContainer.style.flexDirection = "column";
+    paginationContainer.style.alignItems = "center";
+    paginationContainer.style.gap = "10px";
+    paginationContainer.style.marginTop = "20px";
+
+    // Buttons container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.display = "flex";
+    buttonsContainer.style.gap = "30px"; // Increased gap between buttons
+    buttonsContainer.style.justifyContent = "center";
+    buttonsContainer.style.alignItems = "center";
+
+    // Previous button
+    const prevButton = document.createElement("button");
+    prevButton.textContent = "Previous";
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayCurrentPage();
+        }
+    };
+
+    // Next button
+    const nextButton = document.createElement("button");
+    nextButton.textContent = "Next";
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayCurrentPage();
+        }
+    };
+
+    // Page info (below buttons)
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageInfo.style.fontSize = "14px";
+    pageInfo.style.color = "#555";
+    pageInfo.style.marginTop = "46px";
+    pageInfo.style.paddingLeft = "212px"; // Add some space above the page info
+
+    // Button styling
+    const buttonStyle = {
+        padding: "5px 15px",
+        border: "1px solid #ddd",
+        borderRadius: "4px",
+        backgroundColor: "#1fb0e5",
+        cursor: "pointer",
+        fontSize: "14px",
+        color: "#ffffff",
+      
+    };
+
+    Object.assign(prevButton.style, buttonStyle);
+    Object.assign(nextButton.style, buttonStyle);
+
+    // Disabled state styling
+    prevButton.style.cursor = prevButton.disabled ? "not-allowed" : "pointer";
+    prevButton.style.opacity = prevButton.disabled ? "0.6" : "1";
+    prevButton.style.marginRight = "73px"; // Adjusted margin for alignment
+    nextButton.style.cursor = nextButton.disabled ? "not-allowed" : "pointer";
+    nextButton.style.opacity = nextButton.disabled ? "0.6" : "1";
+
+    // Add elements to containers
+    buttonsContainer.appendChild(prevButton);
+    buttonsContainer.appendChild(nextButton);
+    
+    paginationContainer.appendChild(buttonsContainer);
+    paginationContainer.appendChild(pageInfo);
+    
+    container.appendChild(paginationContainer);
+}
+};
+
 // This Function create the File card
 // This Function create the File card
 
 
 const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,fileExtension:any,FolderPath:string,fileName:string) => {
+
   // fileID:string,siteId:string,currentFolderPathForFile:string,fileName:string,flag:string
   const extensionHtml=createFileExtensionHtml(fileName);
 
@@ -10538,7 +14284,7 @@ const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,file
     try {
       const list = sp.web.lists.getByTitle(`${listToUpdate}`);
       console.log("List", list);
-      const isFavourite=false;
+      const isFavourite=false; 
       const items = await list.items.filter(`FileUID eq '${fileId}' and CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 0`)();
       console.log("File Data",items)
       if (items.length > 0) {
@@ -10549,7 +14295,8 @@ const createFileCard = (file:any, fileIcon:any, siteId:any,listToUpdate:any,file
           });
           console.log(`Item with FileUID '${fileId}' updated successfully.`);
           // Re-render only the modified list
-          await myFavorite(null, siteId);
+          await myFavorite(event as any, siteId);
+
         }
      
       } else {
@@ -10595,6 +14342,8 @@ window.toggleFavourite=async (fileId,siteId)=> {
           SiteName:currentEntity,
           SiteID:siteId,
           Status:"",
+          // i added this to make sure  MyRequest should be false or 0
+          MyRequest: false,
           FilePreviewURL:"",
           RequestNo:`DMS-${fileId}` 
         }
@@ -10632,7 +14381,9 @@ window.toggleFavourite=async (fileId,siteId)=> {
           if(!data[0].IsFavourite && currentUserEmailRef.current === data[0].CurrentUser){
          
               const updatedData=await sp.web.lists.getByTitle(listToUpdate).items.getById(itemId).update({
-                IsFavourite:true
+                IsFavourite:true,
+                // here i have added this to make sure  MyRequest should be false or 0
+                MyRequest: false,
               });
               console.log("Updated data",updatedData)
         }
@@ -11314,561 +15065,1767 @@ const testProess5 = async (event:React.MouseEvent<HTMLButtonElement> ) => {
     setlistorgriddata('showGridView');
     window.location.hash = "/edit/90";
 }
-const myRequest = async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any=null ) => {
-  //  this code is for loader
+
+/////////// from here this is my previous working code of my request before pagination buttons
+// const myRequest = async (event:React.MouseEvent<HTMLButtonElement>=null, siteIdToUpdate: string = null,    searchText:any=null ) => {
+
+//   // if(routefrommail  === true){
+//   //   ShareWithMe()
+//   //  return;
+//   // }
+//   //  this code is for loader
+//   const loader = document.getElementById('loader2');
+ 
+
+//   if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
+
+
+//   entityclicktext = ''
+//   setdisplayuploadfileandcreatefolder(false)
+//   ismyrequordoclibforfilepreview = "myRequest"
+//       // New code to hide the create file and folder button start
+//     // clean Url start
+//     if(!cleanUrlInMyRequest){
+//       const newUrl = `${window.location.origin}${window.location.pathname}`;
+//       window.history.pushState(null, '', newUrl)
+//     }
+//     cleanUrlInMyRequest=false;
+//     // end
+//     const CreateFolder=document.getElementById("CreateFolder")
+//     const createFileButton=document.getElementById("createFileButton")
+//     const CreateRoot=document.getElementById("CreateFolder1")
+//     if(CreateFolder){
+//       CreateFolder.style.display = 'none'
+//       }
+//       if(createFileButton){
+//       createFileButton.style.display = 'none'
+//       }
+//       if(CreateRoot){
+//         CreateRoot.style.display = 'none'
+//       }
+//     //End 
+    
+// setTimeout(() => {
+
+//   setlistorgriddata('');  // Update state to '' after a delay
+
+
+// }, 100);
+
+// const wait = document.getElementById('files-container')
+// wait.classList.remove('hidemydatacards')
+// setShowMyrequButtons(true)
+// setShowMyfavButtons(false)
+// setMyreqormyfav('Myrequest')
+
+// const hidegidvewlistviewbutton=document.getElementById("hidegidvewlistviewbutton")
+// if (hidegidvewlistviewbutton) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton.style.display = 'flex'
+ 
+// }
+// const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
+// if (hidegidvewlistviewbutton2) {
+//   console.log("enter here .....................")
+//   hidegidvewlistviewbutton2.style.display = 'none'
+ 
+// }
+
+
+
+// console.log("searchInput",searchText);
+// console.log("siteIdToUpdate",siteIdToUpdate);
+
+// if(event){
+//   event.preventDefault();
+//   event.stopPropagation();
+// }
+
+
+
+
+
+// // call this function onClick of the myRequest
+// // handleShowContent(event)
+
+
+// // if(createFileButton2){
+// // createFileButton2.style.display = 'none'
+// // }
+// // if(createFileButton){
+// // createFileButton.style.display = 'none'
+// // }
+ 
+
+
+// if(event) {
+//   event.preventDefault();
+//   event.stopPropagation();
+// }
+
+// // console.log("myFavorite Function is called");
+
+// const container = document.getElementById("files-container");
+// if(siteIdToUpdate ===  null){
+//     container.innerHTML="";
+//     // console.log("siteToUpdate")
+// }
+
+// // console.log("beforeFetchItems");
+// // Fetch the list of active entity
+// try {
+//   const FilesItems = await sp.web.lists
+//   .getByTitle("MasterSiteURL")
+//   .items.select("Title", "SiteID", "FileMasterList", "Active")
+//   .filter(`Active eq 'Yes'`)();
+
+// // console.log("Active Sites List Names", FilesItems);
+
+// FilesItems.forEach(async (fileItem, index) => {
+//   if (fileItem.FileMasterList !== null) {
+
+//     // console.log("FilesItesms");
+//     // Skip rendering if we're updating only a specific list
+//     if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//       return;
+//     }
+
+//     // console.log("SiteId", fileItem.SiteID);
+//     console.log("fileItem.FileMasterList",fileItem.FileMasterList);
+//     // const filesData = await sp.web.lists
+//     //   .getByTitle(`${fileItem.FileMasterList}`)
+//     //   .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted")
+//     //   .filter(
+//     //     `CurrentUser eq '${currentUserEmailRef.current}'`
+//     //   )();
+//     const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted","MyRequest" ,"Modified" ).filter(
+//             `CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`
+//           ).orderBy("Modified", false)();
+//     console.log("My reaquest Called");
+
+//     // console.log("enter in the myRequest------")
+//     console.log(fileItem.FileMasterList,"- FilesData",filesData)
+//   // route to different-2 sideBar
+
+//   let combineArray:any[]=[];
+//   // start
+//   routeToDiffSideBar="myRequest";
+//   let filteredFileData=[];
+//   if(searchText !== null){
+//         filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+//         // console.log("this is filtered data",filteredFileData)
+//            // New Code to show pop up when no match found start
+//            combineArray=[...combineArray, ...filteredFileData]
+//            if(combineArray.length === 0 && searchText !== null && FilesItems.length === index+1){
+//              console.log("combineArray",combineArray);
+//              fileNotFound(`No files match ${searchText.value}`);
+//            }
+//            // End
+//            // console.log("Index",index);
+//   }else{
+//     filteredFileData=filesData;
+//   }
+//   // end 
+
+//   // change the array
+//   filteredFileData.forEach((file) => {
+//   //  console.log(file.ID , "file.odata.id ")
+//   if(file.IsDeleted === null){
+//     const card = document.createElement("div");
+//     const fileSizeInKB = 2048; // Example file size in KB
+//     const fileSizeInMB = (fileSizeInKB / 1024).toFixed(2); // Convert to MB and round to 2 decimal places
+
+//     // console.log("searchArray",searchArray);
+//     let fileIcon;
+//     const fileExtension = file.FileName?.split(".").pop().toLowerCase(); // Get the file extension
+//     // switch (fileExtension) {
+//     //   case "doc":
+//     //   case "docx":
+//     //     fileIcon = Docicon;
+//     //     break;
+//     //   case "txt":
+//     //     fileIcon = Txticon;
+//     //     break;
+//     //   case "pdf":
+//     //     fileIcon = Pdficon;
+//     //     break;
+//     //   case "xls":
+//     //   case "xlsx":
+//     //     fileIcon = Xlsicon;
+//     //     break;
+//     //   case "zip":
+//     //     fileIcon = Zipicon;
+//     //     break;
+//     //   default:
+//     //     fileIcon = Docicon; // Default icon if no match
+//     //     break;
+//     // }
+//     switch (fileExtension.toLowerCase()) {
+//       // Documents
+//       case "doc":
+//       case "docx":
+//         fileIcon = Docicon;
+//         break;
+//       case "txt":
+//         fileIcon = Txticon;
+//         break;
+//       case "pdf":
+//         fileIcon = Pdficon;
+//         break;
+//       case "xls":
+//       case "xlsx":
+//       case "csv":
+//         fileIcon = Xlsicon;
+//         break;
+//       case "ppt":
+//       case "pptx":
+//         fileIcon = Ppticon;
+//         break;
+    
+//       // Images
+//       case "jpg":
+//       case "jpeg":
+//       case "png":
+//       case "gif":
+//       case "bmp":
+//       case "tiff":
+//       case "svg":
+//       case "webp":
+//         fileIcon = Jpgicon;
+//         break;
+    
+//       // Audio
+//       case "mp3":
+//       case "wav":
+//       case "aac":
+//       case "ogg":
+//       case "flac":
+//         fileIcon = Mp3icon;
+//         break;
+    
+//       // Video
+//       case "mp4":
+//       case "avi":
+//       case "mkv":
+//       case "mov":
+//       case "wmv":
+//       case "flv":
+//       case "webm":
+//         fileIcon = Mp4icon;
+//         break;
+    
+//       // Compressed files
+//       case "zip":
+//       case "rar":
+//       case "7z":
+//       case "tar":
+//       case "gz":
+//         fileIcon = Zipicon;
+//         break;
+    
+//       // Code files
+//       case "html":
+//       case "css":
+//       case "js":
+//       case "ts":
+//       case "json":
+//       case "xml":
+//       case "sql":
+//       case "php":
+//       case "py":
+//       case "java":
+//       case "c":
+//       case "cpp":
+//       case "cs":
+//       case "swift":
+//       case "go":
+//       case "rb":
+//         fileIcon = Htmlicon;
+//         break;
+    
+//       // Default
+//       default:
+//         fileIcon = Docicon; // Default fallback icon
+//         break;
+//     }
+// const extensionHtml=createFileExtensionHtml(file.FileName);
+    
+//     card.className = "card";
+//     card.innerHTML = ` 
+//     <div class="row"> 
+//       <div class="col-md-2 pe-0"> 
+//     <div class="IMGContainer">        
+//       ${extensionHtml}
+//     </div>
+//     </div>
+//         <div class="col-md-10"> 
+//          <div class="CardTextContainer">
+//       <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+//       <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
+//       <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+//       <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+//       </div>
+
+//       <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+//           <span>...</span>
+//       </div>
+//           </div> </div>
+//     `;
+//     // card.innerHTML = ` 
+//     // <div class="row"> 
+//     //   <div class="col-md-2 pe-0"> 
+//     // <div class="IMGContainer">        
+//     //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+//     // </div>
+//     // </div>
+//     //     <div class="col-md-10"> 
+//     //      <div class="CardTextContainer">
+//     //   <p class="p1st" style="cursor: pointer;" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+//     //   <p class="p2nd">${file.DocumentLibraryName}</p>
+//     //   <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+//     //   <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+//     //   </div>
+
+//     //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+//     //       <span>...</span>
+//     //   </div>
+//     //       </div> </div>
+//     // `;
+
+//     const menu = document.createElement("div");
+//     // console.log(menu , "menu is here")
+//     menu.id = `menu-${file.FileUID}`;
+//     menu.className = "popup-menu";
+//     const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
+//     menu.innerHTML = `
+//      <ul>
+//     <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//           <img src=${editIcon} alt="Edit"/>
+//                       Audit History
+//     </li>
+//     <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//       <img src=${ShareFile} alt="Share"/> Share
+//     </li>
+//      <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//          <img src=${FilePreview} alt="Preview File"/> Preview File
+//        </li>
+//        <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//          <img src=${downloadicon} alt="Download File"/> Download File
+//        </li>
+//        <li  onclick="versionHistory('${file.FileName}', '${file.CurrentFolderPath}', '${file.SiteID}' ,'MyRequest','${file.FileUID}')">
+//           <img src=${editIcon} alt="Version History"/> Version History
+//        </li>
+//      ${file.Status === "Rework" ? `
+//             <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
+
+//              <img src=${editIcon} alt="Edit File"/> Edit File
+//       </li>` : ''}
+
+//   </ul>
+//     `;
+    
+//   //   menu.innerHTML = `
+//   //    <ul>
+//   //   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
+//   //     <img src=${deleteIcon} alt="Delete"/> Delete
+//   //   </li>
+//   //   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//   //         <img src=${editIcon} alt="Edit"/>
+//   //                     Audit History
+//   //   </li>
+//   //   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//   //     <img src=${ShareFile} alt="Share"/> Share
+//   //   </li>
+//   //    <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//   //        <img src=${viewIcon} alt="Preview File"/> Preview File
+//   //      </li>
+//   //      <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//   //        <img src=${downloadicon} alt="Download File"/> Download File
+//   //      </li>
+
+//   // </ul>
+//   //   `;
+//   //   menu.innerHTML = `
+//   //    <ul>
+//   //   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
+//   //     <img src=${deleteIcon} alt="Delete"/> Delete
+//   //   </li>
+//   //   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//   //         <img src=${editIcon} alt="Edit"/>
+//   //                     Audit History
+//   //   </li>
+//   //   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//   //     <img src=${ShareFile} alt="Share"/> Share
+//   //   </li>
+//   //    <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//   //        <img src=${viewIcon} alt="Preview File"/> Preview File
+//   //      </li>
+//   //      <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//   //        <img src=${downloadicon} alt="Download File"/> Download File
+//   //      </li>
+//   //   ${file.Status === "Rework" ? `
+//   //    <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
+
+//   //         <img src=${editIcon} alt="Edit File"/> Edit File
+//   //     </li>` : ''}
+//   // </ul>
+//   //   `;
+    
+
+    
+//     card.appendChild(menu);
+//     // Change the background color and text color based on FileStatus
+//     const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+//     switch (file.Status) {
+//       case "Approved":
+//         fileStatusElement.style.backgroundColor = "#b5e7d3";
+//         fileStatusElement.style.color = "#008751";
+//         break;
+//       case "Auto Approved":
+//         fileStatusElement.style.backgroundColor = "#b5e7d3";
+//         fileStatusElement.style.color = "#008751";
+//         fileStatusElement.style.width = "96px";
+
+//         break;
+//       case "Rejected":
+//         fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+//         fileStatusElement.style.color = "#f1556c";
+//         break;
+//       case "Rework":
+//         fileStatusElement.style.backgroundColor = "#ffecc4";
+//         fileStatusElement.style.color = "rgba(247, 184, 75)";
+//         break;
+//         case "Pending":
+//           fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
+//           fileStatusElement.style.color = "#000b56";
+//           break;
+//           default:
+//             fileStatusElement.style.backgroundColor = "none";
+//             fileStatusElement.style.color = "none";
+//             break;
+//     }
+    
+//     container.appendChild(card);
+//     // check file status if approved hide the delete button
+//     // const menu1 = document.getElementById(`menu-${file.FileUID}`);
+//     // console.log("menu1",menu1);
+//     // if(file.Status === "Approved" || file.Status === null){
+//     //   const firstItem = menu1.children[0]?.children[0] as HTMLElement;
+//     //   if (firstItem && firstItem.style.display !== "none") {
+//     //       firstItem.style.display = "none";
+//     //   }
+//     // }
+//   }
+// //   const card = document.createElement("div");
+  
+// //   // console.log("searchArray",searchArray);
+// //   let fileIcon;
+// //   const fileExtension = file.FileName?.split(".").pop().toLowerCase(); // Get the file extension
+// //   switch (fileExtension) {
+// //     case "doc":
+// //     case "docx":
+// //       fileIcon = Docicon;
+// //       break;
+// //     case "txt":
+// //       fileIcon = Txticon;
+// //       break;
+// //     case "pdf":
+// //       fileIcon = Pdficon;
+// //       break;
+// //     case "xls":
+// //     case "xlsx":
+// //       fileIcon = Xlsicon;
+// //       break;
+// //     case "zip":
+// //       fileIcon = Zipicon;
+// //       break;
+// //     default:
+// //       fileIcon = Docicon; // Default icon if no match
+// //       break;
+// //   }
+
+// //   card.className = "card";
+// //   card.innerHTML = `         
+// //     <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
+// //     <p class="p1st">${file.FileName}</p>
+// //     <p class="p2nd"></p>
+// //     <p class="p3rd">${file.FileSize}</p>
+// //     <p class="filestatus"> ${file.Status}  </p>
+// //     <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
+// //         <span>...</span>
+// //     </div>
+// //   `;
+
+// //   const menu = document.createElement("div");
+// //   // console.log(menu , "menu is here")
+// //   menu.id = `menu-${file.FileUID}`;
+// //   menu.className = "popup-menu";
+// //   const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
+// //   menu.innerHTML = `
+// //    <ul>
+// //   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
+// //     <img src=${deleteIcon} alt="Delete"/> Delete
+// //   </li>
+// //   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+// //         <img src=${editIcon} alt="Edit"/>
+// //                     Audit History
+// //   </li>
+// //   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+// //     <img src=${ShareFile} alt="Share"/> Share
+// //   </li>
+// // </ul>
+// //   `;
+  
+
+  
+// //   card.appendChild(menu);
+// //   // Change the background color and text color based on FileStatus
+// //   const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+// //   switch (file.Status) {
+// //     case "Approved":
+// //       fileStatusElement.style.backgroundColor = "#b5e7d3";
+// //       fileStatusElement.style.color = "#008751";
+// //       break;
+// //     case "Rejected":
+// //       fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+// //       fileStatusElement.style.color = "#f1556c";
+// //       break;
+// //     case "Rework":
+// //       fileStatusElement.style.backgroundColor = "#ffecc4";
+// //       fileStatusElement.style.color = "rgba(247, 184, 75)";
+// //       break;
+// //       case "Pending":
+// //         fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
+// //         fileStatusElement.style.color = "#000b56";
+// //         break;
+// //         default:
+// //           fileStatusElement.style.backgroundColor = "gray";
+// //           fileStatusElement.style.color = "white";
+// //           break;
+// //   }
+  
+// //   container.appendChild(card);
+// //   // check file status if approved hide the delete button
+// //   const menu1 = document.getElementById(`menu-${file.FileUID}`);
+// //   // console.log("menu1",menu1);
+// //   if(file.Status === "Approved" || file.Status === null){
+// //     const firstItem = menu1.children[0]?.children[0] as HTMLElement;
+// //     if (firstItem && firstItem.style.display !== "none") {
+// //         firstItem.style.display = "none";
+// //     }
+// //   }
+//     });
+
+
+
+//   }
+// });
+  
+// } catch (error) {
+
+//   console.error("Error loading files:", error);
+// } finally {
+//   // Hide the loader after the operation is complete
+//   if (loader) loader.style.display = 'none'; // 🔥 Hide loader after completion
+// }
+
+
+// };
+
+/////////// till here this is my previous working code of my request before pagination buttons
+
+
+// const myRequest = async (event: React.MouseEvent<HTMLButtonElement> = null, siteIdToUpdate: string = null, searchText: any = null) => {
+//   // Pagination variables
+//   const itemsPerPage = 12;
+//   let currentPage = 1;
+//   let allFilteredData: any[] = [];
+
+//   // Loader setup
+//   const loader = document.getElementById('loader2');
+//   if (loader) loader.style.display = 'block';
+
+//   // Existing setup code...
+//   entityclicktext = '';
+//   setdisplayuploadfileandcreatefolder(false);
+//   ismyrequordoclibforfilepreview = "myRequest";
+  
+//   // Clean URL and hide buttons
+//   if (!cleanUrlInMyRequest) {
+//     const newUrl = `${window.location.origin}${window.location.pathname}`;
+//     window.history.pushState(null, '', newUrl);
+//   }
+//   cleanUrlInMyRequest = false;
+
+//   const CreateFolder = document.getElementById("CreateFolder");
+//   const createFileButton = document.getElementById("createFileButton");
+//   const CreateRoot = document.getElementById("CreateFolder1");
+  
+//   if (CreateFolder) CreateFolder.style.display = 'none';
+//   if (createFileButton) createFileButton.style.display = 'none';
+//   if (CreateRoot) CreateRoot.style.display = 'none';
+
+//   setTimeout(() => {
+//     setlistorgriddata('');
+//   }, 100);
+
+//   const wait = document.getElementById('files-container');
+//   wait.classList.remove('hidemydatacards');
+//   setShowMyrequButtons(true);
+//   setShowMyfavButtons(false);
+//   setMyreqormyfav('Myrequest');
+
+//   // UI setup...
+//   if (event) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//   }
+
+//   const container = document.getElementById("files-container");
+//   if (siteIdToUpdate === null) {
+//     container.innerHTML = "";
+//   }
+
+//   try {
+//     const FilesItems = await sp.web.lists
+//       .getByTitle("MasterSiteURL")
+//       .items.select("Title", "SiteID", "FileMasterList", "Active")
+//       .filter(`Active eq 'Yes'`)();
+
+//     // Clear existing data
+//     allFilteredData = [];
+
+//     for (const  [index, fileItem] of FilesItems.entries()) {
+//       if (fileItem.FileMasterList !== null) {
+//         if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//           continue;
+//         }
+
+//         const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", "SiteName", "FilePreviewURL", "IsDeleted", "MyRequest", "Modified")
+//           .filter(`CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`)
+//           .orderBy("Modified", false)();
+//        let combineArray:any[]=[];
+//         let filteredFileData=[];
+//   if(searchText !== null){
+//         filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
+//         // console.log("this is filtered data",filteredFileData)
+//            // New Code to show pop up when no match found start
+//            combineArray=[...combineArray, ...filteredFileData]
+//            if(combineArray.length === 0 && searchText !== null && FilesItems.length === index+1){
+//              console.log("combineArray",combineArray);
+//              fileNotFound(`No files match ${searchText.value}`);
+//            }
+//            // End
+//            // console.log("Index",index);
+//   }else{
+//     filteredFileData=filesData;
+//   }
+
+//         // Add to our complete dataset
+//         allFilteredData = [...allFilteredData, ...filteredFileData];
+//       }
+//     }
+
+//     // Display first page
+//     displayPaginatedResults(allFilteredData, currentPage);
+//     //  alert(allFilteredData.length + "all filterd data length")
+     
+//   } catch (error) {
+//     console.error("Error loading files:", error);
+//   } finally {
+//     if (loader) loader.style.display = 'none';
+//   }
+
+//   // Pagination functions
+
+//   function displayPaginatedResults(data: any[], page: number) {
+//     const container = document.getElementById("files-container");
+//     if (!container) return;
+    
+//     container.innerHTML = "";
+    
+//     const startIndex = (page - 1) * itemsPerPage;
+//     const endIndex = startIndex + itemsPerPage;
+//     const paginatedItems = data.slice(startIndex, endIndex);
+
+//     if (paginatedItems.length === 0) {
+//       const noFileMessage = document.createElement("p");
+//       noFileMessage.textContent = "No files found.";
+//       noFileMessage.style.color = "black";
+//       noFileMessage.style.fontSize = "16px";
+//       noFileMessage.style.textAlign = "center";
+//       container.appendChild(noFileMessage);
+//       return;
+//     }
+
+//     // Create cards for each item in the current page
+//     paginatedItems.forEach(file => {
+//       if (file.IsDeleted === null) {
+//         const card = document.createElement("div");
+//         const extensionHtml = createFileExtensionHtml(file.FileName);
+        
+//         card.className = "card";
+//         card.innerHTML = ` 
+//           <div class="row"> 
+//             <div class="col-md-2 pe-0"> 
+//               <div class="IMGContainer">        
+//                 ${extensionHtml}
+//               </div>
+//             </div>
+//             <div class="col-md-10"> 
+//               <div class="CardTextContainer">
+//                 <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+//                 <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
+//                 <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+//                 <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+//               </div>
+
+//               <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}')">
+//                 <span>...</span>
+//               </div>
+//             </div> 
+//           </div>
+//         `;
+
+//         const menu = document.createElement("div");
+//         menu.id = `menu-${file.FileUID}`;
+//         menu.className = "popup-menu";
+//         menu.innerHTML = `
+//           <ul>
+//             <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//               <img src=${editIcon} alt="Edit"/>
+//               Audit History
+//             </li>
+//             <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//               <img src=${ShareFile} alt="Share"/> Share
+//             </li>
+//             <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//               <img src=${FilePreview} alt="Preview File"/> Preview File
+//             </li>
+//             <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//               <img src=${downloadicon} alt="Download File"/> Download File
+//             </li>
+//             <li onclick="versionHistory('${file.FileName}', '${file.CurrentFolderPath}', '${file.SiteID}' ,'MyRequest','${file.FileUID}')">
+//               <img src=${editIcon} alt="Version History"/> Version History
+//             </li>
+//             ${file.Status === "Rework" ? `
+//             <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
+//               <img src=${editIcon} alt="Edit File"/> Edit File
+//             </li>` : ''}
+//           </ul>
+//         `;
+
+//         card.appendChild(menu);
+        
+//         // Status styling
+//         const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+//         switch (file.Status) {
+//           case "Approved":
+//           case "Auto Approved":
+//             fileStatusElement.style.backgroundColor = "#b5e7d3";
+//             fileStatusElement.style.color = "#008751";
+//             if (file.Status === "Auto Approved") {
+//               fileStatusElement.style.width = "96px";
+//             }
+//             break;
+//           case "Rejected":
+//             fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+//             fileStatusElement.style.color = "#f1556c";
+//             break;
+//           case "Rework":
+//             fileStatusElement.style.backgroundColor = "#ffecc4";
+//             fileStatusElement.style.color = "rgba(247, 184, 75)";
+//             break;
+//           case "Pending":
+//             fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
+//             fileStatusElement.style.color = "#000b56";
+//             break;
+//           default:
+//             fileStatusElement.style.backgroundColor = "none";
+//             fileStatusElement.style.color = "none";
+//             break;
+//         }
+        
+//         container.appendChild(card);
+//       }
+//     });
+
+//     // Add pagination controls
+//     addPaginationControls(data.length, page);
+//   }
+
+//   function addPaginationControls(totalItems: number, currentPage: number) {
+//     const totalPages = Math.ceil(totalItems / itemsPerPage);
+//     if (totalPages <= 1) return;
+    
+//     const container = document.getElementById("files-container");
+//     const paginationDiv = document.createElement("div");
+//     paginationDiv.className = "pagination-container";
+    
+//     // Previous Button
+//     const prevButton = document.createElement("button");
+//     prevButton.textContent = "Previous";
+//     prevButton.className = "pagination-container-buttons1";
+//     prevButton.disabled = currentPage === 1;
+
+//     if (currentPage === 1) {
+//     prevButton.style.opacity = "0.6";
+//     prevButton.style.cursor = "not-allowed";
+//     prevButton.onclick = null;
+// } else {
+//     prevButton.onclick = () => {
+//         currentPage--;
+//         displayPaginatedResults(allFilteredData, currentPage);
+//     };
+// }
+
+//     // prevButton.onclick = () => {
+//     //   currentPage--;
+//     //   displayPaginatedResults(allFilteredData, currentPage);
+//     // };
+    
+//     // Next Button
+//     const nextButton = document.createElement("button");
+//     nextButton.textContent = "Next";
+//     nextButton.className = "pagination-container-buttons2";
+//     nextButton.disabled = currentPage === totalPages;
+
+//       if (currentPage === totalPages) {
+//     nextButton.style.opacity = "0.6";
+//     nextButton.style.cursor = "not-allowed";
+//     nextButton.onclick = null;
+// } else {
+//     nextButton.onclick = () => {
+//         currentPage++;
+//         displayPaginatedResults(allFilteredData, currentPage);
+//     };
+// }
+//     // nextButton.onclick = () => {
+//     //   currentPage++;
+//     //   displayPaginatedResults(allFilteredData, currentPage);
+//     // };
+    
+//     // Page Info
+//     const pageInfo = document.createElement("span");
+//     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+//     pageInfo.style.margin = "0px 30px 0px 0px";
+//     pageInfo.style.lineHeight = "30px";
+    
+//     // Create container for buttons
+//     const buttonsDiv = document.createElement("div");
+//     buttonsDiv.className = "pagination-container-buttons";
+//     buttonsDiv.appendChild(prevButton);
+//     buttonsDiv.appendChild(nextButton);
+    
+//     paginationDiv.appendChild(buttonsDiv);
+//     paginationDiv.appendChild(pageInfo);
+//     container.appendChild(paginationDiv);
+//   }
+// };
+    // Show Error Message on file not Found start
+
+// const myRequest = async (event: React.MouseEvent<HTMLButtonElement> = null, siteIdToUpdate: string = null, searchText: any = null) => {
+//   // Pagination variables
+//   const itemsPerPage = 12;
+//   let currentPage = 1;
+//   let allFilesData: any[] = [];
+
+//   // Loader setup
+//   const loader = document.getElementById('loader2');
+//   if (loader) loader.style.display = 'block';
+
+//   // Existing setup code...
+//   entityclicktext = '';
+//   setdisplayuploadfileandcreatefolder(false);
+//   ismyrequordoclibforfilepreview = "myRequest";
+  
+//   // Clean URL and hide buttons
+//   if (!cleanUrlInMyRequest) {
+//     const newUrl = `${window.location.origin}${window.location.pathname}`;
+//     window.history.pushState(null, '', newUrl);
+//   }
+//   cleanUrlInMyRequest = false;
+
+//   const CreateFolder = document.getElementById("CreateFolder");
+//   const createFileButton = document.getElementById("createFileButton");
+//   const CreateRoot = document.getElementById("CreateFolder1");
+  
+//   if (CreateFolder) CreateFolder.style.display = 'none';
+//   if (createFileButton) createFileButton.style.display = 'none';
+//   if (CreateRoot) CreateRoot.style.display = 'none';
+
+//   setTimeout(() => {
+//     setlistorgriddata('');
+//   }, 100);
+
+//   const wait = document.getElementById('files-container');
+//   wait.classList.remove('hidemydatacards');
+//   setShowMyrequButtons(true);
+//   setShowMyfavButtons(false);
+//   setMyreqormyfav('Myrequest');
+
+//   // UI setup...
+//   if (event) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//   }
+
+//   const container = document.getElementById("files-container");
+//   if (siteIdToUpdate === null) {
+//     container.innerHTML = "";
+//   }
+
+//   try {
+//     const FilesItems = await sp.web.lists
+//       .getByTitle("MasterSiteURL")
+//       .items.select("Title", "SiteID", "FileMasterList", "Active")
+//       .filter(`Active eq 'Yes'`)();
+
+//     // Clear existing data
+//     allFilesData = [];
+
+//     for (const fileItem of FilesItems) {
+//       if (fileItem.FileMasterList !== null) {
+//         if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//           continue;
+//         }
+
+//         const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", "SiteName", "FilePreviewURL", "IsDeleted", "MyRequest", "Modified")
+//           .filter(`CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`)
+//           .orderBy("Modified", false)();
+
+//         allFilesData = [...allFilesData, ...filesData];
+//       }
+//     }
+
+//     // Apply search filter if searchText exists
+//     let filteredData = allFilesData;
+//     if (searchText?.value) {
+//       filteredData = allFilesData.filter(file => 
+//         file?.FileName?.toLowerCase().includes(searchText.value.toLowerCase())
+//       );
+      
+//       if (filteredData.length === 0) {
+//         fileNotFound(`No files match ${searchText.value}`);
+//       }
+//     }
+
+//     displayPaginatedResults(filteredData, currentPage);
+
+//   } catch (error) {
+//     console.error("Error loading files:", error);
+//   } finally {
+//     if (loader) loader.style.display = 'none';
+//   }
+
+//   function displayPaginatedResults(data: any[], page: number) {
+//     const container = document.getElementById("files-container");
+//     if (!container) return;
+    
+//     container.innerHTML = "";
+    
+//     const startIndex = (page - 1) * itemsPerPage;
+//     const endIndex = startIndex + itemsPerPage;
+//     const paginatedItems = data.slice(startIndex, endIndex);
+
+//     if (paginatedItems.length === 0) {
+//       const noFileMessage = document.createElement("p");
+//       noFileMessage.textContent = "No files found.";
+//       noFileMessage.style.color = "black";
+//       noFileMessage.style.fontSize = "16px";
+//       noFileMessage.style.textAlign = "center";
+//       container.appendChild(noFileMessage);
+//       return;
+//     }
+
+//     // Create cards for each item in the current page
+//     paginatedItems.forEach(file => {
+//       if (file.IsDeleted === null) {
+//         const card = document.createElement("div");
+//         const extensionHtml = createFileExtensionHtml(file.FileName);
+        
+//         card.className = "card";
+//         card.innerHTML = ` 
+//           <div class="row"> 
+//             <div class="col-md-2 pe-0"> 
+//               <div class="IMGContainer">        
+//                 ${extensionHtml}
+//               </div>
+//             </div>
+//             <div class="col-md-10"> 
+//               <div class="CardTextContainer">
+//                 <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+//                 <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
+//                 <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+//                 <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+//               </div>
+
+//               <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}')">
+//                 <span>...</span>
+//               </div>
+//             </div> 
+//           </div>
+//         `;
+
+//         const menu = document.createElement("div");
+//         menu.id = `menu-${file.FileUID}`;
+//         menu.className = "popup-menu";
+//         menu.innerHTML = `
+//           <ul>
+//             <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//               <img src=${editIcon} alt="Edit"/>
+//               Audit History
+//             </li>
+//             <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//               <img src=${ShareFile} alt="Share"/> Share
+//             </li>
+//             <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//               <img src=${FilePreview} alt="Preview File"/> Preview File
+//             </li>
+//             <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//               <img src=${downloadicon} alt="Download File"/> Download File
+//             </li>
+//             <li onclick="versionHistory('${file.FileName}', '${file.CurrentFolderPath}', '${file.SiteID}' ,'MyRequest','${file.FileUID}')">
+//               <img src=${editIcon} alt="Version History"/> Version History
+//             </li>
+//             ${file.Status === "Rework" ? `
+//             <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
+//               <img src=${editIcon} alt="Edit File"/> Edit File
+//             </li>` : ''}
+//           </ul>
+//         `;
+
+//         card.appendChild(menu);
+        
+//         // Status styling
+//         const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+//         switch (file.Status) {
+//           case "Approved":
+//           case "Auto Approved":
+//             fileStatusElement.style.backgroundColor = "#b5e7d3";
+//             fileStatusElement.style.color = "#008751";
+//             if (file.Status === "Auto Approved") {
+//               fileStatusElement.style.width = "96px";
+//             }
+//             break;
+//           case "Rejected":
+//             fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+//             fileStatusElement.style.color = "#f1556c";
+//             break;
+//           case "Rework":
+//             fileStatusElement.style.backgroundColor = "#ffecc4";
+//             fileStatusElement.style.color = "rgba(247, 184, 75)";
+//             break;
+//           case "Pending":
+//             fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
+//             fileStatusElement.style.color = "#000b56";
+//             break;
+//           default:
+//             fileStatusElement.style.backgroundColor = "none";
+//             fileStatusElement.style.color = "none";
+//             break;
+//         }
+        
+//         container.appendChild(card);
+//       }
+//     });
+
+//     // Add pagination controls
+//     addPaginationControls(data.length, currentPage);
+//   }
+
+//   function addPaginationControls(totalItems: number, currentPage: number) {
+//     const totalPages = Math.ceil(totalItems / itemsPerPage);
+//     if (totalPages <= 1) return;
+    
+//     const container = document.getElementById("files-container");
+//     const paginationDiv = document.createElement("div");
+//     paginationDiv.className = "pagination-container";
+    
+//     // Previous Button
+//     const prevButton = document.createElement("button");
+//     prevButton.textContent = "Previous";
+//     prevButton.className = "pagination-container-buttons1";
+//     prevButton.disabled = currentPage === 1;
+
+//     if (currentPage === 1) {
+//       prevButton.style.opacity = "0.6";
+//       prevButton.style.cursor = "not-allowed";
+//       prevButton.onclick = null;
+//     } else {
+//       prevButton.onclick = () => {
+//         currentPage--;
+//         displayPaginatedResults(
+//           searchText?.value 
+//             ? allFilesData.filter(file => 
+//                 file?.FileName?.toLowerCase().includes(searchText.value.toLowerCase())
+//               )
+//             : allFilesData,
+//           currentPage
+//         );
+//       };
+//     }
+    
+//     // Next Button
+//     const nextButton = document.createElement("button");
+//     nextButton.textContent = "Next";
+//     nextButton.className = "pagination-container-buttons2";
+//     nextButton.disabled = currentPage === totalPages;
+
+//     if (currentPage === totalPages) {
+//       nextButton.style.opacity = "0.6";
+//       nextButton.style.cursor = "not-allowed";
+//       nextButton.onclick = null;
+//     } else {
+//       nextButton.onclick = () => {
+//         currentPage++;
+//         displayPaginatedResults(
+//           searchText?.value 
+//             ? allFilesData.filter(file => 
+//                 file?.FileName?.toLowerCase().includes(searchText.value.toLowerCase())
+//               )
+//             : allFilesData,
+//           currentPage
+//         );
+//       };
+//     }
+    
+//     // Page Info
+//     const pageInfo = document.createElement("span");
+//     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+//     pageInfo.style.margin = "0px 30px 0px 0px";
+//     pageInfo.style.lineHeight = "30px";
+    
+//     // Create container for buttons
+//     const buttonsDiv = document.createElement("div");
+//     buttonsDiv.className = "pagination-container-buttons";
+//     buttonsDiv.appendChild(prevButton);
+//     buttonsDiv.appendChild(nextButton);
+    
+//     paginationDiv.appendChild(buttonsDiv);
+//     paginationDiv.appendChild(pageInfo);
+//     container.appendChild(paginationDiv);
+//   }
+// };
+   
+// this is my new working code of my request after pagination buttons but here there was inconsistency in cards 
+
+// const myRequest = async (event: React.MouseEvent<HTMLButtonElement> = null, siteIdToUpdate: string = null, searchText: any = null) => {
+//   // Pagination variables
+//   let currentPage = 1;
+//   const itemsPerPage = 12;
+//   let totalPages = 1;
+//   let allFilesData: any[] = [];
+//   let filteredFilesData: any[] = [];
+//   routeToDiffSideBar = "myRequest";
+
+//   // Show loader
+//   const loader = document.getElementById('loader2');
+//   if (loader) loader.style.display = 'block';
+
+//   // Your existing initialization code...
+//   entityclicktext = '';
+//   setdisplayuploadfileandcreatefolder(false);
+//   ismyrequordoclibforfilepreview = "myRequest";
+
+//   if (!cleanUrlInMyRequest) {
+//     const newUrl = `${window.location.origin}${window.location.pathname}`;
+//     window.history.pushState(null, '', newUrl);
+//   }
+//   cleanUrlInMyRequest = false;
+
+//   // Hide create folder/file buttons
+//   const CreateFolder = document.getElementById("CreateFolder");
+//   const createFileButton = document.getElementById("createFileButton");
+//   const CreateRoot = document.getElementById("CreateFolder1");
+//   if (CreateFolder) CreateFolder.style.display = 'none';
+//   if (createFileButton) createFileButton.style.display = 'none';
+//   if (CreateRoot) CreateRoot.style.display = 'none';
+
+//   setTimeout(() => {
+//     setlistorgriddata('');
+//   }, 100);
+
+//   const wait = document.getElementById('files-container');
+//   wait.classList.remove('hidemydatacards');
+//   setShowMyrequButtons(true);
+//   setShowMyfavButtons(false);
+//   setMyreqormyfav('Myrequest');
+
+//   const hidegidvewlistviewbutton = document.getElementById("hidegidvewlistviewbutton");
+//   if (hidegidvewlistviewbutton) {
+//     hidegidvewlistviewbutton.style.display = 'flex';
+//   }
+
+//   const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+//   if (hidegidvewlistviewbutton2) {
+//     hidegidvewlistviewbutton2.style.display = 'none';
+//   }
+
+//   if (event) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//   }
+
+//   const container = document.getElementById("files-container");
+//   if (siteIdToUpdate === null) {
+//     container.innerHTML = "";
+//   }
+
+//   // Updated renderCards function without IsDeleted check
+//   const renderCards = (files: any[]) => {
+//     container.innerHTML = ""; // Clear container first
+    
+//     files.forEach((file) => {
+//       const card = document.createElement("div");
+//       const fileExtension = file.FileName?.split(".").pop().toLowerCase();
+//       const extensionHtml = createFileExtensionHtml(file.FileName);
+      
+//       card.className = "card";
+//       card.innerHTML = ` 
+//       <div class="row"> 
+//         <div class="col-md-2 pe-0"> 
+//       <div class="IMGContainer">        
+//         ${extensionHtml}
+//       </div>
+//       </div>
+//           <div class="col-md-10"> 
+//            <div class="CardTextContainer">
+//         <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+//         <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
+//         <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+//         <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
+//         </div>
+
+//         <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}')">
+//             <span>...</span>
+//         </div>
+//             </div> </div>
+//       `;
+
+//       const menu = document.createElement("div");
+//       menu.id = `menu-${file.FileUID}`;
+//       menu.className = "popup-menu";
+//       menu.innerHTML = `
+//        <ul>
+//       <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+//             <img src=${editIcon} alt="Edit"/>
+//                         Audit History
+//       </li>
+//       <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+//         <img src=${ShareFile} alt="Share"/> Share
+//       </li>
+//        <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//            <img src=${FilePreview} alt="Preview File"/> Preview File
+//          </li>
+//          <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+//            <img src=${downloadicon} alt="Download File"/> Download File
+//          </li>
+//          <li onclick="versionHistory('${file.FileName}', '${file.CurrentFolderPath}', '${file.SiteID}' ,'MyRequest','${file.FileUID}')">
+//             <img src=${editIcon} alt="Version History"/> Version History
+//          </li>
+//        ${file.Status === "Rework" ? `
+//               <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
+//                <img src=${editIcon} alt="Edit File"/> Edit File
+//         </li>` : ''}
+//     </ul>
+//       `;
+      
+//       card.appendChild(menu);
+      
+//       const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+//       switch (file.Status) {
+//         case "Approved":
+//           fileStatusElement.style.backgroundColor = "#b5e7d3";
+//           fileStatusElement.style.color = "#008751";
+//           break;
+//         case "Auto Approved":
+//           fileStatusElement.style.backgroundColor = "#b5e7d3";
+//           fileStatusElement.style.color = "#008751";
+//           fileStatusElement.style.width = "96px";
+//           break;
+//         case "Rejected":
+//           fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+//           fileStatusElement.style.color = "#f1556c";
+//           break;
+//         case "Rework":
+//           fileStatusElement.style.backgroundColor = "#ffecc4";
+//           fileStatusElement.style.color = "rgba(247, 184, 75)";
+//           break;
+//         case "Pending":
+//           fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
+//           fileStatusElement.style.color = "#000b56";
+//           break;
+//         default:
+//           fileStatusElement.style.backgroundColor = "none";
+//           fileStatusElement.style.color = "none";
+//           break;
+//       }
+      
+//       container.appendChild(card);
+//     });
+//   };
+
+//   // Updated displayItems function with filtering before pagination
+//   const displayItems = (page: number) => {
+//     currentPage = page;
+//     const startIndex = (page - 1) * itemsPerPage;
+//     const endIndex = startIndex + itemsPerPage;
+    
+//     // Filter out deleted items before pagination
+//     const dataToDisplay = (searchText ? filteredFilesData : allFilesData)
+//       .filter(file => file.IsDeleted === null);
+    
+//     const paginatedItems = dataToDisplay.slice(startIndex, endIndex);
+    
+//     renderCards(paginatedItems);
+//     addPaginationControls(dataToDisplay.length);
+//   };
+
+//   const addPaginationControls = (totalItems: number) => {
+//     // Remove existing pagination controls if any
+//     const existingPagination = container.querySelector(".pagination-container");
+//     if (existingPagination) {
+//       container.removeChild(existingPagination);
+//     }
+
+//     totalPages = Math.ceil(totalItems / itemsPerPage);
+//     if (totalPages <= 1) return; // Don't show pagination if only one page
+
+//     const paginationContainer = document.createElement("div");
+//     paginationContainer.className = "pagination-container";
+    
+//     const creatediv = document.createElement("div");
+//     creatediv.className = "pagination-container-buttons";
+    
+//     // Previous button
+//     const prevButton = document.createElement("button");
+//     prevButton.textContent = "Previous";
+//     prevButton.className = "pagination-container-buttons1";
+    
+//     // Next button
+//     const nextButton = document.createElement("button");
+//     nextButton.textContent = "Next";
+//     nextButton.className = "pagination-container-buttons2";
+    
+//     // Disable logic
+//     const disablePrev = currentPage === 1;
+//     const disableNext = currentPage === totalPages;
+
+//     if (disablePrev) {
+//       prevButton.style.opacity = "0.6";
+//       prevButton.style.cursor = "not-allowed";
+//     } else {
+//       prevButton.style.opacity = "1";
+//       prevButton.style.cursor = "pointer";
+//       prevButton.onclick = () => {
+//         currentPage--;
+//         displayItems(currentPage);
+//       };
+//     }
+
+//     if (disableNext) {
+//       nextButton.style.opacity = "0.6";
+//       nextButton.style.cursor = "not-allowed";
+//     } else {
+//       nextButton.style.opacity = "1";
+//       nextButton.style.cursor = "pointer";
+//       nextButton.onclick = () => {
+//         currentPage++;
+//         displayItems(currentPage);
+//       };
+//     }
+
+//     // Page info
+//     const pageInfo = document.createElement("span");
+//     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+//     pageInfo.style.margin = "0px 30px 0px 0px";
+//     pageInfo.style.lineHeight = "30px";
+
+//     // Add controls to container
+//     paginationContainer.appendChild(creatediv); 
+//     creatediv.appendChild(prevButton);
+//     creatediv.appendChild(nextButton);
+//     paginationContainer.appendChild(pageInfo);
+
+//     // Style buttons
+//     const styleButton = (button: HTMLButtonElement) => {
+//       button.style.border = "1px solid #ddd";
+//       button.style.backgroundColor = "#f8f9fa";
+//       button.style.borderRadius = "4px";
+//       button.style.fontSize = "14px";
+//     };
+
+//     styleButton(prevButton);
+//     styleButton(nextButton);
+
+//     container.appendChild(paginationContainer);
+//   };
+
+//   try {
+//     const FilesItems = await sp.web.lists
+//       .getByTitle("MasterSiteURL")
+//       .items.select("Title", "SiteID", "FileMasterList", "Active")
+//       .filter(`Active eq 'Yes'`)();
+
+//     // Clear data arrays
+//     allFilesData = [];
+//     filteredFilesData = [];
+
+//     for (const fileItem of FilesItems) {
+//       if (fileItem.FileMasterList !== null) {
+//         if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
+//           continue;
+//         }
+
+//         const filesData = await sp.web.lists
+//           .getByTitle(`${fileItem.FileMasterList}`)
+//           .items.select("ID", "FileName", "FileUID", "FileSize", "FileVersion", "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", "SiteName", "FilePreviewURL", "IsDeleted", "MyRequest", "Modified")
+//           .filter(`CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`)
+//           .orderBy("Modified", false)();
+
+//         // Store all files
+//         allFilesData = [...allFilesData, ...filesData];
+
+//         // Filter if searchText exists
+//         if (searchText !== null) {
+//           const searchFiltered = filesData.filter((file: any) => 
+//             file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase())
+//           );
+//           filteredFilesData = [...filteredFilesData, ...searchFiltered];
+//         }
+//       }
+//     }
+
+//     // Check if we should show "no results" message
+//     if (searchText && filteredFilesData.length === 0) {
+//       fileNotFound(`No files match ${searchText.value}`);
+//       return;
+//     }
+
+//     // Display first page of appropriate data
+//     displayItems(1);
+
+//   } catch (error) {
+//     console.error("Error loading files:", error);
+//   } finally {
+//     if (loader) loader.style.display = 'none';
+//   }
+// };
+
+
+const myRequest = async (
+  event: React.MouseEvent<HTMLButtonElement> = null,
+  siteIdToUpdate: string = null,
+  searchText: any = null
+) => {
+  // Initialize pagination variables
+  let currentPage = 1;
+  const itemsPerPage = 12;
+  let totalPages = 1;
+  let allFilesData: any[] = [];
+  let filteredFilesData: any[] = [];
+  routeToDiffSideBar = "myRequest";
+
+  // Show loader
   const loader = document.getElementById('loader2');
- 
+  if (loader) loader.style.display = 'block';
 
-  if (loader) loader.style.display = 'block'; // 🔥 Show loader before starting
+  // UI Initialization
+  entityclicktext = '';
+  setdisplayuploadfileandcreatefolder(false);
+  ismyrequordoclibforfilepreview = "myRequest";
 
-
-  entityclicktext = ''
-  setdisplayuploadfileandcreatefolder(false)
-  ismyrequordoclibforfilepreview = "myRequest"
-      // New code to hide the create file and folder button start
-    // clean Url start
-    if(!cleanUrlInMyRequest){
-      const newUrl = `${window.location.origin}${window.location.pathname}`;
-      window.history.pushState(null, '', newUrl)
-    }
-    cleanUrlInMyRequest=false;
-    // end
-    const CreateFolder=document.getElementById("CreateFolder")
-    const createFileButton=document.getElementById("createFileButton")
-    const CreateRoot=document.getElementById("CreateFolder1")
-    if(CreateFolder){
-      CreateFolder.style.display = 'none'
-      }
-      if(createFileButton){
-      createFileButton.style.display = 'none'
-      }
-      if(CreateRoot){
-        CreateRoot.style.display = 'none'
-      }
-    //End 
-    
-setTimeout(() => {
-
-  setlistorgriddata('');  // Update state to '' after a delay
-
-
-}, 100);
-
-const wait = document.getElementById('files-container')
-wait.classList.remove('hidemydatacards')
-setShowMyrequButtons(true)
-setShowMyfavButtons(false)
-setMyreqormyfav('Myrequest')
-
-const hidegidvewlistviewbutton=document.getElementById("hidegidvewlistviewbutton")
-if (hidegidvewlistviewbutton) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton.style.display = 'flex'
- 
-}
-const hidegidvewlistviewbutton2=document.getElementById("hidegidvewlistviewbutton2")
-if (hidegidvewlistviewbutton2) {
-  console.log("enter here .....................")
-  hidegidvewlistviewbutton2.style.display = 'none'
- 
-}
-
-
-
-console.log("searchInput",searchText);
-console.log("siteIdToUpdate",siteIdToUpdate);
-
-if(event){
-  event.preventDefault();
-  event.stopPropagation();
-}
-
-
-
-
-
-// call this function onClick of the myRequest
-// handleShowContent(event)
-
-
-// if(createFileButton2){
-// createFileButton2.style.display = 'none'
-// }
-// if(createFileButton){
-// createFileButton.style.display = 'none'
-// }
- 
-
-
-if(event) {
-  event.preventDefault();
-  event.stopPropagation();
-}
-
-// console.log("myFavorite Function is called");
-
-const container = document.getElementById("files-container");
-if(siteIdToUpdate ===  null){
-    container.innerHTML="";
-    // console.log("siteToUpdate")
-}
-
-// console.log("beforeFetchItems");
-// Fetch the list of active entity
-try {
-  const FilesItems = await sp.web.lists
-  .getByTitle("MasterSiteURL")
-  .items.select("Title", "SiteID", "FileMasterList", "Active")
-  .filter(`Active eq 'Yes'`)();
-
-// console.log("Active Sites List Names", FilesItems);
-
-FilesItems.forEach(async (fileItem, index) => {
-  if (fileItem.FileMasterList !== null) {
-
-    // console.log("FilesItesms");
-    // Skip rendering if we're updating only a specific list
-    if (siteIdToUpdate && fileItem.SiteID !== siteIdToUpdate) {
-      return;
-    }
-
-    // console.log("SiteId", fileItem.SiteID);
-    console.log("fileItem.FileMasterList",fileItem.FileMasterList);
-    // const filesData = await sp.web.lists
-    //   .getByTitle(`${fileItem.FileMasterList}`)
-    //   .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted")
-    //   .filter(
-    //     `CurrentUser eq '${currentUserEmailRef.current}'`
-    //   )();
-    const filesData = await sp.web.lists
-          .getByTitle(`${fileItem.FileMasterList}`)
-          .items.select("ID" , "FileName", "FileUID", "FileSize", "FileVersion" ,"Status" , "SiteID","CurrentFolderPath","DocumentLibraryName","SiteName","FilePreviewURL","IsDeleted","MyRequest" ,"Modified" ).filter(
-            `CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`
-          ).orderBy("Modified", false)();
-    console.log("My reaquest Called");
-
-    // console.log("enter in the myRequest------")
-    console.log(fileItem.FileMasterList,"- FilesData",filesData)
-  // route to different-2 sideBar
-
-  let combineArray:any[]=[];
-  // start
-  routeToDiffSideBar="myRequest";
-  let filteredFileData=[];
-  if(searchText !== null){
-        filteredFileData=filesData.filter((file: any) => file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase()))
-        // console.log("this is filtered data",filteredFileData)
-           // New Code to show pop up when no match found start
-           combineArray=[...combineArray, ...filteredFileData]
-           if(combineArray.length === 0 && searchText !== null && FilesItems.length === index+1){
-             console.log("combineArray",combineArray);
-             fileNotFound(`No files match ${searchText.value}`);
-           }
-           // End
-           // console.log("Index",index);
-  }else{
-    filteredFileData=filesData;
+  // Clean URL if needed
+  if (!cleanUrlInMyRequest) {
+    const newUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.pushState(null, '', newUrl);
   }
-  // end 
+  cleanUrlInMyRequest = false;
 
-  // change the array
-  filteredFileData.forEach((file) => {
-  //  console.log(file.ID , "file.odata.id ")
-  if(file.IsDeleted === null){
-    const card = document.createElement("div");
-    const fileSizeInKB = 2048; // Example file size in KB
-    const fileSizeInMB = (fileSizeInKB / 1024).toFixed(2); // Convert to MB and round to 2 decimal places
+  // Hide create folder/file buttons
+  const CreateFolder = document.getElementById("CreateFolder");
+  const createFileButton = document.getElementById("createFileButton");
+  const CreateRoot = document.getElementById("CreateFolder1");
+  if (CreateFolder) CreateFolder.style.display = 'none';
+  if (createFileButton) createFileButton.style.display = 'none';
+  if (CreateRoot) CreateRoot.style.display = 'none';
 
-    // console.log("searchArray",searchArray);
-    let fileIcon;
-    const fileExtension = file.FileName?.split(".").pop().toLowerCase(); // Get the file extension
-    // switch (fileExtension) {
-    //   case "doc":
-    //   case "docx":
-    //     fileIcon = Docicon;
-    //     break;
-    //   case "txt":
-    //     fileIcon = Txticon;
-    //     break;
-    //   case "pdf":
-    //     fileIcon = Pdficon;
-    //     break;
-    //   case "xls":
-    //   case "xlsx":
-    //     fileIcon = Xlsicon;
-    //     break;
-    //   case "zip":
-    //     fileIcon = Zipicon;
-    //     break;
-    //   default:
-    //     fileIcon = Docicon; // Default icon if no match
-    //     break;
-    // }
-    switch (fileExtension.toLowerCase()) {
-      // Documents
-      case "doc":
-      case "docx":
-        fileIcon = Docicon;
-        break;
-      case "txt":
-        fileIcon = Txticon;
-        break;
-      case "pdf":
-        fileIcon = Pdficon;
-        break;
-      case "xls":
-      case "xlsx":
-      case "csv":
-        fileIcon = Xlsicon;
-        break;
-      case "ppt":
-      case "pptx":
-        fileIcon = Ppticon;
-        break;
-    
-      // Images
-      case "jpg":
-      case "jpeg":
-      case "png":
-      case "gif":
-      case "bmp":
-      case "tiff":
-      case "svg":
-      case "webp":
-        fileIcon = Jpgicon;
-        break;
-    
-      // Audio
-      case "mp3":
-      case "wav":
-      case "aac":
-      case "ogg":
-      case "flac":
-        fileIcon = Mp3icon;
-        break;
-    
-      // Video
-      case "mp4":
-      case "avi":
-      case "mkv":
-      case "mov":
-      case "wmv":
-      case "flv":
-      case "webm":
-        fileIcon = Mp4icon;
-        break;
-    
-      // Compressed files
-      case "zip":
-      case "rar":
-      case "7z":
-      case "tar":
-      case "gz":
-        fileIcon = Zipicon;
-        break;
-    
-      // Code files
-      case "html":
-      case "css":
-      case "js":
-      case "ts":
-      case "json":
-      case "xml":
-      case "sql":
-      case "php":
-      case "py":
-      case "java":
-      case "c":
-      case "cpp":
-      case "cs":
-      case "swift":
-      case "go":
-      case "rb":
-        fileIcon = Htmlicon;
-        break;
-    
-      // Default
-      default:
-        fileIcon = Docicon; // Default fallback icon
-        break;
-    }
-const extensionHtml=createFileExtensionHtml(file.FileName);
-    
-    card.className = "card";
-    card.innerHTML = ` 
-    <div class="row"> 
-      <div class="col-md-2 pe-0"> 
-    <div class="IMGContainer">        
-      ${extensionHtml}
-    </div>
-    </div>
-        <div class="col-md-10"> 
-         <div class="CardTextContainer">
-      <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
-      <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
-      <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
-      <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
-      </div>
+  // Reset view
+  setTimeout(() => {
+    setlistorgriddata('');
+  }, 100);
 
-      <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
-          <span>...</span>
-      </div>
-          </div> </div>
-    `;
-    // card.innerHTML = ` 
-    // <div class="row"> 
-    //   <div class="col-md-2 pe-0"> 
-    // <div class="IMGContainer">        
-    //   <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-    // </div>
-    // </div>
-    //     <div class="col-md-10"> 
-    //      <div class="CardTextContainer">
-    //   <p class="p1st" style="cursor: pointer;" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
-    //   <p class="p2nd">${file.DocumentLibraryName}</p>
-    //   <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
-    //   <p class="filestatus myrequestp3rd"> ${file.Status ? file.Status : ''}  </p>
-    //   </div>
+  const wait = document.getElementById('files-container');
+  wait.classList.remove('hidemydatacards');
+  setShowMyrequButtons(true);
+  setShowMyfavButtons(false);
+  setMyreqormyfav('Myrequest');
 
-    //   <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
-    //       <span>...</span>
-    //   </div>
-    //       </div> </div>
-    // `;
+  // Show/hide view buttons
+  const hidegidvewlistviewbutton = document.getElementById("hidegidvewlistviewbutton");
+  if (hidegidvewlistviewbutton) hidegidvewlistviewbutton.style.display = 'flex';
+  
+  const hidegidvewlistviewbutton2 = document.getElementById("hidegidvewlistviewbutton2");
+  if (hidegidvewlistviewbutton2) hidegidvewlistviewbutton2.style.display = 'none';
 
-    const menu = document.createElement("div");
-    // console.log(menu , "menu is here")
-    menu.id = `menu-${file.FileUID}`;
-    menu.className = "popup-menu";
-    const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
-    menu.innerHTML = `
-     <ul>
-    <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
-          <img src=${editIcon} alt="Edit"/>
-                      Audit History
-    </li>
-    <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
-      <img src=${ShareFile} alt="Share"/> Share
-    </li>
-     <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-         <img src=${FilePreview} alt="Preview File"/> Preview File
-       </li>
-       <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-         <img src=${downloadicon} alt="Download File"/> Download File
-       </li>
-     ${file.Status === "Rework" ? `
+  // Prevent default behavior if event exists
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Clear container if not updating specific site
+  const container = document.getElementById("files-container");
+  if (siteIdToUpdate === null) {
+    container.innerHTML = "";
+  }
+
+  // Function to render cards
+  const renderCards = (files: any[]) => {
+    container.innerHTML = ""; // Clear container first
+    
+    files.forEach((file) => {
+      const card = document.createElement("div");
+      const fileExtension = file.FileName?.split(".").pop().toLowerCase();
+      const extensionHtml = createFileExtensionHtml(file.FileName);
+      
+      card.className = "card";
+      card.innerHTML = ` 
+        <div class="row"> 
+          <div class="col-md-2 pe-0"> 
+            <div class="IMGContainer">        
+              ${extensionHtml}
+            </div>
+          </div>
+          <div class="col-md-10"> 
+            <div class="CardTextContainer">
+              <p class="p1st" style="cursor: pointer;" title="${file.FileName}" onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">${file.FileName}</p>
+              <p class="p2nd" title="${file.CurrentFolderPath ? file.CurrentFolderPath.split('/').slice(3).join('/') : ''}">${file.DocumentLibraryName}</p>
+              <p class="p3rd ">${((file.FileSize as unknown as number) / (1024 * 1024)).toFixed(2)}MB</p>
+              <p class="filestatus myrequestp3rd">${file.Status ? file.Status : ''}</p>
+            </div>
+            <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}')">
+              <span>...</span>
+            </div>
+          </div> 
+        </div>
+      `;
+
+      // Create and append menu
+      const menu = document.createElement("div");
+      menu.id = `menu-${file.FileUID}`;
+      menu.className = "popup-menu";
+      menu.innerHTML = `
+        <ul>
+          <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
+            <img src=${editIcon} alt="Edit"/> Audit History
+          </li>
+          <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
+            <img src=${ShareFile} alt="Share"/> Share
+          </li>
+          <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+            <img src=${FilePreview} alt="Preview File"/> Preview File
+          </li>
+          <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
+            <img src=${downloadicon} alt="Download File"/> Download File
+          </li>
+          <li onclick="versionHistory('${file.FileName}', '${file.CurrentFolderPath}', '${file.SiteID}' ,'MyRequest','${file.FileUID}')">
+            <img src=${editIcon} alt="Version History"/> Version History
+          </li>
+          ${file.Status === "Rework" ? `
             <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
-
-             <img src=${editIcon} alt="Edit File"/> Edit File
-      </li>` : ''}
-
-  </ul>
-    `;
-  //   menu.innerHTML = `
-  //    <ul>
-  //   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
-  //     <img src=${deleteIcon} alt="Delete"/> Delete
-  //   </li>
-  //   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
-  //         <img src=${editIcon} alt="Edit"/>
-  //                     Audit History
-  //   </li>
-  //   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
-  //     <img src=${ShareFile} alt="Share"/> Share
-  //   </li>
-  //    <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-  //        <img src=${viewIcon} alt="Preview File"/> Preview File
-  //      </li>
-  //      <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-  //        <img src=${downloadicon} alt="Download File"/> Download File
-  //      </li>
-
-  // </ul>
-  //   `;
-  //   menu.innerHTML = `
-  //    <ul>
-  //   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
-  //     <img src=${deleteIcon} alt="Delete"/> Delete
-  //   </li>
-  //   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
-  //         <img src=${editIcon} alt="Edit"/>
-  //                     Audit History
-  //   </li>
-  //   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
-  //     <img src=${ShareFile} alt="Share"/> Share
-  //   </li>
-  //    <li onclick="PreviewFile('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-  //        <img src=${viewIcon} alt="Preview File"/> Preview File
-  //      </li>
-  //      <li onclick="Download('${file.FileUID}','${file.SiteID}','${file.ID}' , '${file.FileMasterList}', '${file.FilePreviewURL}')">
-  //        <img src=${downloadicon} alt="Download File"/> Download File
-  //      </li>
-  //   ${file.Status === "Rework" ? `
-  //    <li onclick="rework('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}','${file.CurrentFolderPath}/${file.FileName}')">
-
-  //         <img src=${editIcon} alt="Edit File"/> Edit File
-  //     </li>` : ''}
-  // </ul>
-  //   `;
-    
-
-    
-    card.appendChild(menu);
-    // Change the background color and text color based on FileStatus
-    const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
-    switch (file.Status) {
-      case "Approved":
-        fileStatusElement.style.backgroundColor = "#b5e7d3";
-        fileStatusElement.style.color = "#008751";
-        break;
-      case "Auto Approved":
-        fileStatusElement.style.backgroundColor = "#b5e7d3";
-        fileStatusElement.style.color = "#008751";
-        fileStatusElement.style.width = "96px";
-
-        break;
-      case "Rejected":
-        fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
-        fileStatusElement.style.color = "#f1556c";
-        break;
-      case "Rework":
-        fileStatusElement.style.backgroundColor = "#ffecc4";
-        fileStatusElement.style.color = "rgba(247, 184, 75)";
-        break;
+              <img src=${editIcon} alt="Edit File"/> Edit File
+            </li>` : ''}
+        </ul>
+      `;
+      
+      card.appendChild(menu);
+      
+      // Set status color
+      const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
+      switch (file.Status) {
+        case "Approved":
+          fileStatusElement.style.backgroundColor = "#b5e7d3";
+          fileStatusElement.style.color = "#008751";
+          break;
+        case "Auto Approved":
+          fileStatusElement.style.backgroundColor = "#b5e7d3";
+          fileStatusElement.style.color = "#008751";
+          fileStatusElement.style.width = "96px";
+          break;
+        case "Rejected":
+          fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
+          fileStatusElement.style.color = "#f1556c";
+          break;
+        case "Rework":
+          fileStatusElement.style.backgroundColor = "#ffecc4";
+          fileStatusElement.style.color = "rgba(247, 184, 75)";
+          break;
         case "Pending":
           fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
           fileStatusElement.style.color = "#000b56";
           break;
-          default:
-            fileStatusElement.style.backgroundColor = "none";
-            fileStatusElement.style.color = "none";
-            break;
-    }
-    
-    container.appendChild(card);
-    // check file status if approved hide the delete button
-    // const menu1 = document.getElementById(`menu-${file.FileUID}`);
-    // console.log("menu1",menu1);
-    // if(file.Status === "Approved" || file.Status === null){
-    //   const firstItem = menu1.children[0]?.children[0] as HTMLElement;
-    //   if (firstItem && firstItem.style.display !== "none") {
-    //       firstItem.style.display = "none";
-    //   }
-    // }
-  }
-//   const card = document.createElement("div");
-  
-//   // console.log("searchArray",searchArray);
-//   let fileIcon;
-//   const fileExtension = file.FileName?.split(".").pop().toLowerCase(); // Get the file extension
-//   switch (fileExtension) {
-//     case "doc":
-//     case "docx":
-//       fileIcon = Docicon;
-//       break;
-//     case "txt":
-//       fileIcon = Txticon;
-//       break;
-//     case "pdf":
-//       fileIcon = Pdficon;
-//       break;
-//     case "xls":
-//     case "xlsx":
-//       fileIcon = Xlsicon;
-//       break;
-//     case "zip":
-//       fileIcon = Zipicon;
-//       break;
-//     default:
-//       fileIcon = Docicon; // Default icon if no match
-//       break;
-//   }
-
-//   card.className = "card";
-//   card.innerHTML = `         
-//     <img class="filextension" src=${fileIcon} alt="${fileExtension} icon"/>
-//     <p class="p1st">${file.FileName}</p>
-//     <p class="p2nd"></p>
-//     <p class="p3rd">${file.FileSize}</p>
-//     <p class="filestatus"> ${file.Status}  </p>
-//     <div class="three-dots" onclick="toggleMenu2('${file.FileUID}','${fileItem.SiteID}','${file.ID}' , '${fileItem.FileMasterList}')  ">
-//         <span>...</span>
-//     </div>
-//   `;
-
-//   const menu = document.createElement("div");
-//   // console.log(menu , "menu is here")
-//   menu.id = `menu-${file.FileUID}`;
-//   menu.className = "popup-menu";
-//   const showaudit = <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>
-//   menu.innerHTML = `
-//    <ul>
-//   <li onclick="confirmDeleteFile('${file.FileUID}','${file.SiteID}','${false}','${fileItem.FileMasterList}')">
-//     <img src=${deleteIcon} alt="Delete"/> Delete
-//   </li>
-//   <li onclick="auditHistory('${file.FileUID}', '${file.SiteID}','${file?.DocumentLibraryName}','${file?.SiteName}')">
-//         <img src=${editIcon} alt="Edit"/>
-//                     Audit History
-//   </li>
-//   <li onclick="shareFile('${file.FileUID}', '${file.SiteID}','${file.CurrentFolderPath}','${file.FileName}','MyRequest','${file.FileVersion}','${file.FileSize}','${file.Status}','${file.FilePreviewURL}','${file.DocumentLibraryName}')">
-//     <img src=${ShareFile} alt="Share"/> Share
-//   </li>
-// </ul>
-//   `;
-  
-
-  
-//   card.appendChild(menu);
-//   // Change the background color and text color based on FileStatus
-//   const fileStatusElement = card.querySelector(".filestatus") as HTMLElement;
-//   switch (file.Status) {
-//     case "Approved":
-//       fileStatusElement.style.backgroundColor = "#b5e7d3";
-//       fileStatusElement.style.color = "#008751";
-//       break;
-//     case "Rejected":
-//       fileStatusElement.style.backgroundColor = "rgba(241, 85, 108, 0.1)";
-//       fileStatusElement.style.color = "#f1556c";
-//       break;
-//     case "Rework":
-//       fileStatusElement.style.backgroundColor = "#ffecc4";
-//       fileStatusElement.style.color = "rgba(247, 184, 75)";
-//       break;
-//       case "Pending":
-//         fileStatusElement.style.backgroundColor = "rgb(91 156 187 / 25%)";
-//         fileStatusElement.style.color = "#000b56";
-//         break;
-//         default:
-//           fileStatusElement.style.backgroundColor = "gray";
-//           fileStatusElement.style.color = "white";
-//           break;
-//   }
-  
-//   container.appendChild(card);
-//   // check file status if approved hide the delete button
-//   const menu1 = document.getElementById(`menu-${file.FileUID}`);
-//   // console.log("menu1",menu1);
-//   if(file.Status === "Approved" || file.Status === null){
-//     const firstItem = menu1.children[0]?.children[0] as HTMLElement;
-//     if (firstItem && firstItem.style.display !== "none") {
-//         firstItem.style.display = "none";
-//     }
-//   }
+        default:
+          break;
+      }
+      
+      container.appendChild(card);
     });
+  };
+
+  // Function to display paginated items
+  const displayItems = (page: number) => {
+    currentPage = page;
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    // Use filtered data if search exists, otherwise use all data
+    const dataToDisplay = searchText ? filteredFilesData : allFilesData;
+    const paginatedItems = dataToDisplay.slice(startIndex, endIndex);
+    
+    renderCards(paginatedItems);
+    addPaginationControls(dataToDisplay.length);
+  };
+
+  // Function to add pagination controls
+  const addPaginationControls = (totalItems: number) => {
+    // Remove existing pagination if any
+    const existingPagination = container.querySelector(".pagination-container");
+    if (existingPagination) {
+      container.removeChild(existingPagination);
+    }
+
+    totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) return; // Don't show pagination if only one page
+
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination-container";
+    
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "pagination-container-buttons";
+    
+    // Previous button
+    const prevButton = document.createElement("button");
+    prevButton.textContent = "Previous";
+    prevButton.className = "pagination-container-buttons1";
+    if(prevButton){
+      prevButton.style.marginRight = "64px !important";
+    }
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+      if (currentPage > 1) {
+        displayItems(currentPage - 1);
+      }
+    };
+
+    // Next button
+    const nextButton = document.createElement("button");
+    nextButton.textContent = "Next";
+    nextButton.className = "pagination-container-buttons2";
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+      if (currentPage < totalPages) {
+        displayItems(currentPage + 1);
+      }
+    };
+
+    // Page info
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageInfo.style.margin = "0px 30px 0px 0px";
+    pageInfo.style.lineHeight = "30px";
+
+    // Add elements to container
+    buttonsContainer.appendChild(prevButton);
+    buttonsContainer.appendChild(nextButton);
+    paginationContainer.appendChild(buttonsContainer);
+    paginationContainer.appendChild(pageInfo);
+
+    // Style buttons
+    const styleButton = (button: HTMLButtonElement) => {
+      button.style.border = "1px solid #ddd";
+      button.style.backgroundColor = "#f8f9fa";
+      button.style.borderRadius = "4px";
+      button.style.fontSize = "14px";
+      button.style.padding = "5px 10px";
+      button.style.margin = "0 5px";
+      button.style.cursor = "pointer";
+    };
+
+    styleButton(prevButton);
+    styleButton(nextButton);
+
+    // Disabled button styles
+    prevButton.style.opacity = prevButton.disabled ? "0.6" : "1";
+    prevButton.style.cursor = prevButton.disabled ? "not-allowed" : "pointer";
+    nextButton.style.opacity = nextButton.disabled ? "0.6" : "1";
+    nextButton.style.cursor = nextButton.disabled ? "not-allowed" : "pointer";
+
+    container.appendChild(paginationContainer);
+  };
+
+  try {
+    // 1. Get all active sites
+    const FilesItems = await sp.web.lists
+      .getByTitle("MasterSiteURL")
+      .items.select("Title", "SiteID", "FileMasterList", "Active")
+      .filter(`Active eq 'Yes'`)();
+
+    // 2. Process all sites in parallel
+    const filesDataPromises = FilesItems
+      .filter(fileItem => fileItem.FileMasterList !== null)
+      .filter(fileItem => !siteIdToUpdate || fileItem.SiteID === siteIdToUpdate)
+      .map(async (fileItem) => {
+        try {
+          return await sp.web.lists
+            .getByTitle(`${fileItem.FileMasterList}`)
+            .items.select(
+              "ID", "FileName", "FileUID", "FileSize", "FileVersion", 
+              "Status", "SiteID", "CurrentFolderPath", "DocumentLibraryName", 
+              "SiteName", "FilePreviewURL", "IsDeleted", "MyRequest", "Modified"
+            )
+            .filter(`CurrentUser eq '${currentUserEmailRef.current}' and MyRequest eq 1`)
+            .orderBy("Modified", false)();
+        } catch (error) {
+          console.error(`Error fetching files for ${fileItem.FileMasterList}:`, error);
+          return [];
+        }
+      });
+
+    // 3. Wait for all data to load
+    const allFilesArrays = await Promise.all(filesDataPromises);
+    
+    // 4. Flatten and filter data
+    allFilesData = allFilesArrays.flat().filter(file => file.IsDeleted === null);
+
+    // 5. Apply search filter if provided
+    if (searchText) {
+      filteredFilesData = allFilesData.filter(file => 
+        file?.FileName?.toLowerCase().includes(searchText?.value?.toLowerCase())
+      );
+      
+      if (filteredFilesData.length === 0) {
+        fileNotFound(`No files match ${searchText.value}`);
+        return;
+      }
+    }
+
+    // 6. Display first page with complete data
+    displayItems(1);
+
+  } catch (error) {
+    console.error("Error loading files:", error);
+  } finally {
+    if (loader) loader.style.display = 'none';
   }
-});
-  
-} catch (error) {
-
-  console.error("Error loading files:", error);
-} finally {
-  // Hide the loader after the operation is complete
-  if (loader) loader.style.display = 'none'; // 🔥 Hide loader after completion
-}
-
-
 };
-    // Show Error Message on file not Found start
 const fileNotFound=(fileName:any)=>{
   Swal.fire(`No results found`,`${fileName}`, "warning");
 }
@@ -11887,6 +16844,11 @@ const fileNotFound=(fileName:any)=>{
     const wait = document.getElementById('files-container')
     wait.classList.add('hidemydatacards')
     setlistorgriddata('showListView');
+  }
+  const mycreatedfolderListView = (componentName:any)=>{
+    const wait = document.getElementById('files-container')
+    wait.classList.add('hidemydatacards')
+    setlistorgriddata('showcreatefolderListView');
   }
 
   // side text content based on click 
@@ -12396,7 +17358,8 @@ const fileNotFound=(fileName:any)=>{
                   getdoclibdata(
                     tempFolderDetailsMap[pathCopy].path,
                     tempFolderDetailsMap[pathCopy].siteID,
-                    tempFolderDetailsMap[pathCopy].documentLibraryName
+                    tempFolderDetailsMap[pathCopy].documentLibraryName,
+                    ""
                   );
                 }
                 
@@ -12504,7 +17467,7 @@ const fileNotFound=(fileName:any)=>{
  
       // Update dynamic content based on the button clicked
       switch (text) {
-        case 'My Requests':
+        case 'My Uploaded Files':
           setDynamicContent('Mentioned below are the documents submitted by logged in user.');
           button.style.backgroundColor = "#959b95";
           button.style.color = "white";
@@ -13196,6 +18159,636 @@ formContent.addEventListener('click', (event) => {
 // });
 
 // }
+
+// previous working sharefile code 
+// window.shareFile=async(fileID:string,siteId:string,currentFolderPathForFile:string,fileName:string,flag:string,FileVersion:any,FileSize:any,Status:any,FilePreviewURL:any,DocumentLibraryName:any)=>{
+//   console.log("Share File called");
+//   console.log("flag",flag);
+//   console.log("file Id",fileID);
+//   console.log("site Id",siteId);
+//   console.log("FileName",fileName);
+//   console.log("currentFolderPath",currentFolderPathForFile);
+//   let preURL=FilePreviewURL;
+//   // Check permission of file when it come from the myrequest start
+//   const testidsub =await sp.site.openWebById(siteId)  
+  
+//   let filePath=`${currentFolderPathForFile}/${fileName}`;
+//   if(flag === "DocumentLibrary"){
+//     // Extract the parent folder correctly
+//     const parentFolder = filePath.substring(0, filePath.lastIndexOf('/'));
+//     console.log(parentFolder, "parentFolder");
+
+//     // Correctly encode the parent folder
+//     const encodedParentFolder = encodeURIComponent(parentFolder);
+
+//     // Get the base site URL
+//     const siteUrl = window.location.origin;
+//     console.log(siteUrl, "siteUrl");
+//     const previewUrl = `${siteUrl}${locationPath}/${currentEntity}/${currentDocumentLibrary}/Forms/AllItems.aspx?id=${filePath}&parent=${encodedParentFolder}`;
+//     // const previewUrl = `${siteUrl}/sites/AlRostmani/${currentEntity}/${currentDocumentLibrary}/Forms/AllItems.aspx?id=${encodeURIComponent(filePath)}&parent=${encodedParentFolder}`;
+//     // const previewUrl = `${siteUrl}/sites/AlRostmanispfx2/${currentEntity}/${currentDocumentLibrary}/Forms/AllItems.aspx?id=${encodeURIComponent(filePath)}&parent=${encodedParentFolder}`;
+//     preURL=previewUrl;
+//   }
+//   console.log("filePath",filePath);
+//   const fileServerRelativePath = testidsub.web.getFileByServerRelativePath(filePath);
+//   // Retrieve the list item associated with the file
+//   const item = await fileServerRelativePath.getItem();
+//   console.log("items",item);
+//   // Get current user permissions on the item (file)
+//   const filePermissions = await item.getCurrentUserEffectivePermissions(); 
+//   console.log("File permissions:", filePermissions);
+//   // console.log("file listItems All field",file.ListItemAllFields);
+
+//   const hasFullControl = testidsub.web.hasPermissions(filePermissions, PermissionKind.ManageWeb);
+//   const hasEdit = testidsub.web.hasPermissions(filePermissions, PermissionKind.EditListItems);
+//   const hasContribute = testidsub.web.hasPermissions(filePermissions, PermissionKind.AddListItems) && testidsub.web.hasPermissions(filePermissions, PermissionKind.EditListItems);
+//   const hasRead = testidsub.web.hasPermissions(filePermissions, PermissionKind.ViewListItems);
+//   console.log(hasFullControl , "hasFullControl")
+//   console.log(hasEdit , "hasEdit")
+//   console.log(hasContribute , "hasContribute")
+//   console.log(hasRead , "hasRead")
+//   let filePermission:string;
+//   if (hasFullControl) {
+//     filePermission ="Full Control";
+//   } else if (hasEdit) {
+//     filePermission ="Edit";
+//   } else if (hasContribute) {
+//     filePermission = "Contribute";
+//   } else if (hasRead) {
+//     filePermission = "Read";
+//   } else {
+//     filePermission = "No Access";
+//   }
+
+//   console.log("filePermission",filePermission);
+
+//   // exreact the Entity from folder path
+//   const parts = currentFolderPathForFile.split("/");  
+//   const entity = parts[3]; 
+//   console.log(entity); 
+
+//   const fetchUser=async(entity:any)=>{
+//     // const [
+//     //   users,
+//     //   users1,
+//     //   users2,
+//     //   users3,
+//     //   users4,
+//     // ] = await Promise.all([
+//     //   sp.web.siteGroups.getByName(`${entity}_Read`).users(),
+//     //   sp.web.siteGroups.getByName(`${entity}_Initiator`).users(),
+//     //   sp.web.siteGroups.getByName(`${entity}_Contribute`).users(),
+//     //   sp.web.siteGroups.getByName(`${entity}_Admin`).users(),
+//     //   sp.web.siteGroups.getByName(`${entity}_View`).users(),
+//     // ]);
+//     // console.log(users, "users ", users1,users2,users3,users4);
+//     // const combineArray = [
+//     //   ...(users || []),
+//     //   ...(users1 || []),
+//     //   ...(users2 || []),
+//     //   ...(users3 || []),
+//     //   ...(users4 || []),
+//     // ];
+
+//     // const siteContext = await sp.site.openWebById(OthProps.siteID);
+//     const user0 = await sp.web.siteUsers();
+//     const combineUsersArray=user0.map((user)=>(
+//           {
+//             id:String(user.Id),
+//             value: user.Title,
+//             email: user.Email,
+//           }
+//     ))
+//     console.log("Sub site users",combineUsersArray);
+      
+//     // const resultArray=combineUsersArray.map((user) => ( 
+//     //   {
+//     //     id:String(user.Id),
+//     //     value: user.Title,
+//     //     email: user.Email
+//     //   }
+//     // ))
+//     // console.log("combineArray", combineArray);
+//     // console.log("resultArray",resultArray)
+
+//     return combineUsersArray;
+//   }
+
+//   const users=await fetchUser(entity);
+//   console.log("UserArray",users);
+ 
+
+// // Check if a popup already exists, if so, remove it before creating a new one
+// const existingPopup = document.getElementById('share-popup');
+// if (existingPopup) {
+// existingPopup.remove();
+// }
+
+// // Dummy data
+// // const users = [
+// //   { value: 'Test1', id: '14',email:"User1@officeindia.onmicrosoft.com" },
+// //   { value: 'Test2', id: '31',email:"User2@officeindia.onmicrosoft.com" },
+// //   { value: 'Test3', id: '137',email:"User3@officeindia.onmicrosoft.com"},
+// //   { value: 'Test4', id: '33',email:"User4@officeindia.onmicrosoft.com" },
+// //   { value: 'Test5', id: '32',email:"User5@officeindia.onmicrosoft.com" },
+// //   { value: 'Test6', id: '34',email:"User6@officeindia.onmicrosoft.com" },
+// //   { value: 'Test User1', id: '39',email:"User7@officeindia.onmicrosoft.com" },
+// //   ];
+
+
+// // Declare selectedUsers with an explicit type, assuming user IDs are of type string for selecting the user for share
+// let selectedUsers: { id: string; value: string; email:string }[] = [];
+// // Create the pop-up element
+// const popup = document.createElement("div");
+// popup.id = 'share-popup';
+// popup.className = "share-popup";
+
+// // Show permissions options.
+// let options=''
+// if(filePermission === "Full Control"){
+// options=`
+//     <option value="Full Control">Full Control</option>
+//     <option value="Contribute">Contribute</option>
+//     <option value="Edit">Edit</option>
+//     <option value="Read">Read</option>
+// `
+// }else if(filePermission === "Contribute" || filePermission === "Edit"){
+// options=`
+//   <option value="Contribute">Contribute</option>
+//   <option value="Edit">Edit</option>
+//   <option value="Read">Read</option>
+// `
+// }else if(filePermission === "Read"){
+// options=`
+//   <option value="Read">Read</option>
+// ` 
+// }
+
+
+// // Add HTML structure for the pop-up with a dropdown and a close "X" button
+// popup.innerHTML = `
+// <div class="share-popup-content">
+// <div class="share-popup-header">
+//   <h4>Share</h4>
+//   <span class="share-close-popup" onClick="hideSharePopUp()">x</span>
+// </div>
+// <div class="share-popup-body">
+//   <div id="share-reactSelect">
+//       <input type="text" id="userInput" placeholder="Add a Name, Group, or Email" style="
+//       width: 100%; 
+//       padding: 10px;
+//       font-size: 14px;
+//       border-radius: 4px;
+//       border: 1px solid #ccc;
+//     "/>
+//     <div id="userDropdown" class="user-dropdown" style="
+//       display: none;
+//       position: absolute;
+//       width: 100%;
+//       max-height: 150px;
+//       overflow-y: auto;
+//       background-color: white;
+//       border: 1px solid #ccc;
+//       border-radius: 4px;
+//       z-index: 1000;
+//     ">
+//     </div>
+//   </div>
+//    <div>
+//     <select id="permissionSelect" style="
+//       margin-bottom:10px;
+//       width: 100%; 
+//       padding: 10px;
+//       font-size: 14px;
+//       border-radius: 4px;
+//       border: 1px solid #ccc;
+//       margin-top: 10px;
+//     ">
+//       <option value="" disabled selected>Permission</option>
+//       ${options}
+//     </select>
+//   </div>
+//   <textarea id="share-message" placeholder="Write a message..." >
+//   </textarea>
+// </div>
+// <div class="share-popup-footer">
+//   <button id="share-shareFileButton">Share</button>
+// </div>
+// </div>
+// `;
+
+// // Append the  popup to the body
+// document.body.appendChild(popup);
+
+// // Get references to the input box and dropdown
+// const userInput = document.getElementById('userInput') as HTMLInputElement;
+// const userDropdown = document.getElementById('userDropdown');
+
+// // Function to render dropdown options based on user input
+// function renderDropdown(users: { id: string, value: string,email:string }[]) {
+// // Clear previous options
+// userDropdown.innerHTML = ''; 
+// users.forEach(user => {
+// const option = document.createElement('div');
+// option.className = 'dropdown-item';
+// option.style.padding = '8px';
+// option.style.cursor = 'pointer';
+// option.textContent = user.value;
+// option.onclick = () => selectUser(user);
+// userDropdown.appendChild(option);
+// });
+// }
+
+// // Function to show the dropdown when the input is clicked
+// userInput.addEventListener('focus', () => {
+// userDropdown.style.display = 'block';
+
+// // Display all users initially
+// renderDropdown(users); 
+// });
+
+// // Filter dropdown based on input value
+// userInput.addEventListener('input', () => {
+// const searchValue = userInput.value.toLowerCase();
+// const filteredUsers= users.filter(user => user.value.toLowerCase().includes(searchValue));
+// renderDropdown(filteredUsers);
+// });
+
+// // Function to select a user and display it inside the input
+// function selectUser(user: { id: string, value: string,email:string }) {
+// console.log("selected user",selectedUsers)
+// if (!selectedUsers.some(selectedUser => selectedUser.id === user.id)) {
+
+// selectedUsers.push(user);
+
+// // Create a span for the selected user with a close button
+// const selectedUserDiv = document.createElement('span');
+// selectedUserDiv.className = 'selected-user';
+// selectedUserDiv.style.display = 'inline-block';
+// selectedUserDiv.style.padding = '2px 6px';
+// selectedUserDiv.style.backgroundColor = '#e0e0e0';
+// selectedUserDiv.style.borderRadius = '12px';
+// selectedUserDiv.style.marginRight = '5px';
+// selectedUserDiv.style.position = 'relative';
+
+// selectedUserDiv.textContent = user.value;
+
+// // Create close button for deselecting the user
+// const closeButton = document.createElement('span');
+// closeButton.textContent = 'x';
+// closeButton.style.cursor = 'pointer';
+// closeButton.style.marginLeft = '5px';
+// closeButton.onclick = () => deselectUser(user.id, selectedUserDiv);
+// selectedUserDiv.appendChild(closeButton);
+
+// // Append the selected user to the input field
+// userInput.parentNode!.insertBefore(selectedUserDiv, userInput);
+// userInput.value = ''; 
+// }
+// userDropdown.style.display = 'none'; 
+// }
+
+// // Function to deselect a user
+// function deselectUser(userId: string, selectedUserDiv: HTMLElement) {
+// // selectedUsers = selectedUsers.filter(id => id !== userId);
+// selectedUsers = selectedUsers.filter(selectedUser => selectedUser.id !== userId);
+// console.log("selected user",selectedUsers);
+// selectedUserDiv.remove();
+// }
+
+// // Hide the dropdown if clicked outside
+// document.addEventListener('click', (event) => {
+// if (!userInput.contains(event.target as Node) && !userDropdown.contains(event.target as Node)) {
+// userDropdown.style.display = 'none';
+// }
+// });
+
+// // Capture selected permission
+// let selectedPermission = "";
+// document.getElementById('permissionSelect').addEventListener('change', (event) => {
+// selectedPermission = (event.target as HTMLSelectElement).value;
+// console.log("Selected Permission:", selectedPermission);
+// });
+
+// // Adding event listener to the "Share" button
+// document.getElementById('share-shareFileButton').addEventListener('click', async function() {
+//     // console.log("selectedUserArray",selectedUsers);
+//     // console.log("Entity",entity);
+//     // console.log("FileId",fileID);
+//     // console.log("SiteId",siteId);
+//     // console.log("currentFolderPathForFile",currentFolderPathForFile);
+//     // console.log("FileName",fileName);
+//     // console.log("filesize",FileSize);
+//     // console.log("FileVersion",FileVersion);
+//     // console.log("Status",Status);
+//     // console.log("FilePreviewURL",FilePreviewURL);
+//     // console.log("DocumentLibraryName",DocumentLibraryName)
+//     const filePath=`${currentFolderPathForFile}/${fileName}`;
+//     console.log("filePath",filePath);
+//     // Check the Break role on the file start
+//     const testidsub =await sp.site.openWebById(siteId);
+//     const file =testidsub.web.getFileByServerRelativePath(filePath);
+    
+//     // No need to break the inheritance start
+//     // const item = await file.getItem();
+//     // const itemData = await item.select("HasUniqueRoleAssignments")();
+//     // const breaKRole=itemData.HasUniqueRoleAssignments;
+//     // console.log("breaKRole",breaKRole);
+//     // if (!breaKRole) {
+//     //   // Break role inheritance, keeping current permissions
+//     //   await item.breakRoleInheritance(true);
+//     //   console.log("Inheritance broken, retaining previous permissions.");
+//     // }
+//     // End
+//     // end
+
+//     // New Code push the data into the DMSShareWithOtherMaster Start
+//     try {
+//       const isoDate = new Date().toISOString().slice(0, 19) + 'Z';
+//       const payloadForDMSShareWithOtherMaster={
+//         FileName:fileName,
+//         FileUID:fileID,
+//         CurrentUser:currentUserEmailRef.current,
+//         CurrentFolderPath:currentFolderPathForFile,
+//         SiteName:entity,
+//         PermissionType:selectedPermission,
+//         ShareAt:isoDate,
+//         FileVersion:FileVersion,
+//         FileSize:FileSize,
+//         Status:Status,
+//         // FilePreviewURL:FilePreviewURL,
+//         FilePreviewURL:preURL,
+//         SiteID:siteId,
+//         DocumentLibraryName:DocumentLibraryName
+//       }
+//       let roleType:number;
+//       if(selectedPermission === "Full Control"){
+//         // roleType=5;
+//         roleType=1073741829;
+//         // 1073741829
+//       }else if(selectedPermission === "Contribute"){
+//         // roleType=3;
+//         roleType=1073741827;
+//         // 1073741827
+//       }else if(selectedPermission === "Edit"){
+//         // roleType=6;
+//         roleType=1073741830;
+//       }else if(selectedPermission === "Read"){
+//         // roleType=2;
+//         roleType=1073741826;
+//       }else{
+//         roleType=0;
+//       }
+//       console.log("roletype",roleType);
+//       selectedUsers.forEach(async(user)=>{
+//             (payloadForDMSShareWithOtherMaster as any).UserID=user.id;
+//             (payloadForDMSShareWithOtherMaster as any).ShareWithOthers=user.value;
+//             (payloadForDMSShareWithOtherMaster as any).ShareWithMe=user.email;
+//             const newItem = await sp.web.lists.getByTitle(`DMSShareWithOtherMaster`).items.add(payloadForDMSShareWithOtherMaster)
+            
+//             //Add permission to the user in the file 
+//             const id=Number(user.id)
+//                    const userdata = await sp.web.getUserById(id).select("Id","Title","Email")();
+//             console.log("User Id",id,"type",typeof id);
+//             // const roleDefinitions = await sp.web.roleDefinitions();     
+//             // const roleDefinition = roleDefinitions.find(rd => rd.RoleTypeKind === roleType); 
+//             // console.log("roleDefinition",roleDefinition);    
+//             // if(!roleDefinition) {       
+//             //   throw new Error(`Role type ${roleType} not found.`);
+//             // }
+//             // await item.roleAssignments.add(id,roleType);
+//             if(filePermission === "Full Control"){
+//               console.log("Inside the File Permission Full Control");
+//               // If the user have full control first break the inheritance than share the file
+//               const item = await file.getItem();
+//               const itemData = await item.select("HasUniqueRoleAssignments")();
+//               const breaKRole=itemData.HasUniqueRoleAssignments;
+//               console.log("breaKRole",breaKRole);
+//               if (!breaKRole) {
+//                 // Break role inheritance, keeping current permissions
+//                 await item.breakRoleInheritance(true);
+//                 console.log("Inheritance broken, retaining previous permissions.");
+//               }
+//               await item.roleAssignments.add(id,roleType);
+//               console.log(`User ${user.email} added with role type ${selectedPermission},${roleType}.`);
+//               console.log("Data added successfully in the",newItem);
+
+//               // Testing Changes start
+//               const popup=document.querySelector('.share-popup');
+//               if(popup){
+//                 popup.remove();
+//               }
+//               // onSuccess(`File Share Successfully with permission ${selectedPermission}`);
+//               // end
+//               Swal.fire('Success',`File Share Successfully with permission ${selectedPermission}`,'success')
+
+//             }else{
+//               let permission;
+//               if(selectedPermission === "Contribute" || selectedPermission === "Edit"){
+//                 console.log("Inside the File Permission Contribute || Edit");
+//                 permission=SharingRole.Edit;
+//               }else{
+//                 console.log("Inside the File Permission View");
+//                 permission=SharingRole.View;
+//               }
+//               file.shareWith(
+//                 user.email,     
+//                 // roleType,
+//                 permission          
+//               );
+//               console.log(`User ${user.email} added with role type ${selectedPermission},${roleType}.`);
+//               console.log("Data added successfully in the",newItem);
+//               const popup=document.querySelector('.share-popup');
+//               if(popup){
+//                 popup.remove();
+//               }
+//               Swal.fire('Success',`File Share Successfully with permission ${selectedPermission}`,'success')
+//             }
+            
+//             // console.log("SharingRole.View",SharingRole.View);
+//             // console.log("SharingRole.Edit",SharingRole.Edit);
+//             // console.log("SharingRole.Owner",SharingRole.Owner);
+//             // console.log("SharingRole.None",SharingRole.None);
+//             // file.shareWith(
+//             //   user.email,     
+//             //   // roleType,
+//             //   SharingRole.Edit          
+//             // );
+//             // console.log(`User ${user.email} added with role type ${selectedPermission},${roleType}---${SharingRole.Edit}.`);
+//             // console.log("Data added successfully in the",newItem);
+//             // try {
+//             //   const subject = `File Shared for Access - DMS`;
+//             //   // const body = `File shared with you: ${fileName}`;
+//             //   const body = `
+             
+//             //   <p>Dear ${userdata.Title},</p >
+              
+//             //   <p>Please be informed that a file has been shared with you. Kindly <a href="${preURL}" target="_blank">${fileName}</a> here to access the file.</p>
+
+//             //   <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+
+//             //   <p>With regards,<br>${currentUserTitleRef.current}</p>
+//             //   `;
+//             //   const emailProps:any = {
+//             //     To: [user.email],
+//             //     Subject: subject,
+//             //     Body: body,
+//             //     AdditionalHeaders: {
+//             //       "content-type": "text/html",
+//             //     }
+//             //   };
+          
+//             //   // Send the email
+//             //   await sp.utility.sendEmail(emailProps);
+//             //   console.log("Email sent successfully to", user.email);
+          
+//             // } catch (error) {
+//             //   console.error("Error sending email:", error);
+//             // }
+            
+            
+//       })
+  
+//       // try {
+//       //   // Fetch user details using user IDs
+//       //   const userPromises = selectedUsers.map(userId => sp.web.getUserById(Number(userId.id))());
+//       //   const users = await Promise.all(userPromises);
+        
+//       //   // Get email addresses from user details
+//       //   const emailAddresses = users.map(user => user.Email);
+//       //   const subject = `File shared with you: ${fileName}`;
+//       //   const body = `File shared with you: ${fileName}`;
+//       //   // Construct the email properties
+//       //   const emailProps = {
+//       //     To: emailAddresses,
+//       //     Subject: subject,
+//       //     Body: body,
+//       //     AdditionalHeaders: {
+//       //       "content-type": "text/html",
+//       //     }
+//       //   };
+    
+//       //   // Send the email
+//       //   await sp.utility.sendEmail(emailProps);
+//       //   console.log("Email sent successfully to", emailAddresses);
+    
+//       // } catch (error) {
+//       //   console.error("Error sending email:", error);
+//       // }
+//     } catch (error) {
+//       console.log("Error in adding data to the DMSShareWithOtherMaster",error);
+//       // onError();
+//     }
+   
+//     // End
+
+
+//     // required column
+//     // FileNamex FileUIDx  CurrentUserx CurrentFolderPathx ShareWithOthersx ShareWithMex  SiteNamex       ShareAtx UserIDx PermissionTypex
+//     // FileVersion FileSize Status FilePreviewURL
+
+//     // const listToUpdateWithShareData=`DMS${entity}FileMaster`;
+//     // console.log("listToUpdateWithShareData",listToUpdateWithShareData);
+
+//     // Fetch the item from the list using its ID
+//     // const item = await sp.web.lists.getByTitle(listToUpdateWithShareData).items.select("FileName","ShareWithOthers","ShareWithMe","FileUID","ID").filter(`FileUID eq '${fileID}' and CurrentUser eq '${currentUserEmailRef.current}'`)();
+//     // console.log("Items",item)
+
+//     // console.log("item",item);
+
+//     // let dataArray;
+//     // let dataArray: Array<{ FirstName: string; LastName?: string; SharedWith: string; SharedAt: string; TimeStamp: number; Permission: string,userId:string }> = [];
+          
+//     // selectedUsers.forEach(async(user)=>{
+    
+//     // const nameParts = user.value.trim().split(" ");
+//     // const firstName = nameParts[0]; 
+//     // let lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+//     // console.log("firstName",firstName) 
+//     // console.log("lastName",lastName);
+//     // if(lastName === ""){
+//     //   lastName="";
+//     // }
+
+//     // const isoDate = new Date().toISOString().slice(0, 19) + 'Z';
+//     // const timestamp = Date.now();
+//     //   // let userObj={
+//     //   //   FirstName:firstName,
+//     //   //   LastName:lastName,
+//     //   //   SharedWith:user.email,
+//     //   //   SharedAt:isoDate,
+//     //   //   TimeStamp:timestamp,
+//     //   //   Permission:selectedPermission,
+//     //   //   userId:user.id
+//     //   // }
+//     //   // dataArray.push(userObj);
+//     //   // console.log("userObj",userObj);
+//     // })
+
+//     // console.log("dataArray",dataArray);
+
+    
+
+//     // if(item[0].ShareWithMe === null && item[0].ShareWithOthers === null){
+
+//     //       const dataInTheFormoOfString=JSON.stringify(dataArray);
+//     //        // Now update specific columns of the item
+//     //         const updatedItem = await sp.web.lists.getByTitle(listToUpdateWithShareData).items.getById(item[0].ID).update({
+//     //           ShareWithOthers:dataInTheFormoOfString,
+//     //           ShareWithMe:dataInTheFormoOfString
+//     //         });
+
+//     //         console.log("Data updated when ShareWithMe and ShareWithOthers are null",updatedItem);
+//     // }else{
+//     //    const shareWithOthers =JSON.parse(item[0].ShareWithOthers);
+//     //    const shareWithMe=JSON.parse(item[0].ShareWithMe);
+
+//     //    dataArray.forEach((user)=>{
+//     //         // apply condition for sharing same file with same user multiple time using id of the user
+//     //         const alReadySharedUserIndex=shareWithOthers.findIndex((item:any)=>{
+//     //               return item.userId === user.userId
+//     //         })
+//     //         console.log("alReadySharedUser in shareWithOthers",alReadySharedUserIndex);
+//     //         const alReadySharedUserIndex1=shareWithMe.findIndex((item:any)=>{
+//     //             return item.userId === user.userId
+//     //         })
+//     //         console.log("alReadySharedUser in shareWithMe",alReadySharedUserIndex1);
+
+//     //         if(alReadySharedUserIndex !== -1){
+//     //               shareWithOthers.splice(alReadySharedUserIndex, 1);
+//     //               shareWithOthers.push(user);
+//     //               console.log("shareWithOthers",shareWithOthers);
+//     //         }else{
+//     //           shareWithOthers.push(user);
+//     //         }
+
+//     //         if(alReadySharedUserIndex1 !== -1){
+//     //           shareWithMe.splice(alReadySharedUserIndex1, 1);
+//     //           shareWithMe.push(user);
+//     //           console.log("shareWithMe",shareWithMe);
+//     //         }else{
+//     //           shareWithMe.push(user);
+//     //         }
+//     //    })
+
+//     //    console.log("shareWithOthers",shareWithOthers);
+//     //    console.log("shareWithMe",shareWithMe);
+
+//     //    const dataInTheFormoOfStringForShareWithMe=JSON.stringify(shareWithMe);
+//     //    const dataInTheFormoOfStringForShareWithOthers=JSON.stringify(shareWithOthers);
+//     //    // Now update specific columns of the item
+//     //    const updatedItem = await sp.web.lists.getByTitle(listToUpdateWithShareData).items.getById(item[0].ID).update({
+//     //     ShareWithOthers:dataInTheFormoOfStringForShareWithOthers,
+//     //     ShareWithMe:dataInTheFormoOfStringForShareWithMe
+//     //   });
+
+//     //   console.log("Data updated when ShareWithMe and ShareWithOthers",updatedItem);
+//     // }
+
+// });
+
+
+// }
 window.shareFile=async(fileID:string,siteId:string,currentFolderPathForFile:string,fileName:string,flag:string,FileVersion:any,FileSize:any,Status:any,FilePreviewURL:any,DocumentLibraryName:any)=>{
   console.log("Share File called");
   console.log("flag",flag);
@@ -13341,21 +18934,27 @@ popup.className = "share-popup";
 // Show permissions options.
 let options=''
 if(filePermission === "Full Control"){
-options=`
-    <option value="Full Control">Full Control</option>
-    <option value="Contribute">Contribute</option>
-    <option value="Edit">Edit</option>
-    <option value="Read">Read</option>
+  options=`
+    <option value="can edit">Can download and edit(make any changes)</option>
+    <option value="can view">Can download and view(can not make changes)</option>
+    <option value="Can not download">Cannot download but view(can view but can not downlaod)</option>
 `
+// options=`
+//     <option value="Full Control">Full Control</option>
+//     <option value="Contribute">Contribute</option>
+//     <option value="can edit">can edit (make any changes)</option>
+//     <option value="can view">can view (can not make changes)</option>
+//     <option value="Can not download">Can not download (can view but can not downlaod)</option>
+// `
 }else if(filePermission === "Contribute" || filePermission === "Edit"){
 options=`
-  <option value="Contribute">Contribute</option>
-  <option value="Edit">Edit</option>
-  <option value="Read">Read</option>
+       <option value="can edit">Can download and edit(make any changes)</option>
+    <option value="can view">Can download and view(can not make changes)</option>
+    <option value="Can not download">Cannot download but view(can view but can not downlaod)</option>
 `
 }else if(filePermission === "Read"){
 options=`
-  <option value="Read">Read</option>
+     <option value="Can not download">Cannot download but view(can view but can not downlaod)</option>
 ` 
 }
 
@@ -13568,10 +19167,29 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
       }else if(selectedPermission === "Edit"){
         // roleType=6;
         roleType=1073741830;
+      }else if(selectedPermission === "can edit"){
+        // roleType=6;
+        roleType=1073741830;
       }else if(selectedPermission === "Read"){
         // roleType=2;
         roleType=1073741826;
-      }else{
+      }
+      else if(selectedPermission === "can view"){
+        // roleType=2;
+        roleType=1073741826;
+      }
+      else if(selectedPermission === "Can not download"){
+        // Note Remember this
+        // first create this permission with name Restricted View permission then only it work we created this custom permission get id then add with below access, 
+        // 1:View Items  -  View items in lists and documents in document libraries. 
+        // 2:View Pages  -  View pages in a Web site
+        // 3:Open  -  Allows users to open a Web site, list, or folder in order to access items inside that container.
+        // if thie permission level not added then get api error Permission level cannot be found.
+        const restrictedview = await sp.web.roleDefinitions.getByName("Restricted View permission")()
+        // 1073741926 this roltype is from restrictedview , just console it will give ID and add that id here 
+        roleType=1073741926;
+      }
+      else{
         roleType=0;
       }
       console.log("roletype",roleType);
@@ -13651,35 +19269,101 @@ document.getElementById('share-shareFileButton').addEventListener('click', async
             // );
             // console.log(`User ${user.email} added with role type ${selectedPermission},${roleType}---${SharingRole.Edit}.`);
             // console.log("Data added successfully in the",newItem);
-            try {
-              const subject = `File Shared for Access - DMS`;
-              // const body = `File shared with you: ${fileName}`;
-              const body = `
+            // send mail using pnp sp
+            // try {
+            //   const subject = `File Shared for Access - DMS`;
+            //   // const body = `File shared with you: ${fileName}`;
+            //   const body = `
              
-              <p>Dear ${userdata.Title},</p >
+            //   <p>Dear ${userdata.Title},</p >
               
-              <p>Please be informed that a file has been shared with you. Kindly <a href="${preURL}" target="_blank">${fileName}</a> here to access the file.</p>
+            //   <p>Please be informed that a file has been shared with you. Kindly <a href="${preURL}" target="_blank">${fileName}</a> here to access the file.</p>
 
-              <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
+            //   <p>Please note that this is an automated email, and any responses to this message will not be reviewed.</p>
 
-              <p>With regards,<br>${currentUserTitleRef.current}</p>
-              `;
-              const emailProps:any = {
-                To: [user.email],
-                Subject: subject,
-                Body: body,
-                AdditionalHeaders: {
-                  "content-type": "text/html",
-                }
-              };
+            //   <p>With regards,<br>${currentUserTitleRef.current}</p>
+            //   `;
+            //   const emailProps:any = {
+            //     To: [user.email],
+            //     Subject: subject,
+            //     Body: body,
+            //     AdditionalHeaders: {
+            //       "content-type": "text/html",
+            //     }
+            //   };
           
-              // Send the email
-              await sp.utility.sendEmail(emailProps);
-              console.log("Email sent successfully to", user.email);
+            //   // Send the email
+            //   await sp.utility.sendEmail(emailProps);
+            //   console.log("Email sent successfully to", user.email);
           
-            } catch (error) {
-              console.error("Error sending email:", error);
-            }
+            // } catch (error) {
+            //   console.error("Error sending email:", error);
+            // }
+
+       
+            // Send email using Microsoft Graph API
+//            const tenantId = "79a9a17c-1d27-470f-bf5a-3b542a3563ab";
+// const clientId = "37b1a429-bcb0-484a-8fa3-2681177d84d0";
+// const clientSecret = "d6274d7e-87ce-489a-993e-2c4f48e6a961";
+// const senderEmail = "AlRosatamani.Group.Portal@alrostamanigroup.ae";
+
+// async function getAccessToken() {
+//   const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+//   const params = {
+//     client_id: clientId,
+//     scope: "https://graph.microsoft.com/.default",
+//     client_secret: clientSecret,
+//     grant_type: "client_credentials"
+//   };
+
+//   const res = await fetch(url, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//     body: qs.stringify(params)
+//   });
+
+//   const data = await res.json();
+//   return data.access_token;
+// }
+
+// async function sendEmail() {
+//   const token = await getAccessToken();
+
+//   const email = {
+//     message: {
+//       subject: "Test email from backend",
+//       body: {
+//         contentType: "HTML",
+//         content: "Hello, this is a test email sent from your backend app.",
+//       },
+//       toRecipients: [
+//         {
+//           emailAddress: {
+//             address: "recipient@example.com",
+//           },
+//         },
+//       ],
+//     },
+//     saveToSentItems: "false"
+//   };
+
+//   const res = await fetch(`https://graph.microsoft.com/v1.0/users/${senderEmail}/sendMail`, {
+//     method: "POST",
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify(email)
+//   });
+
+//   if (res.ok) {
+//     console.log("✅ Email sent successfully");
+//   } else {
+//     console.error("❌ Error sending email", await res.text());
+//   }
+// }
+
+// sendEmail();
             
             
       })
@@ -15787,6 +21471,25 @@ librarydiv.appendChild(mainContainer)
     </div>
     <div className="content-page">
       <HorizontalNavbar _context={sp}  siteUrl={props.siteUrl} context={props.context} />
+        {isLoading && (
+      <div className='loaderOverlay'>
+        <div className='loader'>
+        <img style={{width :'116px'  ,margin: '31px'}} src={require("../../../CustomAsset/arground.gif")} alt="Loading..." />
+        </div>
+      </div>
+    )}
+     <div id="files-container2" className="container-fluid">
+
+      </div>
+{routeFromMail2 ? (
+  <div className="first-div">
+    {/* Content for when routefrommail is true */}
+    {/* <button onClick={ (e)=>setfilepreviewcontainerblank() }>Back</button>
+    <p id="containershow">Shared File In Preview</p>
+     
+    <iframe src={mailsharefilewithpreview} id="routefrommailfilePreview" style={{ width: '100%', height: '100%' }}></iframe> */}
+  </div>
+) : (
       <div className="content" style={{marginLeft: `${!useHide ? '240px' : '80px'}`,marginTop:'2.8rem'}}>
        
       <div className="container-fluid  paddb">
@@ -15940,6 +21643,20 @@ librarydiv.appendChild(mainContainer)
                                   </button>
                           </div>) 
                           }
+                          {/* {showFolderListviewgridviewbutton && ( <div id="hidegidvewlistviewbutton3"  className="view-buttons mt-2">
+                                  <button className="btn btngridview grid-view active"    
+                                  onClick={(e)=>mycreatedfolders(e)}>
+                                    <a className="listviewfonticon">          
+                                      <FontAwesomeIcon style={{color: "black"}} icon={faTableCells}/> </a>Grid View
+                                  </button>
+                                  <button type="button" className="btn btnlistview list-view" onClick={(event:any)=>mycreatedfolderListView('FolderListViewComponent')}>
+                                    <a className="listviewfonticon">
+                                    <FontAwesomeIcon style={{color: "black"}} icon={faListSquares}/>&nbsp;
+                                    </a>
+                                    List View
+                                  </button>
+                          </div>) 
+                          } */}
                           </div>
 
                           </div>
@@ -15989,7 +21706,7 @@ librarydiv.appendChild(mainContainer)
                             {/* <FontAwesomeIcon icon={faList} /> */}
                             <img className="sidebariconssmall" src={listicon}></img>
                           </span>
-                          <span className="sidebarText">My Requests</span>
+                          <span className="sidebarText">My Uploaded Files</span>
                         </button>
 
                         <button
@@ -16177,6 +21894,12 @@ librarydiv.appendChild(mainContainer)
           Currentbuttonclick={{ buttonclickis: Myreqormyfav }}
         />
       )}
+      {listorgriddata === 'showcreatefolderListView' && (
+        <Testfile
+          onReturnToMain={handleReturnToMain}
+          Currentbuttonclick={{ buttonclickis: Myreqormyfav }}
+        />
+      )}
 
       {listorgriddata === 'showGridView' && (
          <FormComponent
@@ -16247,6 +21970,7 @@ librarydiv.appendChild(mainContainer)
                 )}
               </div>
             </div>
+)}
           </div>
           </div>
         

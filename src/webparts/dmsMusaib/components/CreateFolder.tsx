@@ -815,7 +815,8 @@ const validateFields = () => {
         createFolderButton.disabled=true;
         const payloadForFolderMaster={
           SiteTitle:OthProps.Entity,
-          CurrentUser:currentUserEmailRef.current
+          CurrentUser:currentUserEmailRef.current,
+          IsProcessRelated:'No'
         }
   
         if(OthProps.DocumentLibrary === ""){

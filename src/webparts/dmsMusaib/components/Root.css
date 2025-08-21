@@ -1,0 +1,9 @@
+/* :root {
+  --primaryColor: #0000ff;
+  --secondaryColor: #ffffff;
+}
+
+.btngridview.active{
+    background-color: var(--primaryColor)  !important;
+    color: var(--secondaryColor) !important;
+} */
