@@ -1037,3 +1037,47 @@ text-align: center;}
      color: #ffffff !important;
      margin-right: 64px !important;
 }
+
+
+
+.searchfolder-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.searchfolder-input {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding-right: 40px; /* Space for icons */
+}
+
+.searchfolderbutton {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.searchfolder-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+}
+
+.searcfolderhbutton:hover .searchfolder-icon {
+    opacity: 0.8;
+}
+.crossiconclass{
+   padding: 6px 10px;  background:transparent !important; color: #333; cursor: pointer;
+   position: absolute; right:8px; top:-8px; border: 0px solid #ccc;;
+       
+      
+}

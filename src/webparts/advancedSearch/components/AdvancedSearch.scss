@@ -61,7 +61,7 @@
   border-color: #ccc !important;
   color: #000 !important;font-weight: 400 !important;
 }
-.nwsera button{color: #000 !important;}
+.nwsera button{}
 .newdesign{margin-left: 10px; display: flex;}
 .newbutton span{border: 1px solid #ccc !important; border-radius: 30px !important;}
 .pagination-container {
@@ -75,13 +75,13 @@
 .pagination-container ul{margin-bottom: 0px;}
 .newdesign {display: flex;}
 .newdesign  label{width:240px ; padding: 10px 0px 0px 0px;}
-.neewd{height: 36px;
+.btn.neewd{height: 36px;
   color: #ffffff !important;
   font-size: 14px !important;}
-.newbuttons{color: #ffffff !important;
-  font-size: 14px !important;
-  position: absolute;
-  right: 0;
-  height: 36px;
-  top: 21px;
+.btn.newbuttons{color: #ffffff !important;
+   font-size: 14px !important;
+   position: absolute;
+   right: 0;
+   height: 36px;
+   top: 21px;
 }
