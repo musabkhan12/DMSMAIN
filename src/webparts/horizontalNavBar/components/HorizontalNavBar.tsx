@@ -430,19 +430,22 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
               value={query} className='searchcss desktoView'
               onChange={(e) => searchKeyPress(e)}
               onClick={toggleSearchDropdown}
-              
+              placeholder='Search here ...'
               
             />
-            {query === "" && (
-            <span
-              onClick={(e) => {
+            <div  onClick={(e) => {
                 e.stopPropagation(); // Prevent input's onClick
                 window.open(
                   `${dmssiteUrl}${locationPath}/SitePages/DMSAdvanceSearch.aspx`,
 
                   "_blank"
                 );
-              }}
+              }} className='btn btn-primary alginsearchbtn'>
+              Advance Search
+            </div>
+            {query === "" && (
+            <span
+             
               style={{
                 position: 'absolute',
                 top: '50%',
@@ -450,10 +453,10 @@ const HorizontalNavbar = ({ _context, siteUrl,context }: any) => {
                 transform: 'translateY(-50%)',
                 zIndex: 3,
                 color: '#aaa',
-                cursor: 'pointer',
+            
               }}
             >
-              Click here for advance search
+              {/* Click here for advance search */}
             </span>
             )}
           </div>

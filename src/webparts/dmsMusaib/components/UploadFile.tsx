@@ -67,7 +67,7 @@ const [data, setData] = useState({
 const [state, setState] = useState({});
 
 const currentUserEmailRef = useRef('');
-
+const orphanServerRelativeUrlRef = useRef<string | null>(null);
 const getcurrentuseremail = async()=>{
   const userdata = await sp.web.currentUser();
   currentUserEmailRef.current = userdata.Email;
@@ -181,6 +181,19 @@ console.log("documentLibraryName" , documentLibraryName)
       const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
       submitBtn.disabled = false; // Enable the button
       setIsUploading(false);
+      // Set Status to 'pending' after upload
+      try {
+        const listItem = await uploadResult.file.getItem();
+        // store orphan file server relative url so we can update it later
+        try{
+          orphanServerRelativeUrlRef.current = uploadResult.data.ServerRelativeUrl;
+        }catch(e){console.warn('Unable to set orphanServerRelativeUrlRef', e)}
+        if (listItem) {
+          await listItem.update({ Status: "Pending" });
+        }
+      } catch (err) {
+        console.error("Error setting Status to pending:", err);
+      }
       previewFile(previewUrl,"singleUpload");
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -933,6 +946,29 @@ const handleSubmit = async (event: any) => {
           RequestNo: newRequestNo,
        
       });
+      try {
+        console.log('Updating list item status to Successful. listItem object:', listItem);
+        const updResult = await listItem.update({ Status: "Successful" });
+        console.log("File status updated to Successful", updResult);
+      } catch (err) {
+        console.error("Error updating Status to Successful:", err);
+      }
+
+      // Also update the original DMSOrphanDocs item's Status from Pending to Successful
+      if (orphanServerRelativeUrlRef.current) {
+        try {
+          console.log('Updating DMSOrphanDocs item status for:', orphanServerRelativeUrlRef.current);
+          const orphanFile = sp.web.getFileByServerRelativePath(orphanServerRelativeUrlRef.current as string);
+          const orphanItem = await orphanFile.getItem();
+          if (orphanItem) {
+            await orphanItem.update({ Status: "Successful" });
+            console.log('DMSOrphanDocs item status updated to Successful');
+          }
+        } catch (e) {
+          console.error('Error updating DMSOrphanDocs status:', e);
+        }
+      }
+
       console.log(newItem, "New item added FileMaster");
 
       if (IsApproval === true) {

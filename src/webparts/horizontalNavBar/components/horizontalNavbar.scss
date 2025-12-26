@@ -52,7 +52,17 @@
  
   padding: 10px 16px !important;
 }
+.search_bar{position: relative;}
+.newscroll{max-height: 250px; overflow-y: auto;}
 
+.alginsearchbtn{
+  position: absolute;
+  right: 1px;
+  top: 0px;
+  border-radius: 30px;
+  height: 40px !important;
+  line-height: 28px; 
+}
 .navcss{padding-right: 0px;}
 .rounded-circlecss1 {
   width: 40px !important;

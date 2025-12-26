@@ -2560,7 +2560,8 @@ const toggleVisibility = (element: HTMLElement, forceShow = false) => {
 };
 
 // Toggle button used for folders/doclibs
-const createToggleButton = () => {
+const createToggleButton = (isProcessRelated:any) => {
+  console.log("IOC in toggle button", isProcessRelated);
   const link = document.createElement("a");
   link.id = "toggle-plus/minus";
   link.textContent = "+"; // Initial text
@@ -2568,7 +2569,16 @@ const createToggleButton = () => {
   link.style.cursor = "pointer";
   link.style.textDecoration = "none";
 
-  link.style.backgroundImage = `url('${require("../assets/Toggle-Button-plus-minus.png")}')`;
+  // link.style.backgroundImage = `url('${require("../assets/Toggle-Button-plus-minus.png")}')`;
+  // ⭐ Change icon based on IsProcessRelated
+  if (isProcessRelated === "Yes" || isProcessRelated === "IOC") {
+    // Red folder icon for process-related folders
+    link.style.backgroundImage = `url('${require("../assets/GreenFolder.png")}')`;
+    link.style.color = "white";
+  } else {
+    // Green folder icon for regular folders
+    link.style.backgroundImage = `url('${require("../assets/Toggle-Button-plus-minus.png")}')`;
+  }
   link.style.backgroundRepeat = "no-repeat";
   link.style.backgroundPosition = "center";
   link.style.backgroundSize = "contain";
@@ -2834,8 +2844,9 @@ const fetchAndBuildTree2 = async () => {
           }
           folderElement.textContent = folderRenameText;
           parentElement.appendChild(folderElement);
-
-          const toggleBtn = createToggleButton();
+console.log("item.isProcessRelated", item.isProcessRelated);
+debugger;
+          const toggleBtn = createToggleButton(item.IsProcessRelated);
           folderElement.appendChild(toggleBtn);
 
           const subFolderList = document.createElement("ul");
@@ -2925,11 +2936,12 @@ const fetchAndBuildTree2 = async () => {
             renameText = checkIsRename[0].IsRename;
           }
           docLibElement.textContent = renameText;
-        if (data.isProcessRelated === "Yes") {
-          console.log("data is process related", data);
-    docLibElement.style.color = "#d9534f";
-    docLibElement.style.fontWeight = "600";
-}
+          //highlight with red when folder
+//         if (data.isProcessRelated === "Yes") {
+//           console.log("data is process related", data);
+//     docLibElement.style.color = "#d9534f";
+//     docLibElement.style.fontWeight = "600";
+// }
  
  
           documentList.appendChild(docLibElement);
@@ -2937,8 +2949,9 @@ const fetchAndBuildTree2 = async () => {
           const folderList = document.createElement("ul");
           folderList.style.display = "none";
           folderList.style.width = "240px";
-
-          const toggleBtn = createToggleButton();
+          console.log("data.isProcessRelated", data.isProcessRelated);
+          debugger;
+          const toggleBtn = createToggleButton(data.isProcessRelated);
           docLibElement.appendChild(toggleBtn);
           docLibElement.appendChild(folderList);
 
@@ -2984,9 +2997,10 @@ const fetchAndBuildTree2 = async () => {
                     if (folder.Name === "Forms") return;
                     const folderElement = document.createElement("li");
                     folderElement.textContent = folder.Name;
-
-                    const tBtn = createToggleButton();
-                    folderElement.appendChild(tBtn);
+                    console.log("data.isProcessRelated", data.isProcessRelated);
+                    debugger;
+                     const toggleBtn = createToggleButton(data.isProcessRelated);
+                    folderElement.appendChild(toggleBtn);
 
                     IOCfolderList!.appendChild(folderElement);
 
@@ -2997,7 +3011,7 @@ const fetchAndBuildTree2 = async () => {
                       updateBreadcrumb(folder.ServerRelativeUrl);
                       isprocessfolder = true;
 
-                      tBtn.textContent = tBtn.textContent === "+" ? "-" : "+";
+                      toggleBtn.textContent = toggleBtn.textContent === "+" ? "-" : "+";
                       getdoclibdata(
                         folder.ServerRelativeUrl,
                         value.siteID,
@@ -3136,7 +3150,7 @@ const fetchAndBuildTree2 = async () => {
         devisionElement.style.cursor = "pointer";
         devisionList.appendChild(devisionElement);
 
-        const toggleBtn = createToggleButton();
+        const toggleBtn = createToggleButton("");
         const docLibList = document.createElement("ul");
         docLibList.style.display = "none";
         devisionElement.appendChild(toggleBtn);
