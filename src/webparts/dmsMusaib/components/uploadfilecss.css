@@ -153,13 +153,13 @@ display: none !important;
     padding: 15px;
     /* border: 1px solid #4fc6e1; */
     font-size: 16px;
-    max-height: 750px;
+  
   }
 
   .column1{
     width: 30%;
     overflow-y: scroll;
-    height: 83vh;
+  
   }
 
   .column1::-webkit-scrollbar {
@@ -168,13 +168,22 @@ display: none !important;
   .column2{
     width: 70%;
   }
-
+.newbulnup {list-style: none; padding: 0px; margin: 10px 0px 0px 0px;}
+.newbulnup li{    border: 1px solid #ccc;
+  border-radius: 30px;
+  display: flex;
+  margin: 3px;
+  padding: 2px 5px;
+  width: 32%;
+  float: left;
+  justify-content: space-around;
+  align-items: center;}
   .input-container {
-    margin-bottom: 20px; /* Space between each input */
+    margin-bottom: 10px; /* Space between each input */
     display: flex;
     flex-direction: column; /* Ensure label is on top of the input */
   }
-  
+  .column1{padding-left: 0px !important;}
   label {
     font-weight: bold;
     margin-bottom: 5px; font-size:14px; font-weight:700;
@@ -380,6 +389,7 @@ display: none !important;
   padding: 10px;
   background: #fff;
   border-radius: 10px;    border: 1px solid #4fc6e1;
+  height: 100% !important;
   }
 
   /* Child divs */
@@ -388,13 +398,13 @@ display: none !important;
     padding: 15px;
     /* border: 1px solid #4fc6e1; */
     font-size: 16px;
-    max-height: 750px;
+ 
   }
 
   .column1{
     width: 30%;
     overflow-y: scroll;
-    height: 83vh;
+    
   }
 
   .column1::-webkit-scrollbar {
@@ -405,11 +415,35 @@ display: none !important;
   }
 
   .input-container {
-    margin-bottom: 20px; /* Space between each input */
+    margin-bottom: 10px; /* Space between each input */
     display: flex;
     flex-direction: column; /* Ensure label is on top of the input */
   }
+  .input-container input[type="checkbox"]{
+    width: 26px;
+    height: 26px;
+    float: left;
+    justify-content: start;
+    display: flex
+;
+    text-align: left;
+    -moz-appearance:none;
+	-webkit-appearance:none;
+	-o-appearance:none;
+	outline: none;
+	content: none;	
+  margin-bottom: 10px;
+  }
   
+  .input-container input[type="checkbox"]::before{
+    border: 1px solid #dee2e6 !important;
+  }
+  .column1 .input-container{
+    clear: both;
+  }
+  input[type=password]:focus, input[type=text]:focus, input:not([type]):focus, select:focus, textarea:focus, .sp-peoplepicker-topLevelFocus, .ms-inputBoxActive, .ms-inputBox.ms-inputBoxActive:hover{
+    border-color: #dee2e6 !important; outline: none !important;
+  }
   label {
     font-weight: bold;
     margin-bottom: 5px; font-size:14px; font-weight:700;
@@ -435,6 +469,9 @@ display: none !important;
   
   button:hover {
     background-color: #005a9e;
+  }
+  @media(max-width:640px){
+    .newbulnup li{width: 100% !important;}
   }
   /* Responsive for small screens (like phones) */
   /* @media (max-width: 480px) {
@@ -469,3 +506,149 @@ display: none !important;
     }
 
 } */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+
+  bottom: 5px;
+  content: "";
+  height: 20px;
+  left: 4px;
+  width: 20px;
+
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+#filePreview{height: 850px !important; border-radius: 20px !important;}
+div[class*=OneUpModalSizing]>div.ms-Dialog-main{
+  background: #fff !important;
+}
+
+
+/* this css was added as file preview was coming oiut of dic  */
+
+
+.borderprev {
+
+  border: 1px solid #4fc6e1;
+
+  border-radius: 10px;
+
+  padding: 10px;
+
+  overflow: hidden; 
+
+  /* height: 400px;  */
+  height: 98% !important; 
+
+  position: relative; 
+  margin-top: 0px !important;
+}
+ 
+
+#filePreview {
+
+  background: transparent;
+
+  width: 100%;
+
+  height: 100%;
+
+  border: none;
+
+  border-radius: 8px;
+
+  display: block; 
+
+}
+ 
+
+
+#spinner {
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  right: 0;
+
+  bottom: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: rgba(255, 255, 255, 0.8);
+
+  z-index: 10;
+
+}
+ 
+
+
+#filePreview {
+
+  object-fit: contain; 
+
+  max-width: 100%;
+
+  max-height: 100%;
+
+}
+ 

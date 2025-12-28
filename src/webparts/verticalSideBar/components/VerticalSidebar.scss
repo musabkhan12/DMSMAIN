@@ -8,6 +8,15 @@
   // box-shadow: 0 0 1px var(--grey-color-light);
   transition: all 0.5s ease;
 }
+.newline{padding-top: 10px;}
+.newline .form-check {
+  display: inline-block;
+  margin: 5px 26px 10px 0px;
+  padding: 0px 0px 0px 0px;
+  font-size: 14px;
+}
+.search_bar span{padding-left: 20px; color: #3c3c3c !important;}
+
 .tabcss {
   background: #f7fbfc !important;
   border-radius: 2rem;
@@ -226,7 +235,9 @@ a:hover, a:active {
   font-size: 11px !important;
 }
 .sidebar.close .logo_item{
+  // width: 110px;
   width: 66px;
+  // margin-left: -38px;
   margin-left: -16px;
 }
 .loadernewadd{color: #1fb0e5;display: block; text-align:center ; font-size: 18px;gap: 0px;font-weight: 700;justify-content: center;
@@ -420,7 +431,10 @@ a:hover, a:active {
 .item{
   margin:0.8rem 0.8rem 0rem 0.8rem;
 } 
-.logo_item img{margin-left: 5px;}
+.logo_item img{
+  margin-left: 5px;
+  //  width: % !important;
+}
 .sidebar.close .nav_link:hover {
   background: var(--blue-color);
   color: #fff;
@@ -543,7 +557,7 @@ a:hover, a:active {
     -webkit-transition: all .1s ease-in-out;
     transition: all .1s ease-in-out !important;
     padding: 0 11px;
-
+    text-align: center;
 }
 .font-14 {
   font-size: 14px !important;
@@ -858,7 +872,7 @@ span.navlink:hover {
   }
   .search_bar {
   
-    width: 230px;
+   
     display: block; 
 }
 .navcss
@@ -984,7 +998,7 @@ span.navlink:hover {
   }
   .search_bar {
 
-    width: 230px;
+   
     display: block; 
 
 }
@@ -1583,6 +1597,10 @@ color: #fff !important;
   height: 20px !important;
   width: 20px !important;
 }
+.navbar_content svg.logoutop{
+  height: 33px !important;
+  width: 33px !important;
+}
 .footer{text-align: left;}
 .searchcssmobile {
   
@@ -1799,3 +1817,13 @@ color: #fff !important;
 .cursor-none{cursor: none !important;}
 .swal2-confirm{background: #1fb0e5 !important; border-color: #1fb0e5 !important;box-shadow: none !important;}
 .swal2-confirm:hover{background: #008751 !important; border-color: #008751 !important;}
+
+
+.largelogostyle {
+  height: 58px !important;
+  width: 200px !important;
+}
+.smalllogostyle {
+     width: 48px !important;;
+    height: 48px !important;; 
+}

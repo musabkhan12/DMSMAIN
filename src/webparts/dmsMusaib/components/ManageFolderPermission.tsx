@@ -48,6 +48,46 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     const [toggelPermission,setTogglePermission]=React.useState<string>();
     console.log("toggelPermission",toggelPermission);
 
+    const [errorsForPermissionSelection, setErrorsForPermissionSelection] = useState<{ [key: number]: { userSelect?: string, permissionSelect?: string; duplicate?: string } }>({});
+      const validatePermissionsSelect = () => {
+        let isValid = true;
+        const newErrors: { [key: number]: { userSelect?: string, permissionSelect?: string; duplicate?: string } } = {};
+      
+        rowsForPermission.forEach((row:any) => {
+          if (!row.selectedUserForPermission || row.selectedUserForPermission.length === 0) {
+            newErrors[row.id] = { ...newErrors[row.id], userSelect: 'Please select at least one user.' };
+            isValid = false;
+          }
+          if (!row.selectedPermission) {
+            newErrors[row.id] = { ...newErrors[row.id], permissionSelect: 'Please select a permission.' };
+            isValid = false;
+          }
+        // **Collect all duplicate users**
+        let duplicateUsers: string[] = [];
+          row.selectedUserForPermission.forEach((user: any) => {
+            const isDuplicate = tableData.some(
+                (item) => item.userId === user.userId && item.Permission === row.selectedPermission.value
+            );
+            if (isDuplicate) {
+              duplicateUsers.push(user.value);
+          }
+        });
+
+        // If there are duplicates, set a single error message
+        if (duplicateUsers.length > 0) {
+            newErrors[row.id] = {
+              ...newErrors[row.id],
+                duplicate: `${duplicateUsers.join(", ")} already have "${row.selectedPermission.value}" permission.`,
+              };
+                isValid = false;
+        }
+        });
+      
+        setErrorsForPermissionSelection(newErrors);
+        return isValid;
+      };
+      console.log("newErrors after added error message",errorsForPermissionSelection)
+
     const handlesetTogglePermission=()=>{
         setTogglePermission("Yes");
     }
@@ -111,20 +151,98 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     console.log(currentUserEmailRef.current ,"my current id")
     const fetchUsers = async () => {
       try {
-        // start
-        const siteContext = await sp.site.openWebById(OthProps.SiteID);
-        const user0 = await siteContext.web.siteUsers();
+        if(OthProps.externalFolder === "true"){
+          const user0 = await sp.web.siteUsers();
+          const user1 = await sp.web.siteGroups();
+          const groupsArray=user1.map((user)=>(
+            {
+            PrincipalType:user.PrincipalType,
+            userId:user.Id,
+            value: user.Title,
+            label: user.Title,
+            email: user.Title,
+            }
+          ))
+          const combineUsersArray=user0.map((user)=>(
+                {
+                userId:user.Id,
+                value: user.Title,
+                label: user.Title,
+                email: user.Email,
+            }
+          ))
+          let resultArray =[...combineUsersArray, ...groupsArray];
+          console.log("resultArray --->",resultArray)
+          setUsers(resultArray);
+        }else{
+        //   const siteContext = await sp.site.openWebById(OthProps.SiteID);
+        //   const user0 = await siteContext.web.siteUsers();
+        //   const combineUsersArray=user0.map((user)=>(
+        //       {
+        //       userId:user.Id,
+        //       value: user.Title,
+        //       label: user.Title,
+        //       email: user.Email,
+        //   }
+        // ))
+        // setUsers(combineUsersArray);
+        // console.log("Sub site users",combineUsersArray);
+        // fetch the data from site Gropus
+        const [
+          users,
+          users1,
+          users2,
+          users3,
+          users4,
+          users5,
+          users6,
+          users7
+        ] = await Promise.all([
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Read`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Initiator`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Contribute`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Admin`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_View`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_AllUsers`).users(),
+          sp.web.siteGroups.getByName(`${OthProps.SiteTitle}_Approval`).users(),
+          sp.web.siteGroups.getByName(`DMSSuper_Admin`).users(),
+        ]);
 
-        const combineUsersArray=user0.map((user)=>(
-              {
-              userId:user.Id,
-              value: user.Title,
-              label: user.Title,
-              email: user.Email,
+        const combineArray = [
+          ...(users || []),
+          ...(users1 || []),
+          ...(users2 || []),
+          ...(users3 || []),
+          ...(users4 || []),
+          ...(users5 || []),
+          ...(users6 || []),
+          ...(users7 || []),
+        ];
+        setUsers(
+          combineArray.map((user) => ( 
+          {
+            userId:user.Id,
+            value: user.Title,
+            label: user.Title,
+            email: user.Email,
           }
         ))
-        setUsers(combineUsersArray);
-        console.log("Sub site users",combineUsersArray);
+        );
+        console.log("combineArray", combineArray);
+        }
+        // start
+        // const siteContext = await sp.site.openWebById(OthProps.SiteID);
+        // const user0 = await siteContext.web.siteUsers();
+        // const combineUsersArray=user0.map((user)=>(
+        //       {
+        //       userId:user.Id,
+        //       value: user.Title,
+        //       label: user.Title,
+        //       email: user.Email,
+        //   }
+        // ))
+        // setUsers(combineUsersArray);
+        // console.log("Sub site users",combineUsersArray);
         // const user0 = await sp.web.siteUsers();
         // const [
         //   users,
@@ -295,12 +413,17 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             }
             
             // alert(`here is filter data  sitetitle ${OthProps.SiteTitle} , OthProps.DocumentLibraryName${OthProps.DocumentLibraryName} , folderName ${folderName}`)
-            const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName}`)();
+            // const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName}`)();
+            const permissionDetails=await sp.web.lists.getByTitle("DMSFolderMaster").items.getById(Number(OthProps.FolderID))();
             console.log("permissionDetails1",permissionDetails);
-            IsUpdate=permissionDetails[0]?.IsPrivate;
-            IsPrivateColumnId=permissionDetails[0].Id;
-            division=permissionDetails[0].Devision;
-            department=permissionDetails[0].Department
+            // IsUpdate=permissionDetails[0]?.IsPrivate;
+            IsUpdate=permissionDetails?.IsPrivate;
+            // IsPrivateColumnId=permissionDetails[0].Id;
+            IsPrivateColumnId=permissionDetails.Id;
+            // division=permissionDetails[0].Devision;
+            division=permissionDetails.Devision;
+            // department=permissionDetails[0].Department
+            department=permissionDetails.Department
             
             // Bread crumb start
             path = OthProps.SiteTitle;
@@ -328,7 +451,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             
             // const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and CurrentUser eq '${currentUserEmailRef.current}' and FolderName eq ${null}`)();
             // alert(`folderName is :${folderName}`)
-            const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName","Id").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and CurrentUser eq '${currentUserEmailRef.current}' and FolderName eq ${folderName}`)();
+            const fetchData=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("User","UserID","UserPermission","FolderName","Id").filter(`SiteName eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}' and FolderName eq ${folderName} and FolderID eq ${Number(OthProps.FolderID)}`)();
             console.log("Fetch data",fetchData);    
             
 
@@ -464,6 +587,61 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
     console.log("rowsForPermission",rowsForPermission);
     // console.log("selected User Array",defaultUser);
     // console.log("selected permission",selectedPermission);
+    if(!validatePermissionsSelect()){
+      return
+    }
+     
+    // this code will make public folder to private and change all public checks to private
+    // if(!IsUpdate){
+    //   const getDataFromFolderPrivacy=await sp.web.lists.getByTitle("DMSFolderPrivacy").items.select("*").filter(`FolderID eq ${Number(OthProps.FolderID)} and User eq ${null} and UserID eq ${null}`)();
+    //   console.log("getDataFromFolderPrivacy",getDataFromFolderPrivacy);
+    //    // if(getDataFromFolderPrivacy.length > 0){
+    //   //   try {
+    //   //    await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
+    //   //       PublicFolderPermission:false,
+    //   //     })
+    //   //     console.log("PublicFolderPermission updated successfully");
+    //   //   } catch (error) {
+    //   //     console.log("error in PublicFolderPermission updated",error);
+    //   //   }
+    //   // }
+    //   if(getDataFromFolderPrivacy.length > 0){
+    //     alert("getDataFromFolderPrivacy[0].PublicFolderPermission " + getDataFromFolderPrivacy[0].PublicFolderPermission )
+    //     if(getDataFromFolderPrivacy[0].PublicFolderPermission === true){
+    //       alert("Please update the folder privacy first")
+    //       try {
+    //         await sp.web.lists.getByTitle("DMSFolderPrivacy").items.getById(getDataFromFolderPrivacy[0].ID).update({
+    //            PublicFolderPermission:false,
+    //          })
+    //          console.log("PublicFolderPermission updated successfully");
+    //        } catch (error) {
+    //          console.log("error in PublicFolderPermission updated",error);
+    //        }
+    //     }
+      
+    //   }
+    //     try {
+    //       await sp.web.lists.getByTitle('DMSFolderMaster').items.getById(Number(OthProps.FolderID)).update({
+    //         IsPrivate:true
+    //       })
+    //       console.log("successfully updated the IsPrivate column");
+    //     } catch (error) {
+    //       console.log("error in updating IsPrivate column",error);
+    //     }
+
+    //     if(OthProps.FolderName === "null"){
+          
+    //       try {
+    //         await sp.web.lists.getByTitle('DMSPreviewFormMaster').items.getById(IsPrivateColumnIdForDocumentLibrary).update({
+    //           IsPrivate:true
+    //         })
+    //         console.log("successfully updated the IsPrivate column of the DMSPreviewformmaster list")
+    //       } catch (error) {
+    //         console.log("error in updated the IsPrivate column of the DMSPreviewformmaster list")
+    //       }
+    //     }
+      
+    // }
 
     try {
         
@@ -472,6 +650,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
             DocumentLibraryName:OthProps.DocumentLibraryName,
             CurrentUser:currentUserEmailRef.current,
             IsModified:true,
+            FolderID:Number(OthProps.FolderID)
             // UserPermission:selectedPermission[0].value
         }
 
@@ -529,7 +708,11 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                   await securableObject.breakRoleInheritance(true); // First `true` copies permissions, second `true` clears unique assignments
               }
           }
-
+          // t222_Admin
+          // const roleDefinition = await web.roleDefinitions.getByName('Edit')();
+          // const roleDefinitionId = roleDefinition.Id;
+          // const group = await sp.web.siteGroups.getByName('t222_Admin')();
+          // await securableObject.roleAssignments.add(group.Id, roleDefinitionId);
           // Iterate through filteredArray and add role assignments
           rowsForPermission.forEach(async(row:any)=>{
               try {
@@ -863,7 +1046,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
 
   return (
-    <div className="container mt-4 second">
+    <div className="container mt-0 second">
             <div className="modal show d-block" tabIndex={-1}>
                     <div className="modal-dialog">
                         <div className="modal-content" style={{
@@ -882,33 +1065,37 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                               width:"auto",
                           }}
                           >
-                          <h5 className="mb-3 " style={{
+                          
+                         
+                          <div  className='row'>
+                            <div className='col-sm-8 w90'>
+                            <h5 className="mb-3 " style={{
                               display:"block", margin:'inherit'
                              
                           }}>
-                              <strong>Manage Permission</strong>
+                              Manage Permission
+                              
                           </h5>
-                          <div>
+                          <div  className='font-12 text-muted'>
                             {path}
                           </div>
-                          <div style={{top:'-51px', position:'relative'}} className='row'>
-                            <div className='col-sm-6'>
 
                             </div>
-                            <div className='col-sm-6'>
+                            <div className='col-sm-4'>
                             <div  className="mb-0">
                             <div style={{height:'20px'}} className="col-12 d-flex justify-content-end">
                               <a onClick={handleAddRow}>
-                                <img className="bi bi-plus" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
+                                <img className="bi bi-plus newl" src={require("../assets/plus.png")} alt="add" style={{ width: "50px", position:'relative', height: "50px" , top:'0px'}} />
                               </a>
                             </div>
                           </div>
                             </div>
+                            <div style={{borderBottom:'1px solid #ccc', marginBottom:'15px', height:'15px', float:'left', width:'100%',  paddingBottom:'10px'}}></div>
                           </div>
                         
                           {rowsForPermission.map((row)=>(
-                          <div className="row mb-2 approvalheirarcystyle" key={row.id}>
-                                  <div className="col-12 col-md-6">
+                          <div style={{clear:'both'}} className="row  approvalheirarcystyle" key={row.id}>
+                                  <div className="col-12 col-md-6 mb-2">
                                       <Select
                                           value={row.selectedUserForPermission}
                                           isMulti
@@ -919,8 +1106,15 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           placeholder="Enter names or email addresses..."
                                           noOptionsMessage={() => "No User Found..."}
                                       />
+                                      {errorsForPermissionSelection[row.id]?.userSelect && (
+                                    <span className="text-danger">{errorsForPermissionSelection[row.id].userSelect}</span>
+                                  )}
+                                  
+                                    {errorsForPermissionSelection[row.id]?.duplicate && (
+                                      <span className="text-danger">{errorsForPermissionSelection[row.id].duplicate}</span>
+                                    )}
                                   </div>
-                                  <div className="col-12 col-md-4" style={{
+                                  <div className="col-12 col-md-4 mb-2" style={{
                                
                                   }}>
                                       <Select
@@ -932,9 +1126,12 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                                           placeholder="Select Permission..."
                                           noOptionsMessage={() => "No Such Permission Find"}
                                       />
+                                      {errorsForPermissionSelection[row.id]?.permissionSelect && (
+                                    <span className="text-danger">{errorsForPermissionSelection[row.id].permissionSelect}</span>
+                                  )}
                                   </div>
                                   {/* {row.id === 0 ? null : ( */}
-                                    <div className="col-12 col-md-2 d-flex align-items-end">
+                                    <div className="col-12 mb-2 col-md-2 d-flex align-items-end">
                                       <a onClick={(e) => handleRemoveRow(row.id, e)} style={{ width: "50px",    height: "50px", cursor: "pointer" }}>
                                         <img className="fas fa-trash" src={require("../assets/del.png")} alt="delete" />
                                       </a>
@@ -954,7 +1151,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             <thead>
                             <tr>
                                 <th style={{minWidth:'55px', maxWidth:'55px'}}>S.No.</th>
-                                <th>User</th>
+                                <th>User/Groups</th>
                                 {/* <th className={styles.tabledept}>Email</th> */}
                                 <th >Permisson</th>
                                 <th style={{minWidth:'75px', maxWidth:'75px'}}>Action</th>
@@ -964,8 +1161,8 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             {currentData.map((item:any, index:any) => (
                                 <React.Fragment key={item.Id}>
                                 <tr >
-                                    <td >
-                                  <span className='indexdesign'>{index + 1}</span>   
+                                    <td style={{minWidth:'55px', maxWidth:'55px'}} >
+                                  <span style={{marginLeft:'20px'}}  className='indexdesign'>{index + 1}</span>   
                                     </td>
                                     <td >
                                     {item.value || ''}
@@ -994,12 +1191,36 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
                             ))}
                         </tbody>
                         </table>
-                        <Pagination
+                        <div className='row'>
+                          <div className='col-md-8 newpag'>
+                          <Pagination
                           currentPage={currentPage}
                           totalPages={totalPages}
                           handlePageChange={handlePageChange}
   
                         />
+
+                            </div>
+                            <div className='col-md-4'>
+                            <div style={{textAlign:'right'}} className="text-right pb-0">
+                                    <button type="button" className="btn btn-primary me-2" 
+                                    onClick={handleCreate}
+                                    >
+                                    Create
+                                    </button>
+                                    <button type="button" className="btn btn-secondary" 
+                                    //   onClick={toggleModal}
+                                    onClick={onReturnToMain}
+                                    >
+                                        Cancel{" "}
+                                    </button>
+                            </div>
+
+                              </div>
+
+                          </div>
+                        
+                       
                         </div>
                       </div>
                           </div>   
@@ -1042,19 +1263,7 @@ const ManageFolderPermission : React.FC<ManageFolderPermissionProps> = ({
 
                             </div>
                             </div> */}
-                            <div className="modal-footer pb-0">
-                                    <button type="button" className="btn btn-primary" 
-                                    onClick={handleCreate}
-                                    >
-                                    Create
-                                    </button>
-                                    <button type="button" className="btn btn-secondary" 
-                                    //   onClick={toggleModal}
-                                    onClick={onReturnToMain}
-                                    >
-                                        Cancel{" "}
-                                    </button>
-                            </div>
+                           
                       </div>
                     )
                     :null

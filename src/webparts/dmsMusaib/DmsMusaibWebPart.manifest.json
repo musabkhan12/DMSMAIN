@@ -3,7 +3,7 @@
   "id": "691145bd-f62c-4a54-ae4f-37c2107d748c",
   "alias": "DmsMusaibWebPart",
   "componentType": "WebPart",
-
+  // "supportsFullBleed": true,
   // The "*" signifies that the version should be taken from the package.json
   "version": "*",
   "manifestVersion": 2,
@@ -18,11 +18,11 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
     "group": { "default": "Advanced" },
-    "title": { "default": "dms-musaib" },
-    "description": { "default": "dms-musaib description" },
+    "title": { "default": "dmsmain" },
+    "description": { "default": "dmsmain description" },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "description": "dms-musaib"
+      "description": "dmsmain"
     }
   }]
 }

@@ -15,6 +15,7 @@ import {  faEllipsisV, faFileExport, faSort , faExclamation , faListSquares
 } from '@fortawesome/free-solid-svg-icons';
 // import { useState , useEffect } from "react";
 // import Provider from "../../../GlobalContext/provider";
+
 import { useMediaQuery } from "react-responsive";
 import "@pnp/sp/webs";
 import "@pnp/sp/folders";
@@ -540,7 +541,19 @@ const Pagination = ( { currentPage, totalPages, handlePageChange }: PaginationPr
                                  </td>
                                 <td>{item.FileName}</td>
                                 <td>{item.CurrentUser}</td>
-                                <td>{item.Modified}</td>
+                                {/* <td>{item.Modified}</td> */}
+                                <td>
+
+                                   {new Date(item?.Modified).toLocaleString('en-GB', {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          //second: '2-digit',
+                                          hour12: true
+                                        })}
+                                </td>
                                 <td style={{ minWidth: '80px', maxWidth: '80px' }}>{item.Status} </td>
                                  <td style={{ minWidth: '80px', maxWidth: '80px' }} className="ng-binding">
                                   {/* <div>

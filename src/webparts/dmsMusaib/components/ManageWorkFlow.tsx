@@ -246,8 +246,9 @@ const handleCreate = async(e: any) => {
               await sp.web.lists.getByTitle("DMSPreviewFormMaster").items.getById(IsApprovalColumnId).update({
                 IsApproval:true
               });
-
               console.log("Item Updated in DMSPreviewFormMaster");
+         
+              
           }
           const LibraryApproverDdetails = await sp.web.lists
           .getByTitle("DMSFolderPermissionMaster")
@@ -308,6 +309,66 @@ const handleCreate = async(e: any) => {
             })
 
         })
+
+        try {
+          const { web } = await sp.site.openWebById(`${OthProps.SiteID}`);
+        // Fetch all the groups in the subsite
+        interface IMember {
+          PrincipalType: number;
+          Title:String;
+          Id:number 
+        }
+        interface IRoleAssignmentInfo {
+          Member?: IMember; 
+        }
+        const groups:IRoleAssignmentInfo[] = await web.roleAssignments.expand("Member")();
+        console.log("groups",groups);
+        const filteredMembers=groups.filter(roleAssignment => {
+          return roleAssignment.Member.PrincipalType === 8;
+        });
+     
+        const filteredObject = filteredMembers.filter(item => item.Member.Title === `${OthProps.SiteTitle}_Approval`);
+
+        console.log("filteredObject",filteredObject);
+        const roleDefinition = await web.roleDefinitions.getByName("Edit")();
+        const roleDefinitionId = roleDefinition.Id;
+        const principalId = filteredObject[0].Member.Id;
+        console.log("Approval group added successfully")
+
+        const libraryNestedData=await sp.web.lists.getByTitle("DMSFolderMaster").items.select("*").filter(`SiteTitle eq '${OthProps.SiteTitle}' and DocumentLibraryName eq '${OthProps.DocumentLibraryName}'`)();
+        console.log("documentNestedData",libraryNestedData);
+        if(libraryNestedData.length > 0){
+          for(let item of libraryNestedData){
+            try {
+              let securableObject: any;
+              if(item.IsLibrary === true){
+                securableObject =await web.lists.getByTitle(`${item.DocumentLibraryName}`);
+                console.log("securableObject",securableObject);
+                // Break inheritance if needed (optional)
+                const hasUniquePermissions = await securableObject.hasUniqueRoleAssignments;
+                if (!hasUniquePermissions) {
+                    await securableObject.breakRoleInheritance(true); 
+                }
+                await securableObject.roleAssignments.add(principalId, roleDefinitionId);
+              }else if(item.IsFolder === true){
+                const folder =await web.getFolderByServerRelativePath(`${item.FolderPath}`).getItem();
+                securableObject=folder;
+                const itemData = await folder.select("HasUniqueRoleAssignments")();
+                const breaKRole=itemData.HasUniqueRoleAssignments;
+                if (!breaKRole) {
+                  await folder.breakRoleInheritance(true);
+                  console.log("Inheritance broken, retaining previous permissions.");
+                }
+                await securableObject.roleAssignments.add(principalId, roleDefinitionId);
+              }
+            } catch (error) {
+              console.log(`Error in adding Approvals group `,error)
+            }
+          }
+        }
+        } catch (error) {
+          console.log("Error in adding Approval group",error)
+        }
         Swal.fire('Added','Users Added Successfully','success');
     } catch (error) {
         console.log("Erroe in LibraryApproverDdetails",error);
@@ -327,7 +388,7 @@ const handleCreate = async(e: any) => {
   
   return (
 
-    <div className="container mt-4 second">
+    <div className="container mt-0 second">
         <div className="modal show d-block" tabIndex={-1}>
           <div className="modal-dialog">
             <div className="modal-content" style={{
@@ -338,17 +399,19 @@ const handleCreate = async(e: any) => {
                   {toggleApprover === "Yes"  ?
                   (<div>
                       <div className="" style={{ height: "auto", width: "100%" }}>
+                      <div  className='row'>
+                      <div className='col-sm-8 w90'>
                                         <h5 className="mb-1 Permissionsectionstyle">
-                                          <strong>Approval Hierarchy</strong>
+                                          Approval Hierarchy
                                         </h5>
                                         <p className="subheadernew font-14">
                                           Define approval hierarchy for the documents submitted by Team
                                           members in this folder.
                                         </p>
-                                        <div style={{position:'relative',top:'-51px'}} className='row'>
-                                          <div className='col-sm-6'>
-                                            </div>
-                                            <div className='col-sm-6'>
+
+                                        </div>
+                                        <div className='col-sm-4 w20'>
+                                      
                                             <div className="mb-0">
                                           <div style={{height:'20px'}} className="col-12 d-flex justify-content-end">
                                             <a onClick={handleAddRow}>
@@ -357,26 +420,38 @@ const handleCreate = async(e: any) => {
                                           </div>
                                         </div>
                                             </div>
+
+                                            <div style={{borderBottom:'1px solid #ccc', marginBottom:'15px', height:'15px', float:'left', width:'100%',  paddingBottom:'10px'}}></div>
                                           </div>
                                        
                                         <div className="row mb-1 approvalheirarcystyle">
-                                          <div className="col-12 col-md-4">
+                                        <table className="mtbalenew mtbalenewn createc">
+    <thead>
+      <tr>
+        <th  style={{minWidth:'60px',maxWidth:'60px'}}> Level</th>
+        <th> Approver</th>
+        <th style={{minWidth:'80px',maxWidth:'80px'}}> &nbsp;</th>
+        <th style={{minWidth:'40px',maxWidth:'40px'}}> Action</th>
+      </tr>
+    </thead>
+    <tbody>
+                                          {/* <div className="col-12 col-md-4">
                                             <label htmlFor="level" className="form-label approvalhierarcyfont">
                                               Level
                                             </label>
-                                          </div>
-                                          <div className="col-12 col-md-6">
+                                          </div> */}
+                                          {/* <div className="col-12 col-md-6">
                                             <label htmlFor="approver" className="form-label approvalhierarcyfont">
                                               Approver
                                             </label>
-                                          </div>
-                                        </div>
+                                          </div> */}
+                                       
                                         {rows.map((row) => (
-                                          <div className="row mb-3 approvalheirarchyfield" key={row.id}>
-                                            <div className="col-12 col-md-4">
+                                          <tr className="approvalheirarchyfield" key={row.id}>
+                                            <td  style={{minWidth:'60px',maxWidth:'60px'}}>
                                               <input type="text" style={{height:'36px'}} className="form-control" id={`level-${row.id}`} value={`Level ${row.id + 1}`} disabled />
-                                            </div>
-                                            <div className="col-12 col-md-6">
+                                            </td>
+                                            <td>
                                               <Select
                                                 value={row.approvedUserList}
                                                 isMulti
@@ -388,8 +463,9 @@ const handleCreate = async(e: any) => {
                                               {errorsForUserSelection[row.id]?.userSelect && (
                                                 <span className="text-danger">{errorsForUserSelection[row.id].userSelect}</span>
                                               )}
-                                            </div>
-                                            <div style={{gap:'10px'}} className="col-12 col-md-2 d-flex">
+                                            </td>
+                                            <td style={{minWidth:'80px',maxWidth:'80px', textAlign:'center'}}>
+                                            <div style={{gap:'10px', justifyContent:'center'}} className="d-flex">
                                               <div className="form-check">
                                                 <input
                                                   className="form-check-input"
@@ -419,16 +495,23 @@ const handleCreate = async(e: any) => {
                                                 </label>
                                               </div>
                                             </div>
+                                            </td>
+                                            <td style={{minWidth:'40px',maxWidth:'40px', textAlign:'center'}}>
                                             {row.id === 0 ? null : (
-                                              <div className="col-12 col-md-2 d-flex align-items-end">
+                                              <div style={{textAlign:'center', justifyContent:'center'}} className="d-flex align-items-end">
                                                 <a onClick={(e) => handleRemoveRow(row.id, e)} style={{ width: "50px", height: "50px", cursor: "pointer" }}>
-                                                  <img className="fas fa-trash" src={require("../assets/delete.png")} alt="delete" />
+                                                  <img className="fas fa-trash" src={require("../assets/del.png")} alt="delete" />
                                                 </a>
                                               </div>
                                             )}
-                                          </div>
+
+                                            </td>
+                                           
+                                          </tr>
                                         ))}
-                                      </div> 
+                                        </tbody>
+                                        </table>
+                                      </div>  </div>
                                       <div className="modal-footer">
                                       <button type="button" className="btn btn-primary" 
                                       onClick={handleCreate}

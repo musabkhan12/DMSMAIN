@@ -1,5 +1,14 @@
 
 
+/* this was added to hide navbar from modern sharepoint page */
+/* #SuiteNavWrapper {
+  display: none !important; 
+}
+.ms-compositeHeader {
+  display: none !important; 
+} */
+
+/*  */
 .greater{
   padding-right: 10px;
 }
@@ -14,17 +23,36 @@
   position: relative; margin-top: 20px;
 }
 .newhe{overflow: auto; max-height: 350px;}
-#folderContainer2{
-    /* width: 17rem; */
+
+/* #folderContainer2{
+
   
     padding: 7px;
     max-height: 325px;
     overflow-y: auto;
     overflow-x: hidden;
     
+} */
+  /* amjad latest chnage on folder container  */
+
+#folderContainer2{
+    /* width: 17rem; */
+  
+    padding: 7px;
+    /* max-height: 325px; */
+    max-height: 671px !important;
+    overflow-y: auto;
+    overflow-x: auto;
+
+    
 }
-#folderContainer2::-webkit-scrollbar {
+
+/* #folderContainer2::-webkit-scrollbar {
   width: 6px;
+} */
+ /* amjad latest chnage on folder container  */
+ #folderContainer2::-webkit-scrollbar {
+  width: 6px; height: 6px;
 }
 
 /* Track */
@@ -490,10 +518,21 @@ a:hover
 #showfolderpermission .modal-dialog h6, #workflowdiv .modal-dialog h6{
   text-align: center;
 }
- #folderContainer2 ul li{font-weight:300; font-size: 12px;}
+ /* #folderContainer2 ul li{font-weight:300; font-size: 12px;} */
+
+ /* amjad latest chnage */
+ #folderContainer2 ul li{font-weight:300; font-size: 12px;
+  /* display:flex;
+      justify-content: left;
+      flex-direction: row-reverse;
+      text-align: left; */
+      width: 325px;
+}
+
 /* Popup body: Spacing for the select and textarea */
 .share-popup-body {
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
+  margin-bottom: 20px; position: relative;
 }
  
 /* React select container */
@@ -554,26 +593,35 @@ a:hover
 
 
 /*Edit pop Css*/
+.blur-backround{
+  width: 600px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    
+}
 .edit-popup {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50%;
-  max-width: 600px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+
+  width: 100%;
+
+top: 0;
   z-index: 99999;
-  min-width:60%;
+  background: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  height: 100%;  
+  display: flex
+  ;
+      justify-content: center;
+      align-items: center;
+  
 }
  
 /* Styling for form groups (Field name and type) */
 .edit-popup .form-group {
   margin-top: 15px;
   display: flex;
-  gap: 10px;
+  gap: 10px; width: 98%;
 }
  
 .edit-popup .row {
@@ -620,17 +668,17 @@ a:hover
  
 /* Buttons (Save and Cancel) */
 .edit-popup button {
-  padding: 10px 20px;
+  padding: 6px 20px;
   margin-top: 0px;
   background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   float:right;
 }
- 
+.edit-popup  a{float: right;}
 .edit-popup button:hover {
   background-color: #45a049;
 }
@@ -927,6 +975,9 @@ text-align: center;
   max-height: 30007px !important;
   overflow-y: hidden !important;
 }
+.mtbalenewn tbody{
+  overflow-y: inherit !important;
+}
 .mtbalenew td {
   min-width: 130px;
   max-width: 130px;
@@ -1001,4 +1052,15 @@ text-align: center;
   .mtbalenew{overflow: auto;}
   .mtbalenew tbody{overflow: visible !important;}
   .indexdesign{margin-left: 0px !important;}
+}
+.flexContainer-75, .ms-TooltipHost, .root-53, .root-61 {
+  display: block !important;
+}
+
+
+/* i have added this because folder hierarchy was conjusted if name was too large */
+#folderContainer2 ul li{
+  font-size: 12px;
+  font-weight: 300;
+  width: 400px;
 }

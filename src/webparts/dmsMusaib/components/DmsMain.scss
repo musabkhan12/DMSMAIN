@@ -1,3 +1,17 @@
+// this was added to hide navbar from modern sharepoint page
+
+// #SuiteNavWrapper {
+//   display: none !important; /* Completely hides the Suite Nav */
+// }
+// .ms-compositeHeader {
+//   display: none !important; /* Sometimes used in classic pages */
+// }
+// .sp-appBar {
+//   display: none !important; /* Hides the app bar */
+// }
+
+
+///////
 .sidebariconssmall{
   width: 14px; margin-top: -2px;
 }
@@ -430,6 +444,8 @@ a:hover
   align-items: center;
   margin-bottom: 10px;
   gap: 383px;
+  border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
 }
  
 /* Close "X" button */
@@ -450,15 +466,30 @@ a:hover
   line-height: 27px;
   text-align: center;
 }
- #folderContainer2 ul li{font-weight:400; margin-top: 6px; }
+//  #folderContainer2 ul li{font-weight:400; margin-top: 6px; }
+// amjad latest change on fodler hierarchy
+#folderContainer2 ul li{font-weight:400; margin-top: 6px;  width: 325px;}
 /* Popup body: Spacing for the select and textarea */
 .share-popup-body {
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
+  margin-bottom: 20px; position: relative;
 }
  
 /* React select container */
 #share-reactSelect {
-  margin-bottom: 15px;
+  margin-bottom: 0px !important; 
+}
+#react-select-2-placeholder,.form-check-label,.css-hlgwow div,#react-select-3-placeholder{
+  color: #212529 !important; font-weight: 500 !important;font-size: 1rem !important;
+}
+input[type=password], input[type=text], input[type=file], input:not([type]), select, textarea, .sp-peoplepicker-topLevel, .sp-peoplepicker-topLevelDisabled, .sp-peoplepicker-autoFillContainer, .ms-inputBox{
+  color: #212529 !important;font-weight: 500 !important; font-size: 1rem !important;
+}
+input::placeholder,select::placeholder,textarea::placeholder,#react-select-3-placeholder::placeholder{
+  color: #212529 !important;font-weight: 500 !important;font-size: 1rem !important;
+}
+.newpag .pagination-container{
+  justify-content: start !important;
 }
  
 /* Textarea for the message */
@@ -514,25 +545,41 @@ a:hover
 
 
 /*Edit pop Css*/
-.edit-popup {
+.blur-backround{
+  width: 600px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+}
+#renameForm button{margin-top: 0px !important;}
+.edit-popup,#rename-popup,#renamePopup {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50%;
-  max-width: 600px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  z-index: 99999;
-  min-width:60%;
-  max-height: 550px; overflow-y: auto;
+
+  width: 100%;
+z-index: 99999;
+ 
+top: 0;
+  background: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  height: 100%;  
+  display: flex
+  ;
+      justify-content: center;
+      align-items: center;
+ 
+}
+#addMetaColumn-wrapper .bi-plus{
+  top: 2px !important; left: 0rem !important;
+
 }
  #files-container button{    position: absolute;
   right: 28px;
   font-size: 14px; background: #1fb0e5;
-  margin-top: 0px;}
+  margin-top: 0px;
+    right: 40px;
+    top: 27%;
+}
   #files-container button:hover{
     background: #008751;
   }
@@ -588,16 +635,17 @@ a:hover
  
 /* Buttons (Save and Cancel) */
 .edit-popup button {
-  padding: 10px 20px;
+  padding: 6px 20px;
   margin-top: 0px;
   background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px; float:right;
+  font-size: 14px; float:none; margin: 20px auto 0px;
 }
- 
+
+label{font-size: 0.875rem !important; font-weight: 400 !important; color: #6c757d !important;}
 .edit-popup button:hover {
   background-color: #45a049;
 }
@@ -721,7 +769,7 @@ a:hover
     
     padding: 7px;
 
-
+    max-height: 671px !important;
    
 }
 #folderContainer2 .toggle-button{width: 17px;
@@ -758,7 +806,8 @@ a:hover
 .popup-content{    background: #fff;
 width: 32%;
 margin: auto;
-top: 5%;
+// top: 5%;
+top: 40%;
 position: relative;
 padding: 20px;
 border-radius: 5px;}
@@ -773,7 +822,7 @@ border-radius: 5px;}
 
 
 .myrequestp3rd{
-  width: 96px;
+  width: 100px !important;
  
 }
  
@@ -824,6 +873,10 @@ border-radius: 5px;}
 }
 .search-container input:focus{outline: 1px solid #1fb0e5 !important;}
 @media(max-width:640px){
+  .w90{width: 80% !important; float: left;}
+  .w20{
+    width: 20% !important; float: left;
+  }
 .mainsidebardms,#files-container .card{width: 100% !important;}
 .cardsearch .neww{margin-bottom: 10px;}
 .librarydata {
@@ -836,15 +889,18 @@ border-radius: 5px;}
 }
 
 #files-container .card{margin: 5px 0px !important; height: 115px !important;}
-#files-container .col-md-2{    width: 13% !important;
+#files-container .col-md-2{    width: 15% !important;
 float: left;}
-.main-containeruploadfile{display: block !important;}
+.main-containeruploadfile{display: block !important;
+height: 100% !important;
+}
 .column1{height: auto !important;}
 .main-containeruploadfile .column{max-height: max-content !important;}
 .popup-content-auditHistory,.share-popup-content{width: 95% !important;}
-#files-container .col-md-10{    width: 84% !important;
+#files-container .col-md-10{    width: 84% !important; padding-left: 10px !important;
 float: left;}
 .cardsearch{height: auto;}
+.newl{top: -38px !important;}
 
 }
 .p-31{padding: 20px !important; width: 100%;}
@@ -870,3 +926,158 @@ max-width: 130px;
 min-width: 130px;
 padding: 10px !important;
 text-align: center;}
+
+
+
+.file-extension-icon{
+  border-radius: 3px;
+  width: 35px;
+  height: 35px;
+  background-color: #1fb0e5;
+  display: flex;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.CardTextContainer{
+  padding-left: 0px;
+}
+
+.flexContainer-75, .ms-TooltipHost, .root-53, .root-61 {
+  display: block !important;
+}
+.main,#ModalFocusTrapZone3,div.ms-Dialog-main{background: #fff !important; }
+  .OneUpTextFileContainer{
+    width: 100% !important;
+  }
+.borderprev{border: 1px solid #1fb0e5;
+  //  height: 483px; 
+   height: 98% !important;  
+  
+  border-radius: 20px; 
+  
+  // margin-top: 30px;
+  margin-top: 0px !important;
+}
+
+
+.ms-fullscreenmode #contentBox{
+     margin-left: 0px !important;
+}
+/* i have added this because folder hierarchy was conjusted if name was too large */
+#folderContainer2 ul li{
+  font-size: 12px;
+  font-weight: 300;
+  width: 400px;
+}
+// i added this becuase in file upload checkbox was not working
+.input-container {
+  input[type="checkbox"] {
+    -webkit-appearance: auto !important;
+    appearance: auto;
+  }
+}
+
+.sidebardmsButton.active {
+  background-color: #e0f0ff;
+  border-left: 4px solid #0078d4;
+  font-weight: bold;
+}
+#OneUpCommandBar{
+  display: none !important;
+}
+#closeCommand{
+  display: none !important;
+}
+
+#files-container2{
+  width: 100% !important;
+
+}
+
+.sidebardmsButton.active {
+  background-color: #e0f0ff;
+  border-left: 4px solid #0078d4;
+  font-weight: bold;
+}
+#OneUpCommandBar{
+  display: none !important;
+}
+#closeCommand{
+  display: none !important;
+}
+
+#files-container2{
+  width: 100% !important;
+
+}
+.pagination-container{
+      left: 89% !important;
+    position: sticky !important;
+    top: 52% !important;
+    width: 327px !important;
+}
+.pagination-container-buttons{
+  display: flex !important;
+    width: 159px !important;
+    flex-direction: row !important;
+        gap: 16px !important;
+            right: 9px !important;
+             padding-top: 89px !important;
+}
+  
+// next button
+.pagination-container-buttons2{
+     background-color: #1fb0e5 !important;
+     color: #ffffff !important;
+}
+.pagination-container-buttons1{
+     background-color: #1fb0e5 !important;
+     color: #ffffff !important;
+     margin-right: 64px !important;
+}
+
+
+
+.searchfolder-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.searchfolder-input {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding-right: 40px; /* Space for icons */
+}
+
+.searchfolderbutton {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.searchfolder-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+}
+
+.searcfolderhbutton:hover .searchfolder-icon {
+    opacity: 0.8;
+}
+.crossiconclass{
+   padding: 6px 10px;  background:transparent !important; color: #333; cursor: pointer;
+   position: absolute; right:8px; top:-8px; border: 0px solid #ccc;;
+       
+      
+}

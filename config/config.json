@@ -2,18 +2,30 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
   "version": "2.0",
   "bundles": {
-    "dms-musaib-web-part": {
+    "dmsmain-web-part": {
       "components": [
         {
           "entrypoint": "./lib/webparts/dmsMusaib/DmsMusaibWebPart.js",
           "manifest": "./src/webparts/dmsMusaib/DmsMusaibWebPart.manifest.json"
         }
       ]
+    },
+    "advanced-search-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/advancedSearch/AdvancedSearchWebPart.js",
+          "manifest": "./src/webparts/advancedSearch/AdvancedSearchWebPart.manifest.json"
+        }
+      ]
     }
   },
-  "externals": {},
+  "externals": {
+    "react": "React",
+    "react-dom": "ReactDOM"
+  },
   "localizedResources": {
     "DmsMusaibWebPartStrings": "lib/webparts/dmsMusaib/loc/{locale}.js",
-    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
+    "AdvancedSearchWebPartStrings": "lib/webparts/advancedSearch/loc/{locale}.js"
   }
 }
